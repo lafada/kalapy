@@ -1,8 +1,7 @@
+import inspect
 
-
-def validate(field, model_class=None):
-    """A decorator to assign a validator for a field of the given
-    model_class which if None then assumes current class.
+def validate(field):
+    """A decorator to assign a validator for a field. Should be used on model methods only.
 
     >>>
     >>> class User(Model):
@@ -15,14 +14,17 @@ def validate(field, model_class=None):
     >>>             raise BadValueError("Name is too short.")
     >>>
     """
-
-    def wraper(func):
-
-        _class = model_class or func.im_class
-
-        _field = getattr(_class, field)
-        _field.validator = func
-
+    
+    _frame = inspect.currentframe()
+    _locals = _frame.f_back.f_locals
+    
+    _field = _locals.get(field)
+    
+    if not isinstance(_field, Field):
+        raise Exception("A field '%s' should be defined." % field)
+    
+    def wrapper(func):
+        _field._validator = func
         return func
 
     return wrapper
@@ -33,7 +35,7 @@ class Field(object):
     _data_type = "string"
     
     def __init__(self, label=None, name=None, default=None, size=None,
-            required=None, unique=False, indexed=None, validator=None):
+            required=None, unique=False, indexed=None):
 
         self._label = label
         self._name = name
@@ -44,7 +46,7 @@ class Field(object):
         self._unique = unique
         self._indexed = indexed
 
-        self.validator = validator
+        self._validator = None
 
     def __configure__(self, model_class, name):
         if self._name is None:
@@ -59,20 +61,20 @@ class Field(object):
 
         if model_instance is None:
             return self
-
-        return getattr(model_instance, self.name, None)
+        
+        return getattr(model_instance, self._attr_name(), None)
 
     def __set__(self, model_instance, value):
-        value = self.validate(value)
-        setattr(model_instance, self.name, value)
+        value = self.validate(model_instance, value)
+        setattr(model_instance, self._attr_name(), value)
 
-    def validate(self, value):
+    def validate(self, model_instance, value):
 
         if self.empty(value) and self.required:
-            raise BadValueError("Field '%s' is required.", self.name)
+            raise ValueError("Field '%s' is required.", self.name)
 
-        if callable(self.validator):
-            self.validator(value)
+        if self._validator:            
+            self._validator(model_instance, value)
 
         return value
 
@@ -86,6 +88,9 @@ class Field(object):
     @property
     def name(self):
         return self._name
+    
+    def _attr_name(self):
+        return '_' + self.name
 
     @property
     def label(self):
