@@ -25,7 +25,8 @@ class ModelType(type):
         super(ModelType, cls).__init__(name, bases, attrs)
 
         cls._fields = ModelType.get_fields(cls, bases, attrs)
-
+        cls._values = {}
+        
         _REGISTRY[name] = cls
 
     @staticmethod
@@ -55,9 +56,7 @@ class ModelType(type):
 class Model(object):
     
     __metaclass__ = ModelType
-
-    _name = None
-
+    
     def __init__(self, **kw):
         pass
 

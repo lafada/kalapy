@@ -1,7 +1,8 @@
 import inspect
 
 def validate(field):
-    """A decorator to assign a validator for a field. Should be used on model methods only.
+    """A decorator to assign a validator for a field. Should only be used with 
+    the methods of the class where the field is defined.
 
     >>>
     >>> class User(Model):
@@ -16,8 +17,11 @@ def validate(field):
     """
     
     _frame = inspect.currentframe()
-    _locals = _frame.f_back.f_locals
-    
+    try:
+        _locals = _frame.f_back.f_locals
+    finally:
+        del _frame
+
     _field = _locals.get(field)
     
     if not isinstance(_field, Field):
@@ -62,11 +66,11 @@ class Field(object):
         if model_instance is None:
             return self
         
-        return getattr(model_instance, self._attr_name(), None)
+        return model_instance._values.get(self.name)
 
     def __set__(self, model_instance, value):
         value = self.validate(model_instance, value)
-        setattr(model_instance, self._attr_name(), value)
+        model_instance._values[self.name] = value
 
     def validate(self, model_instance, value):
 
@@ -89,9 +93,6 @@ class Field(object):
     def name(self):
         return self._name
     
-    def _attr_name(self):
-        return '_' + self.name
-
     @property
     def label(self):
         return self._label
