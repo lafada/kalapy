@@ -39,7 +39,7 @@ class Field(object):
     _data_type = "string"
     
     def __init__(self, label=None, name=None, default=None, size=None,
-            required=None, unique=False, indexed=None):
+            required=None, unique=False, indexed=None, selection=None):
 
         self._label = label
         self._name = name
@@ -49,7 +49,10 @@ class Field(object):
         self._required = required
         self._unique = unique
         self._indexed = indexed
-
+        
+        self._selection = selection
+        self._selection_list = [x[0] for x in selection] if selection else []
+        
         self._validator = None
 
     def __configure__(self, model_class, name):
@@ -76,7 +79,11 @@ class Field(object):
 
         if self.empty(value) and self.required:
             raise ValueError("Field '%s' is required.", self.name)
-
+        
+        if self._selection and value not in self._selection_list:
+            raise ValueError("Field '%s' is '%s'; must be one of %s" % (
+                                self.name, value, self._selection_list))
+         
         if self._validator:            
             self._validator(model_instance, value)
 
@@ -152,18 +159,6 @@ class Time(DateTime):
 
 class Binary(Field):
     pass
-
-
-class Selection(Field):
-    """Selection field restricts the value of the field to the given set of values.
-    
-    >>> language = Selection(String, selection=[("en", "English"), 
-    >>>                                         ("fr", "French"), 
-    >>>                                         ("de", "German")], required=False)
-    """
-    
-    def __init__(self, field, selection, **kw):
-        pass
 
 
 class ManyToOne(Field):
