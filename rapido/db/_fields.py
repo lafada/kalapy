@@ -15,22 +15,9 @@ def validate(field):
     >>>             raise BadValueError("Name is too short.")
     >>>
     """
-    
-    _frame = inspect.currentframe()
-    try:
-        _locals = _frame.f_back.f_locals
-    finally:
-        del _frame
-
-    _field = _locals.get(field)
-    
-    if not isinstance(_field, Field):
-        raise Exception("A field '%s' should be defined." % field)
-    
     def wrapper(func):
-        _field._validator = func
+        func._validates = field
         return func
-
     return wrapper
 
 

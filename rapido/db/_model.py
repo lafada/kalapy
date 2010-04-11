@@ -1,3 +1,4 @@
+from types import FunctionType, MethodType
 
 from _fields import *
 
@@ -14,8 +15,17 @@ def get(model):
     return _REGISTRY[model]
 
 
-class DuplicateFieldError(Exception):
+class FieldError(Exception):
+    """Raised when a non-existent field is referenced.
+    """
     pass
+
+
+class DuplicateFieldError(Exception):
+    """Raised when a field is duplicated in a model definition.
+    """
+    pass
+
 
 
 class ModelType(type):
@@ -24,8 +34,11 @@ class ModelType(type):
 
         super(ModelType, cls).__init__(name, bases, attrs)
 
+
         cls._fields = ModelType.get_fields(cls, bases, attrs)
         cls._values = {}
+
+        ModelType.prepare_validators(cls, attrs)
         
         _REGISTRY[name] = cls
 
@@ -52,6 +65,20 @@ class ModelType(type):
 
         return fields
 
+    @staticmethod
+    def prepare_validators(cls, attrs):        
+        for name, attr in attrs.items():
+            if isinstance(attr, (FunctionType, MethodType)) and hasattr(attr, '_validates'):
+
+                field = attr._validates
+                if isinstance(field, basestring):
+                    field = getattr(cls, field, None)
+
+                if not isinstance(field, Field):
+                    raise FieldError("Field '%s' is not defined." % attr._validates)
+
+                field._validator = attr
+                
 
 class Model(object):
     
