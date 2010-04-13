@@ -1,4 +1,6 @@
-import inspect
+
+from _errors import *
+
 
 def validate(field):
     """A decorator to assign a validator for a field. Should only be used with 
@@ -12,7 +14,7 @@ def validate(field):
     >>>     @validate("name")
     >>>     def check_name(self, value):
     >>>         if len(value) < 3:
-    >>>             raise BadValueError("Name is too short.")
+    >>>             raise ValidationError("Name is too short.")
     >>>
     """
     def wrapper(func):
@@ -65,10 +67,10 @@ class Field(object):
     def validate(self, model_instance, value):
 
         if self.empty(value) and self.required:
-            raise ValueError("Field '%s' is required.", self.name)
+            raise ValidationError("Field '%s' is required.", self.name)
         
         if self._selection and value not in self._selection_list:
-            raise ValueError("Field '%s' is '%s'; must be one of %s" % (
+            raise ValidationError("Field '%s' is '%s'; must be one of %s" % (
                                 self.name, value, self._selection_list))
          
         if self._validator:            

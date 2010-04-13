@@ -1,138 +1,175 @@
-
+"""
+This module defines several interfaces to be implemented by database engines.
+The implementation is meant for internal use only. Users should use the Model
+api instead.
+"""
 
 class IDatabase(object):
-
-    def __new__(cls, name):
-        return object.__new__(cls, name)
+    """The Database interface. The backend engines should implement this 
+    interface with a class Database.
+    """
     
-    def __init__(self, name):
+    def __init__(self, name, host=None, port=None, user=None, password=None, autocommit=False):
+        """Initialize the database.
+
+        Args:
+            name: the name of the database
+            host: the hostname where the database server is running
+            port: the port on which the database server is listning
+            user: the user name to connect to the database
+            password: the database password
+            autocommit: whether to enable autocommit or not
+        """
         self.name = name
+        self.host = host
+        self.port = port
+        self.user = user
+        self.password = password
+        self.autocommit = autocommit
     
     def connect(self):
+        """Connect to the database.
+        """
         raise NotImplementedError
     
     def close(self):
+        """Close the database connection.
+        """
         raise NotImplementedError
-    
-    def begin_transaction(self):
-        raise NotImplementedError
-    
-    def end_transaction(self):
-        raise NotImplementedError
-    
+        
     def commit(self):
+        """Commit the changes to the database.
+        """
         raise NotImplementedError
     
     def rollback(self):
-        raise NotImplementedError           
+        """Rollback all the changes made since the last commit.
+        """
+        raise NotImplementedError
+    
+    def create(self):
+        """Create the database if it doesn't exist.
+        """
+        raise NotImplementedError
+    
+    def drop(self):
+        """Drop the database.
+        """
+        raise NotImplementedError
 
-    @staticmethod
-    def get_databases():
+    def cursor(self):
+        """Return a dbapi2 compiant cursor instance.
+        """
         raise NotImplementedError
     
-    @staticmethod
-    def create(name):
+    def select(self, entity, condition):
+        """Select all the records of the given entity that passes 
+        the given condition.
+
+        Args:
+            entity: the name of the entity on which to perform query
+            condition: the filter condition
+
+        Returns:
+            a list of all records matched.
+        """
         raise NotImplementedError
-    
-    @staticmethod
-    def drop(name):
-        raise NotImplementedError
-    
-    @staticmethod
-    def dump(name):
-        raise NotImplementedError
-    
-    @staticmethod
-    def restore(name, dumpfile):
-        raise NotImplementedError
-    
-    
-class ITable(object):
-    
-    def __init__(self, name):
+
+
+class IEntity(object):
+    """The Entity inteface, low level representation of the main storage 
+    structure of the perticular database engine.  For example, `table` in RDMBS
+    and `entity` in BigTable.
+    """
+
+    def __init__(self, database, name):
+        """Initialize the entity instance.
+
+        Args:
+            database: the database instance
+            name: name of the entity
+        """
+        self.database = database
         self.name = name
     
-    @staticmethod
-    def exists(name):
+    def exists(self):
+        """Check whether the entiry exists in the database.
+        """
         raise NotImplementedError
     
-    @staticmethod
-    def create(name):
+    def create(self):
+        """Create a new entity in the database if it doesn't exist.
+        """
         raise NotImplementedError
     
-    @staticmethod
-    def drop(name):
+    def drop(self):
+        """Drop the current entity if it exists.
+        """
         raise NotImplementedError
     
-    @staticmethod
-    def rename(old_name, new_name):
+    def rename(self, new_name):
+        """Rename the current entiry with the given new name.
+
+        Args:
+            new_name: the new name for the entity
+        """
         raise NotImplementedError
     
     def insert(self, **kw):
+        """Insert a record to the entity with the given values.
+
+        Args:
+            **kw: the key, value pairs for the given record.
+        """
         raise NotImplementedError
     
     def update(self, key, **kw):
+        """Update a perticular record identified with the given key.
+
+        Args:
+            key: the key to identify the record
+            **kw: the items to be updated
+        """
         raise NotImplementedError
     
     def delete(self, keys):
+        """Delete all the records from the entiry identified with the
+        given keys.
+
+        Args:
+            keys: list of keys
+        """
         raise NotImplementedError
+
     
     def column_exists(self, name):
+        """Check whether the given column exists in the entiry.
+        Args:
+            name: the name of a column
+        """
         raise NotImplementedError
     
     def column_add(self, field):
+        """Add a column for the given `field`.
+        Args:
+            field: an instance of perticular Field type
+        """
         raise NotImplementedError
     
     def column_drop(self, field):
-        raise NotImplementedError
-    
-    def column_alter(self, field, name=None, size=None, datatype=None):
-        raise NotImplementedError
-    
-    def add_contraint(self, name, spec=None):
-        """Add a contraint with the given name as specified in spec.       
-        Only supposrts UNIQUE and CHECK contraints.
-        
-        >>> tbl.add_constraint("unq_name", "UNIQUE(name)")
-        >>> tbl.add_constraint("chk_age", "CHECK(age >= 20)")
+        """Drop the given field.
+        Args:
+            field: an instance of perticular Field type or name of the column
         """
         raise NotImplementedError
     
-    def drop_contraint(self, name):
-        """Drop the given contraint.
-        """
-        raise NotImplementedError
-    
+    def column_alter(self, field):
+        """Change the definition of the column with the changed 
+        attribures of the field.
 
-class IQuery(object):
-    
-    def filter(self, query, **kw):
-        """Filter with the given query."
-        
-        >>> q.filter("name ILIKE :name AND age >= :age", name="some", age=20)
+        Args:
+            field: an instance of Field type
         """
         raise NotImplementedError
     
-    def order(self, spec):
-        """Order the query result with given spec.
-        
-        >>> q = q.filter("name ILIKE :name AND age >= :age", name="some", age=20)
-        >>> q.order("-age")
-        """
-        raise NotImplementedError
-    
-    def fetch(self, limit, offset=0):
-        """Fetch the given number of records from the query object from the given offset.
-        
-        >>> q = q.filter("name ILIKE :name AND age >= :age", name="some", age=20)
-        >>> for obj in q.fetch(20):
-        >>>     print obj.name
-        """
-        raise NotImplementedError
-    
-    def count(self):
-        """Return the number of records in the query object.
-        """
-        raise NotImplementedError
-
 
