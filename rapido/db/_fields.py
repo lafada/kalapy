@@ -92,6 +92,10 @@ class Field(object):
     @property
     def label(self):
         return self._label
+    
+    @property
+    def size(self):
+        return self._size
 
     @property
     def default(self):
@@ -115,39 +119,39 @@ class String(Field):
 
 
 class Text(String):
-    pass
+    _data_type = "text"
 
 
 class Integer(Field):
-    pass
+    _data_type = "integer"
 
 
 class Float(Field):
-    pass
+    _data_type = "float"
 
 
 class Numeric(Float):
-    pass
+    _data_type = "decimal"
 
 
 class Boolean(Field):
-    pass
+    _data_type = "bool"
 
 
 class DateTime(Field):
-    pass
+    _data_type = "datetime"
 
 
 class Date(DateTime):
-    pass
+    _data_type = "date"
 
 
 class Time(DateTime):
-    pass
+    _data_type = "time"
 
 
 class Binary(Field):
-    pass
+    _data_type = "blob"
 
 
 class ManyToOne(Field):
@@ -160,5 +164,4 @@ class OneToMany(Field):
 
 class ManyToMany(Field):
     pass
-
 
