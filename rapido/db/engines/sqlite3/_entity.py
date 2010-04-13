@@ -5,7 +5,7 @@ from rapido.db._interface import IEntity
 class Entity(IEntity):
 
     def __init__(self, database, name):
-        super(IEntity, self).__init__(database, name)
+        super(Entity, self).__init__(database, name)
         
     def cursor(self):
         return self.database.cursor()
