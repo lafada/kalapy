@@ -6,10 +6,7 @@ class Entity(IEntity):
 
     def __init__(self, database, name):
         super(Entity, self).__init__(database, name)
-       
-    @property
-    def cursor(self):
-        return self.database.cursor()
+        self.cursor = self.database.cursor()
 
     def exists(self):
         self.cursor.execute("""
