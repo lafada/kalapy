@@ -59,8 +59,12 @@ class Entity(IEntity):
         self.cursor.execute(sql, vals)
     
     def delete(self, keys):
-        sql = "DELETE FROM %s WHERE key IN %s" % (self.name, tuple(keys))
-        self.cursor.execute(sql)
+
+        if not isinstance(keys, (list, tuple)):
+            keys = [keys]
+
+        sql = "DELETE FROM %s WHERE key IN (%s)" % (self.name, ", ".join(['?'] * len(keys)))
+        self.cursor.execute(sql, keys)
     
     def column_exists(self, field):
         name = field if isinstance(field, basestring) else field.name
@@ -95,7 +99,7 @@ DATA_TYPES = {
         "float"     :   "FLOAT",
         "numeric"   :   "CHAR",
         "boolean"   :   "BOOL",
-        "dateTime"  :   "CHAR[20]",
+        "datetime"  :   "CHAR[20]",
         "date"      :   "CHAR[10]",
         "time"      :   "CHAR[10]",
         "binary"    :   "BLOB",
