@@ -31,6 +31,7 @@ class Entity(IEntity):
     def insert(self, **kw):
         
         items = kw.items()
+
         keys = [x[0] for x in items]
         vals = [x[1] for x in items]
         
@@ -42,7 +43,20 @@ class Entity(IEntity):
         self.cursor.execute(sql, vals)
         
     def update(self, key, **kw):
-        raise NotImplementedError
+
+        items = kw.items()
+
+        keys = [x[0] for x in items]
+        vals = [x[1] for x in items]
+
+        keys = ", ".join(["%s = ?" % k for k in keys])
+
+        sql = "UPDATE %(table)s SET\n    %(keys)s\nWHERE key = ?" % dict(
+                table=self.name, keys=keys)
+
+        vals.append(key)
+
+        self.cursor.execute(sql, vals)
     
     def delete(self, keys):
         sql = "DELETE FROM %s WHERE key IN %s" % (self.name, tuple(keys))
@@ -61,12 +75,8 @@ class Entity(IEntity):
 
         datatype = DATA_TYPES.get(field.data_type, "TEXT") % (dict(size=field.size))
 
-        sql = """
-        ALTER TABLE %(name)s 
-            ADD COLUMN %(col)s %(datatype)s
-        """ % dict(name=self.name, col=field.name, datatype=datatype)
-
-        print sql
+        sql = "ALTER TABLE %(name)s ADD COLUMN %(col)s %(datatype)s" % dict(
+                name=self.name, col=field.name, datatype=datatype)
 
         self.cursor.execute(sql)
     
