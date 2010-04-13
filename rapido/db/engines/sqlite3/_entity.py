@@ -49,7 +49,13 @@ class Entity(IEntity):
         self.cursor.execute(sql)
     
     def column_exists(self, field):
-        raise NotImplementedError
+        name = field if isinstance(field, basestring) else field.name
+        sql = "SELECT %s FROM %s LIMIT 1" % (name, self.name)
+        try:
+            self.cursor.execute(sql)
+            return True
+        except:
+            return False
     
     def column_add(self, field):
 
