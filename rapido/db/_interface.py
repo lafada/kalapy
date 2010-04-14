@@ -8,6 +8,8 @@ class IDatabase(object):
     """The Database interface. The backend engines should implement this 
     interface with a class Database.
     """
+
+    data_types = {}
     
     def __init__(self, name, host=None, port=None, user=None, password=None, autocommit=False):
         """Initialize the database.
@@ -74,6 +76,14 @@ class IDatabase(object):
             a list of all records matched.
         """
         raise NotImplementedError
+
+    def get_data_type(self, kind, size=None):
+        try:
+            res = self.data_types[kind]
+        except KeyError:
+            raise DatabaseError("Unsupported datatype '%s'" % kind)
+
+        return "%s(%s)" % (res, size) if size else res
 
 
 class IEntity(object):

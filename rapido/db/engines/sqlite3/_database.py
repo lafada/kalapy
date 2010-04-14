@@ -8,6 +8,20 @@ from _entity import Entity
 
 
 class Database(IDatabase):
+
+    data_types = {
+        "string"    :   "CHAR",
+        "text"      :   "VARCHAR",
+        "integer"   :   "INTEGER",
+        "float"     :   "FLOAT",
+        "numeric"   :   "DECIMAL",
+        "boolean"   :   "BOOL",
+        "datetime"  :   "DATETIME",
+        "date"      :   "DATE",
+        "time"      :   "TIME",
+        "binary"    :   "BLOB",
+    }
+
     
     def __init__(self, name, host=None, port=None, user=None, password=None, autocommit=False):
         super(Database, self).__init__(name, host, port, user, password, autocommit)
@@ -40,9 +54,14 @@ class Database(IDatabase):
         self.connection.rollback()
 
     def create(self):
-        # SQLite database will be created automatically upon connect
-        self.connect()
-        self.close()
+
+        if self.connection:
+            return self
+
+        if not os.path.isfile(self.name):
+            self.connection = sqlite3.connect(self.name, detect_types=sqlite3.PARSE_DECLTYPES)
+            self.close()
+
         return self
     
     def drop(self):

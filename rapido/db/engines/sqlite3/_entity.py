@@ -10,32 +10,35 @@ class Entity(IEntity):
 
     def exists(self):
         self.cursor.execute("""
-            SELECT name FROM sqlite_master 
-                WHERE type = 'table' AND name = ?;
+            SELECT "name" FROM sqlite_master 
+                WHERE type = "table" AND name = ?;
             """, (self.name,))
         return bool(self.cursor.fetchone())
 
     def create(self):
         self.cursor.execute("""
-            CREATE TABLE %s (
-                key INTEGER PRIMARY KEY AUTOINCREMENT
+            CREATE TABLE "%s" (
+                "id" INTEGER PRIMARY KEY AUTOINCREMENT
             );
             """ % (self.name,))
 
     def drop(self):
-        self.cursor.execute("DROP TABLE %s" % (self.name,))
+        self.cursor.execute("""
+            DROP TABLE "%s"
+            """ % (self.name,))
 
     def rename(self, new_name):
-        self.cursor.execute('ALTER TABLE %s RENAME TO %s' % (self.name, new_name,))
+        self.cursor.execute('ALTER TABLE "%s" RENAME TO "%s"' % (
+            self.name, new_name,))
     
     def insert(self, **kw):
         
         items = kw.items()
 
-        keys = [x[0] for x in items]
+        keys = ['"%s"' % x[0] for x in items]
         vals = [x[1] for x in items]
         
-        sql = "INSERT INTO %s (%s) VALUES (%s)" % (
+        sql = 'INSERT INTO "%s" (%s) VALUES (%s)' % (
                 self.name, 
                 ", ".join(keys), 
                 ", ".join(['?'] * len(vals)))
@@ -49,11 +52,11 @@ class Entity(IEntity):
         keys = [x[0] for x in items]
         vals = [x[1] for x in items]
 
-        keys = ", ".join(["%s = ?" % k for k in keys])
+        keys = ", ".join(['"%s" = ?' % k for k in keys])
 
-        sql = "UPDATE %(table)s SET\n    %(keys)s\nWHERE key = ?" % dict(
+        sql = 'UPDATE "%(table)s" SET\n    %(keys)s\nWHERE "id" = ?' % dict(
                 table=self.name, keys=keys)
-
+        
         vals.append(key)
 
         self.cursor.execute(sql, vals)
@@ -63,12 +66,13 @@ class Entity(IEntity):
         if not isinstance(keys, (list, tuple)):
             keys = [keys]
 
-        sql = "DELETE FROM %s WHERE key IN (%s)" % (self.name, ", ".join(['?'] * len(keys)))
+        sql = 'DELETE FROM "%s" WHERE "id" IN (%s)' % (self.name, ", ".join(['?'] * len(keys)))
+
         self.cursor.execute(sql, keys)
     
     def column_exists(self, field):
         name = field if isinstance(field, basestring) else field.name
-        sql = "SELECT %s FROM %s LIMIT 1" % (name, self.name)
+        sql = 'SELECT "%s" FROM "%s" LIMIT 1' % (name, self.name)
         try:
             self.cursor.execute(sql)
             return True
@@ -77,9 +81,9 @@ class Entity(IEntity):
     
     def column_add(self, field):
 
-        datatype = DATA_TYPES.get(field.data_type, "TEXT") % (dict(size=field.size))
+        datatype = self.database.get_data_type(field.data_type, field.size)
 
-        sql = "ALTER TABLE %(name)s ADD COLUMN %(col)s %(datatype)s" % dict(
+        sql = 'ALTER TABLE "%(name)s" ADD COLUMN "%(col)s" %(datatype)s' % dict(
                 name=self.name, col=field.name, datatype=datatype)
 
         self.cursor.execute(sql)
@@ -92,16 +96,4 @@ class Entity(IEntity):
         #XXX: not supported
         pass
 
-DATA_TYPES = {
-        "string"    :   "CHAR[%(size)s]",
-        "text"      :   "VARCHAR",
-        "integer"   :   "INTEGER",
-        "float"     :   "FLOAT",
-        "numeric"   :   "CHAR",
-        "boolean"   :   "BOOL",
-        "datetime"  :   "CHAR[20]",
-        "date"      :   "CHAR[10]",
-        "time"      :   "CHAR[10]",
-        "binary"    :   "BLOB",
-}
 
