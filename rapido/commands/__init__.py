@@ -19,11 +19,7 @@ class Commander(object):
         self.prog = os.path.basename(self.argv[0])
         
     def help(self):
-        print "\nType '%s command' for help on a specific command.\n" % (self.prog)
-        print "Available commands:"
-        commands = get_commands()
-        for command in commands:
-            print "  %s" % (command)
+        
         sys.exit(1)
         
     def get_command(self, name):
@@ -34,25 +30,45 @@ class Commander(object):
             print "Type '%s help' for usage" % self.prog
             sys.exit(1)
             
-    def run(self):
+    def get_version(self):
+        return "1.0"
+    
+    def print_help(self):
+        print "Usage: %s command [options] [args]\n" % self.prog
+        print "Options:"
+        print "  --version  show programs version number and exit"
+        print "  -h, --help   show this help message and exit"
+        print "\nType '%s command' for help on a specific command.\n" % (self.prog)
+        print "Available commands:"
+        commands = get_commands()
+        for command in commands:
+            print "  %s" % (command)
+        sys.exit(1)
         
-        parser = OptionParser(usage="%prog command [options] [args]")
-        options, args = parser.parse_args(self.argv)
+    def run(self):
                 
         try:
             command = self.argv[1]
         except:
-            print "Type '%s help' for usage" % self.prog
+            self.print_help()
+            
+        if command == "--version":
+            print self.get_version()
             sys.exit(1)
+            
+        if command in ("-h", "--help"):
+            self.print_help()
 
         if command == "help":
-            if len(args) > 2:
-                cls = self.get_command(args[2])
+            if len(self.argv) > 2:
+                cls = self.get_command(self.argv[2])
                 cls().print_help()
             else:
-                parser.print_help()
-                self.help()
+                self.print_help()
+                
+        elif command.startswith("-"):
+            self.print_help()
         
-        self.get_command(command).run(self.argv)
+        self.get_command(command)().run(self.argv)
         
         
