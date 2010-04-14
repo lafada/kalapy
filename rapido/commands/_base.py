@@ -11,16 +11,38 @@ class CommandError(Exception):
 _commands = {}
 
 def get_commands():
-    return _commands
+    commands = _commands.items()
+    commands.sort(lambda a, b: cmp(a[0], b[0]))
+    return commands
 
+def get_command(name):
+    try:
+        return _commands[name]
+    except KeyError, e:
+        print "Unknown command: %s" % name
+        print "Type '%s help' for usage" % sys.argv[0]
+        sys.exit(1)
+        
 class CommandType(type):
 
     def __init__(cls, name, bases, attrs):
         super(CommandType, cls).__init__(name, bases, attrs)
         
+        if "options" in attrs:
+            cls.options = CommandType.merge_options(bases, attrs["options"])
+        
         if name != "BaseCommand" and "name" in attrs:
             _commands[attrs["name"]] = cls
 
+    @staticmethod
+    def merge_options(bases, options):
+        opts = []
+        for base in bases:
+            for op in getattr(base, "options", []):
+                if op not in opts:
+                    opts.append(op)
+        opts.extend(options)
+        return opts
 
 class BaseCommand(object):
     
@@ -40,7 +62,10 @@ class BaseCommand(object):
 
     @property
     def usage(self):
-        return "%%prog %s [options] %s" % (self.name, self.args)
+        usage = "%%prog %s [options] %s" % (self.name, self.args)
+        if self.help:
+            usage = "%s\n\n%s" % (usage, self.help)
+        return usage
     
     @property
     def version(self):
@@ -51,7 +76,7 @@ class BaseCommand(object):
         sys.exit(1)
 
     def run(self, argv):
-        options, args = self.parser.parse_args(argv[1:])
+        options, args = self.parser.parse_args(argv[2:])
         try:
             self.execute(*args, **options.__dict__)
         except CommandError, e:
