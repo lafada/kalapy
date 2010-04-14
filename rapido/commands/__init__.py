@@ -26,7 +26,7 @@ class Commander(object):
         print "Options:"
         print "  --version  show programs version number and exit"
         print "  -h, --help   show this help message and exit"
-        print "\nType '%s command' for help on a specific command.\n" % (self.prog)
+        print "\nType '%s help command' for help on a specific command.\n" % (self.prog)
         print "Available commands:"
         commands = get_commands()
         for command, cls in commands:

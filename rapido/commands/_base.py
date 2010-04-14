@@ -57,7 +57,7 @@ class BaseCommand(object):
     def __init__(self):
         self.parser = OptionParser(prog=sys.argv[0],
                 usage=self.usage,
-                version=self.version,
+                #add_help_option=False,
                 option_list=self.options)
 
     @property
@@ -66,10 +66,6 @@ class BaseCommand(object):
         if self.help:
             usage = "%s\n\n%s" % (usage, self.help)
         return usage
-    
-    @property
-    def version(self):
-        return "1.0"
     
     def print_help(self):
         self.parser.print_help()
