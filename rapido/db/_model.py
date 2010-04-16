@@ -9,41 +9,31 @@ class ModelType(type):
     def __init__(cls, name, bases, attrs):
 
         super(ModelType, cls).__init__(name, bases, attrs)
-        
+
+        parents = [b for b in bases if isinstance(b, ModelType)]
+        if not parents:
+            # This is not a subclass of Model so do nothing
+            return
+
+        if len(parents) > 1:
+            raise DatabaseError("Multiple inheritance is not supported.")
+
+        cls._parent = parent = parents[0]
+
         cls._values = {}
-        cls._fields = ModelType.get_fields(cls, bases, attrs)
-        
-        ModelType.prepare_validators(cls, attrs)
-        
-    @staticmethod
-    def get_fields(cls, bases, attrs):
-
-        fields = {}
-
-        for base in bases:
-            defined = getattr(base, '_fields', {})
-            for name, field in defined.items():
-                if name in fields:
-                    raise DuplicateFieldError("Duplicate field, %s, is inherited from both %s and %s." % (
-                            name, fields[name].model_class.__name__, field.model_class.__name__))
-            fields.update(defined)
+        cls._fields = dict(getattr(parent, '_fields', {}))
 
         for name, attr in attrs.items():
+
+            # prepare fields
             if isinstance(attr, Field):
-                if name in fields:
-                    raise DuplicateFieldError("Duplicate field, %s, is inherited from %s." % (
-                            name, fields[name].model_class.__name__))
-                fields[name] = attr
+                if name in cls._fields:
+                    raise DuplicateFieldError("Duplicate field, %s, already defined in parent class." % (name))
+                cls._fields[name] = attr
                 attr.__configure__(cls, name)
-
-        return fields
-
-    @staticmethod
-    def prepare_validators(cls, attrs):
             
-        for _, attr in attrs.items():
-            
-            if isinstance(attr, (FunctionType, MethodType)) and hasattr(attr, '_validates'):
+            # prepare validators
+            if isinstance(attr, FunctionType) and hasattr(attr, '_validates'):
                 
                 field = attr._validates
                 if isinstance(field, basestring):
@@ -53,7 +43,7 @@ class ModelType(type):
                     raise FieldError("Field '%s' is not defined." % attr._validates)
 
                 field._validator = attr
-                
+
 
 class Model(object):
     
