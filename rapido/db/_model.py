@@ -4,24 +4,60 @@ from _errors import *
 from _fields import *
 
 
+_model_cache = {}
+
+def get_models():
+    pass
+
+def get_model(name):
+
+    if not isinstance(name, basestring):
+        name = getattr(name, '_model_name', None)
+
+    try:
+        return _model_cache[name]
+    except KeyError, e:
+        raise DatabaseError("No such model %s", name)
+
+
 class ModelType(type):
-    
-    def __init__(cls, name, bases, attrs):
 
-        super(ModelType, cls).__init__(name, bases, attrs)
+    def __new__(cls, name, bases, attrs):
 
+        super_new = super(ModelType, cls).__new__
+        
         parents = [b for b in bases if isinstance(b, ModelType)]
         if not parents:
             # This is not a subclass of Model so do nothing
-            return
+            return super_new(cls, name, bases, attrs)
 
         if len(parents) > 1:
             raise DatabaseError("Multiple inheritance is not supported.")
 
-        cls._parent = parent = parents[0]
 
-        cls._values = {}
-        cls._fields = dict(getattr(parent, '_fields', {}))
+        # always use the last defined class of base parent class
+        # to maintain linear inheritance hierarchy.
+
+        model_name = getattr(parents[0], '_model_name', name)
+        parent = _model_cache.get(model_name)
+
+        if parent:
+            bases = list(bases)
+            for i, base in enumerate(bases):
+                if isinstance(base, ModelType):
+                    bases[i] = parent
+            bases = tuple(bases)
+
+        cls = super_new(cls, name, bases, attrs)
+
+        cls._parent = parent
+        cls._model_name = model_name
+
+        # overwrite model class in the cache
+        _model_cache[cls._model_name] = cls
+
+        cls._values = None
+        cls._fields = getattr(parent, '_fields', {})
 
         for name, attr in attrs.items():
 
@@ -44,12 +80,26 @@ class ModelType(type):
 
                 field._validator = attr
 
+        return cls
+
 
 class Model(object):
     
     __metaclass__ = ModelType
+
+    def __new__(cls, **kw):
+
+        if cls is Model:
+            raise DatabaseError("You can't create instance of Model class")
+
+        klass = get_model(cls)
+
+        return super(Model, cls).__new__(klass)
+
     
     def __init__(self, **kw):
+
+        self._values = {}
 
         fields = self.fields()
         for name, value in kw.items():
