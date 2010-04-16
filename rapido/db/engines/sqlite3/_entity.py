@@ -15,12 +15,30 @@ class Entity(IEntity):
             """, (self.name,))
         return bool(self.cursor.fetchone())
 
-    def create(self):
-        self.cursor.execute("""
-            CREATE TABLE "%s" (
-                "id" INTEGER PRIMARY KEY AUTOINCREMENT
-            );
-            """ % (self.name,))
+    def get_pk_sql(self):
+        return '"id" INTEGER PRIMARY KEY AUTOINCREMENT'
+
+    def get_column_sql(self, field, for_alter=False):
+        res = '"%s" %s' % (field.name, self.database.get_data_type(field.data_type, field.size))
+        if not for_alter:
+            if field.required:
+                res = "%s NOT NULL" % res
+            if field.unique:
+                res = "%s UNIQUE" % res
+
+        #TODO: add reference
+        return res
+
+    def create(self, fields=None):
+
+        fields = fields or []
+
+        fields_sql = [self.get_pk_sql()] + [self.get_column_sql(f) for f in fields]
+        fields_sql = ",\n    ".join(fields_sql)
+
+        sql = 'CREATE TABLE "%s" (\n    %s\n);' % (self.name, fields_sql)
+
+        self.cursor.execute(sql)
 
     def drop(self):
         self.cursor.execute("""
@@ -80,12 +98,8 @@ class Entity(IEntity):
             return False
     
     def column_add(self, field):
-
-        datatype = self.database.get_data_type(field.data_type, field.size)
-
-        sql = 'ALTER TABLE "%(name)s" ADD COLUMN "%(col)s" %(datatype)s' % dict(
-                name=self.name, col=field.name, datatype=datatype)
-
+        field_sql = self.get_column_sql(field, for_alter=True)
+        sql = 'ALTER TABLE "%s" ADD COLUMN %s' % (self.name, fields_sql)
         self.cursor.execute(sql)
     
     def column_drop(self, field):

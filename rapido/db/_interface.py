@@ -107,8 +107,11 @@ class IEntity(object):
         """
         raise NotImplementedError
     
-    def create(self):
+    def create(self, fields=None):
         """Create a new entity in the database if it doesn't exist.
+
+        Args:
+            fields: list of fields
         """
         raise NotImplementedError
     
