@@ -4,10 +4,10 @@ from _errors import *
 from _fields import *
 
 
-_model_cache = {}
+__all__ = ['get_model', 'ModelType', 'Model', 'Query']
 
-def get_models():
-    pass
+
+_model_cache = {}
 
 def get_model(name):
 
@@ -83,11 +83,12 @@ class ModelType(type):
 
 
 class Model(object):
-    """Model is the super class of all the data entities.
+    """Model is the super class of all the objects of data entities in
+    the database.
 
     Database entities declared as subclasses of `Model` defines entity
-    properties in as class members of type `Field`. So if you want to
-    publish a story with title, body and date, you would do it like:
+    properties as class members of type `Field`. So if you want to publish
+    a story with title, body and date, you would do it like:
 
     >>> class Story(Model):
     >>>     title = String(size=100, required=True)
@@ -114,8 +115,8 @@ class Model(object):
     >>>     c = String()
 
 
-    Another interesting behavior is that no matter which class you inherit
-    from, you always inherit from the last class defined of that base model 
+    Another interesting behavior is that no matter which class it inherits
+    from, it always inherits from the last class defined of that base model 
     class. Let's see what it means:
 
     >>> class D(C):
@@ -124,17 +125,17 @@ class Model(object):
     >>> class E(C):
     >>>     e = String()
 
-    Here even though E is extending C it is actually extending D, the last
-    defined class of A. So E will have access to all the methods/members of
-    D not just from C and upwards. In other words the inheritance hierarchy
-    will be forcefully maintained in linear fashion.
+    Here even though `E` is extending `C` it is actually extending `D`, the
+    last defined class of `A`. So E will have access to all the methods/members
+    of `D` not just from `C`. In other words the inheritance hierarchy will be
+    forcefully maintained in linear fashion.
 
     Also whatever class you use of the hierarchy to instantiate you will
     always get an instance of the last defined class. For example:
 
     >>> obj = D()
 
-    The `obj` will be a direct instance of `E` other then `C`.
+    The `obj` will be a direct instance of `E` other then `D`.
 
     This way you can easily change the behaviour of existing data models
     by simply creating subclasses without modifying existing code.
@@ -144,27 +145,37 @@ class Model(object):
     >>> class User(Model):
     >>>     name = String(size=100, required=True)
     >>>     lang = String(size=6, selection=[('en_EN', 'English'), ('fr_FR', 'French')])]
+    >>>
+    >>>     def do_something(self):
+    >>>         ...
+    >>>         ...
 
-    your package is using this class like this:
+    Your package is using this class like this:
 
     >>>
     >>> user = User(**kwargs)
+    >>> user.do_something()
     >>> user.put()
     >>> 
 
-    where `kwargs` are dict of form variables coming from an html post request.
+    Where `kwargs` are `dict` of form variables coming from an http post request.
 
     Now if you think that `User` should have one more property `age` but you
-    don't want to change your running system by modifying the source code directly,
-    you simply create a subclass of `User` and that all the methods/members defined
+    don't want to change your running system by modifying the source code,
+    you simply create a subclass of `User` and all the methods/members defined
     in that subclass will be available to the package.
 
     >>> class UserEx(User):
     >>>     age = Integer(size=3)
+    >>> 
+    >>>     def do_something(self):
+    >>>         super(UserEx, self).do_something()
+    >>>         ...
+    >>>         ...
 
     so now if the html form has `age` field, the above code will work without any change
-    and still saving `age` value. Also you can change the behaviour of the base class
-    by overriding methods. See the docs for more informations.
+    and still saving `age` value. You can also change the behaviour of the base class
+    by overriding methods.
     """
     
     __metaclass__ = ModelType
