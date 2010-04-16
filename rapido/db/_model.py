@@ -34,9 +34,8 @@ class ModelType(type):
         if len(parents) > 1:
             raise DatabaseError("Multiple inheritance is not supported.")
 
-
-        # always use the last defined class of base parent class
-        # to maintain linear inheritance hierarchy.
+        # always use the last defined base class in the inheritance chain 
+        # to maintain linear hierarchy.
 
         model_name = getattr(parents[0], '_model_name', name)
         parent = _model_cache.get(model_name)
@@ -84,6 +83,89 @@ class ModelType(type):
 
 
 class Model(object):
+    """Model is the super class of all the data entities.
+
+    Database entities declared as subclasses of `Model` defines entity
+    properties in as class members of type `Field`. So if you want to
+    publish a story with title, body and date, you would do it like:
+
+    >>> class Story(Model):
+    >>>     title = String(size=100, required=True)
+    >>>     body = Text()
+    >>>     date = DateTime()
+
+    You can extend a model by creating subclasses of that model but you
+    can't inherit from more then one models.
+
+    >>> class A(Model):
+    >>>     a = String()
+    >>> 
+    >>> class B(Model):
+    >>>     b = String()
+
+    you can extend A like this:
+
+    >>> class C(A):
+    >>>     c = String()
+
+    but not like this:
+
+    >>> class C(A, B):
+    >>>     c = String()
+
+
+    Another interesting behavior is that no matter which class you inherit
+    from, you always inherit from the last class defined of that base model 
+    class. Let's see what it means:
+
+    >>> class D(C):
+    >>>     d = String()
+    >>>
+    >>> class E(C):
+    >>>     e = String()
+
+    Here even though E is extending C it is actually extending D, the last
+    defined class of A. So E will have access to all the methods/members of
+    D not just from C and upwards. In other words the inheritance hierarchy
+    will be forcefully maintained in linear fashion.
+
+    Also whatever class you use of the hierarchy to instantiate you will
+    always get an instance of the last defined class. For example:
+
+    >>> obj = D()
+
+    The `obj` will be a direct instance of `E` other then `C`.
+
+    This way you can easily change the behaviour of existing data models
+    by simply creating subclasses without modifying existing code.
+
+    Let's see an use case:
+
+    >>> class User(Model):
+    >>>     name = String(size=100, required=True)
+    >>>     lang = String(size=6, selection=[('en_EN', 'English'), ('fr_FR', 'French')])]
+
+    your package is using this class like this:
+
+    >>>
+    >>> user = User(**kwargs)
+    >>> user.put()
+    >>> 
+
+    where `kwargs` are dict of form variables coming from an html post request.
+
+    Now if you think that `User` should have one more property `age` but you
+    don't want to change your running system by modifying the source code directly,
+    you simply create a subclass of `User` and that all the methods/members defined
+    in that subclass will be available to the package.
+
+    >>> class UserEx(User):
+    >>>     age = Integer(size=3)
+
+    so now if the html form has `age` field, the above code will work without any change
+    and still saving `age` value. Also you can change the behaviour of the base class
+    by overriding methods. See the docs for more informations.
+    """
     
     __metaclass__ = ModelType
 
