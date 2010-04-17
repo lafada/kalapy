@@ -1,4 +1,5 @@
 
+from rapido.db._model import get_model
 from rapido.db._interface import IEntity
 
 
@@ -19,7 +20,7 @@ class Entity(IEntity):
         return '"id" INTEGER PRIMARY KEY AUTOINCREMENT'
 
     def get_column_sql(self, field, for_alter=False):
-        res = '"%s" %s' % (field.name, self.database.get_data_type(field.data_type, field.size))
+        res = '"%s" %s' % (field.name, self.database.get_data_type(field))
         if not for_alter:
             if field.required:
                 res = "%s NOT NULL" % res
@@ -29,9 +30,11 @@ class Entity(IEntity):
         #TODO: add reference
         return res
 
-    def create(self, fields=None):
+    def create(self):
 
-        fields = fields or []
+        model = get_model(self.name)
+
+        fields = model.fields().values()
 
         fields_sql = [self.get_pk_sql()] + [self.get_column_sql(f) for f in fields]
         fields_sql = ",\n    ".join(fields_sql)
@@ -88,7 +91,7 @@ class Entity(IEntity):
 
         self.cursor.execute(sql, keys)
     
-    def column_exists(self, field):
+    def field_exists(self, field):
         name = field if isinstance(field, basestring) else field.name
         sql = 'SELECT "%s" FROM "%s" LIMIT 1' % (name, self.name)
         try:
@@ -97,16 +100,16 @@ class Entity(IEntity):
         except:
             return False
     
-    def column_add(self, field):
+    def field_add(self, field):
         field_sql = self.get_column_sql(field, for_alter=True)
         sql = 'ALTER TABLE "%s" ADD COLUMN %s' % (self.name, fields_sql)
         self.cursor.execute(sql)
     
-    def column_drop(self, field):
+    def field_drop(self, field):
         #XXX: not supported
         pass
         
-    def column_alter(self, field, name=None, size=None, datatype=None):
+    def field_alter(self, field):
         #XXX: not supported
         pass
 

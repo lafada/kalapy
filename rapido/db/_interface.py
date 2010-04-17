@@ -77,13 +77,14 @@ class IDatabase(object):
         """
         raise NotImplementedError
 
-    def get_data_type(self, kind, size=None):
+    def get_data_type(self, field):
+        """Get the intername datatype for the given field supported by the database.
+        """
         try:
-            res = self.data_types[kind]
+            res = self.data_types[field.data_type]
+            return "%s(%s)" % (res, field.size) if field.size else res
         except KeyError:
             raise DatabaseError("Unsupported datatype '%s'" % kind)
-
-        return "%s(%s)" % (res, size) if size else res
 
 
 class IEntity(object):
@@ -107,11 +108,8 @@ class IEntity(object):
         """
         raise NotImplementedError
     
-    def create(self, fields=None):
+    def create(self):
         """Create a new entity in the database if it doesn't exist.
-
-        Args:
-            fields: list of fields
         """
         raise NotImplementedError
     
@@ -155,33 +153,34 @@ class IEntity(object):
         raise NotImplementedError
 
     
-    def column_exists(self, name):
-        """Check whether the given column exists in the entiry.
-        Args:
-            name: the name of a column
-        """
-        raise NotImplementedError
-    
-    def column_add(self, field):
-        """Add a column for the given `field`.
-        Args:
-            field: an instance of perticular Field type
-        """
-        raise NotImplementedError
-    
-    def column_drop(self, field):
-        """Drop the given field.
-        Args:
-            field: an instance of perticular Field type or name of the column
-        """
-        raise NotImplementedError
-    
-    def column_alter(self, field):
-        """Change the definition of the column with the changed 
-        attribures of the field.
+    def field_exists(self, field):
+        """Check whether a field exists in the entiry.
 
         Args:
-            field: an instance of Field type
+            field: an instance of `db.Field`
+        """
+        raise NotImplementedError
+    
+    def field_add(self, field):
+        """Add the field if it doesn't exist.
+        Args:
+            field: an instance of `db.Field`
+        """
+        raise NotImplementedError
+    
+    def field_drop(self, field):
+        """Drop the given field.
+        Args:
+            field: an instance of `db.Field`
+        """
+        raise NotImplementedError
+    
+    def field_alter(self, field):
+        """Change the definition of the entity field with the changed 
+        attribures of the given field.
+
+        Args:
+            field: an instance of `db.Field`
         """
         raise NotImplementedError
     
