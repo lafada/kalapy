@@ -104,6 +104,11 @@ class IEntity(object):
         """
         self.database = database
         self.name = name
+        
+    def schema(self):
+        """Return the entity schema representation in the underlying database.
+        """
+        raise NotImplementedError
     
     def exists(self):
         """Check whether the entity exists in the database.

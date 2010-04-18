@@ -29,9 +29,8 @@ class Entity(IEntity):
 
         #TODO: add reference
         return res
-
-    def create(self):
-
+    
+    def get_create_sql(self):
         model = get_model(self.name)
 
         fields = model.fields().values()
@@ -39,18 +38,23 @@ class Entity(IEntity):
         fields_sql = [self.get_pk_sql()] + [self.get_field_sql(f) for f in fields]
         fields_sql = ",\n    ".join(fields_sql)
 
-        sql = 'CREATE TABLE "%s" (\n    %s\n);' % (self.name, fields_sql)
+        return 'CREATE TABLE "%s" (\n    %s\n);' % (self.name, fields_sql)
+    
+    def schema(self):
+        return self.get_create_sql()
 
-        self.cursor.execute(sql)
+    def create(self):        
+        if not self.exists():
+            self.cursor.execute(self.get_create_sql())
 
     def drop(self):
-        self.cursor.execute("""
-            DROP TABLE "%s"
-            """ % (self.name,))
+        if self.exists():
+            self.cursor.execute('DROP TABLE "%s"' % self.name)
 
     def rename(self, new_name):
-        self.cursor.execute('ALTER TABLE "%s" RENAME TO "%s"' % (
-            self.name, new_name,))
+        if self.exists():
+            self.cursor.execute('ALTER TABLE "%s" RENAME TO "%s"' % (
+                self.name, new_name,))
     
     def insert(self, **kw):
         
@@ -112,5 +116,3 @@ class Entity(IEntity):
     def field_alter(self, field):
         #XXX: not supported
         pass
-
-
