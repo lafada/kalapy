@@ -29,7 +29,7 @@ class Entity(IEntity):
                 res = "%s UNIQUE" % res
                 
         if isinstance(field, ManyToOne):
-            res = '%s REFERENCES %s("id")' % (res, field.reference)
+            res = '%s REFERENCES "%s" ("id")' % (res, field.reference)
             if field.cascade:
                 res = '%s ON DELETE CASCADE' % res
             elif field.required:
