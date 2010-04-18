@@ -1,8 +1,10 @@
 """
 This module defines several interfaces to be implemented by database engines.
 The implementation is meant for internal use only. Users should use the Model
-api instead.
+API instead.
 """
+
+from _errors import DatabaseError
 
 class IDatabase(object):
     """The Database interface. The backend engines should implement this 
@@ -17,7 +19,7 @@ class IDatabase(object):
         Args:
             name: the name of the database
             host: the hostname where the database server is running
-            port: the port on which the database server is listning
+            port: the port on which the database server is listening
             user: the user name to connect to the database
             password: the database password
             autocommit: whether to enable autocommit or not
@@ -60,7 +62,7 @@ class IDatabase(object):
         raise NotImplementedError
 
     def cursor(self):
-        """Return a dbapi2 compiant cursor instance.
+        """Return a dbapi2 complaint cursor instance.
         """
         raise NotImplementedError
     
@@ -78,18 +80,18 @@ class IDatabase(object):
         raise NotImplementedError
 
     def get_data_type(self, field):
-        """Get the intername datatype for the given field supported by the database.
+        """Get the internal datatype for the given field supported by the database.
         """
         try:
             res = self.data_types[field.data_type]
             return "%s(%s)" % (res, field.size) if field.size else res
         except KeyError:
-            raise DatabaseError("Unsupported datatype '%s'" % kind)
+            raise DatabaseError("Unsupported datatype '%s'" % field.data_type)
 
 
 class IEntity(object):
-    """The Entity inteface, low level representation of the main storage 
-    structure of the perticular database engine.  For example, `table` in RDMBS
+    """The Entity interface, low level representation of the main storage 
+    structure of the particular database engine.  For example, `table` in RDMBS
     and `entity` in BigTable.
     """
 
@@ -104,7 +106,7 @@ class IEntity(object):
         self.name = name
     
     def exists(self):
-        """Check whether the entiry exists in the database.
+        """Check whether the entity exists in the database.
         """
         raise NotImplementedError
     
@@ -119,7 +121,7 @@ class IEntity(object):
         raise NotImplementedError
     
     def rename(self, new_name):
-        """Rename the current entiry with the given new name.
+        """Rename the current entity with the given new name.
 
         Args:
             new_name: the new name for the entity
@@ -135,7 +137,7 @@ class IEntity(object):
         raise NotImplementedError
     
     def update(self, key, **kw):
-        """Update a perticular record identified with the given key.
+        """Update a particular record identified with the given key.
 
         Args:
             key: the key to identify the record
@@ -144,17 +146,16 @@ class IEntity(object):
         raise NotImplementedError
     
     def delete(self, keys):
-        """Delete all the records from the entiry identified with the
+        """Delete all the records from the entity identified with the
         given keys.
 
         Args:
             keys: list of keys
         """
         raise NotImplementedError
-
     
     def field_exists(self, field):
-        """Check whether a field exists in the entiry.
+        """Check whether a field exists in the entity.
 
         Args:
             field: an instance of `db.Field`
@@ -177,11 +178,9 @@ class IEntity(object):
     
     def field_alter(self, field):
         """Change the definition of the entity field with the changed 
-        attribures of the given field.
+        attributes of the given field.
 
         Args:
             field: an instance of `db.Field`
         """
         raise NotImplementedError
-    
-

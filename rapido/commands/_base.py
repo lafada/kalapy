@@ -1,7 +1,5 @@
-import os
 import sys
-
-from optparse import make_option, OptionParser
+from optparse import OptionParser
 
 
 class CommandError(Exception):
@@ -10,19 +8,22 @@ class CommandError(Exception):
 
 _commands = {}
 
+
 def get_commands():
     commands = _commands.items()
     commands.sort(lambda a, b: cmp(a[0], b[0]))
     return commands
 
+
 def get_command(name):
     try:
         return _commands[name]
-    except KeyError, e:
+    except KeyError:
         print "Unknown command: %s" % name
         print "Type '%s help' for usage" % sys.argv[0]
         sys.exit(1)
         
+
 class CommandType(type):
 
     def __init__(cls, name, bases, attrs):
@@ -43,6 +44,7 @@ class CommandType(type):
                     opts.append(op)
         opts.extend(options)
         return opts
+
 
 class BaseCommand(object):
     
@@ -81,6 +83,3 @@ class BaseCommand(object):
 
     def execute(self, *args, **options):
         raise NotImplementedError
-
-
-    

@@ -1,4 +1,4 @@
-from types import FunctionType, MethodType
+from types import FunctionType
 
 from _errors import *
 from _fields import *
@@ -9,6 +9,7 @@ __all__ = ['get_model', 'ModelType', 'Model', 'Query']
 
 _model_cache = {}
 
+
 def get_model(name):
 
     if not isinstance(name, basestring):
@@ -16,7 +17,7 @@ def get_model(name):
 
     try:
         return _model_cache[name]
-    except KeyError, e:
+    except KeyError:
         raise DatabaseError("No such model %s", name)
 
 
@@ -63,7 +64,8 @@ class ModelType(type):
             # prepare fields
             if isinstance(attr, Field):
                 if name in cls._fields:
-                    raise DuplicateFieldError("Duplicate field, %s, already defined in parent class." % (name))
+                    raise DuplicateFieldError(
+                        "Duplicate field, %s, already defined in parent class." % name)
                 cls._fields[name] = attr
                 attr.__configure__(cls, name)
             

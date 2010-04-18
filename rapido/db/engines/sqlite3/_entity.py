@@ -19,7 +19,7 @@ class Entity(IEntity):
     def get_pk_sql(self):
         return '"id" INTEGER PRIMARY KEY AUTOINCREMENT'
 
-    def get_column_sql(self, field, for_alter=False):
+    def get_field_sql(self, field, for_alter=False):
         res = '"%s" %s' % (field.name, self.database.get_data_type(field))
         if not for_alter:
             if field.required:
@@ -36,7 +36,7 @@ class Entity(IEntity):
 
         fields = model.fields().values()
 
-        fields_sql = [self.get_pk_sql()] + [self.get_column_sql(f) for f in fields]
+        fields_sql = [self.get_pk_sql()] + [self.get_field_sql(f) for f in fields]
         fields_sql = ",\n    ".join(fields_sql)
 
         sql = 'CREATE TABLE "%s" (\n    %s\n);' % (self.name, fields_sql)
@@ -101,8 +101,8 @@ class Entity(IEntity):
             return False
     
     def field_add(self, field):
-        field_sql = self.get_column_sql(field, for_alter=True)
-        sql = 'ALTER TABLE "%s" ADD COLUMN %s' % (self.name, fields_sql)
+        field_sql = self.get_field_sql(field, for_alter=True)
+        sql = 'ALTER TABLE "%s" ADD COLUMN %s' % (self.name, field_sql)
         self.cursor.execute(sql)
     
     def field_drop(self, field):

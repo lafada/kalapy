@@ -1,5 +1,3 @@
-from optparse import make_option
-
 from _base import BaseCommand
 
 #TODO: not implemented yet
@@ -29,7 +27,7 @@ class Sync(DBCommand):
 class Reset(DBCommand):
     
     name = "db-reset"
-    help = "CAUTION: distructive, will drop all existing tables from the database."
+    help = "CAUTION: destructive, will drop all existing tables from the database."
     args = "[args]"
     
     def execute(self, *args, **options):
