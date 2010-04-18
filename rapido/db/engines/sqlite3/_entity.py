@@ -1,6 +1,7 @@
 
 from rapido.db._model import get_model
 from rapido.db._interface import IEntity
+from rapido.db._fields import ManyToOne
 
 
 class Entity(IEntity):
@@ -26,10 +27,17 @@ class Entity(IEntity):
                 res = "%s NOT NULL" % res
             if field.unique:
                 res = "%s UNIQUE" % res
-
-        #TODO: add reference
+                
+        if isinstance(field, ManyToOne):
+            res = '%s REFERENCES %s("id")' % (res, field.reference)
+            if field.cascade:
+                res = '%s ON DELETE CASCADE' % res
+            elif field.required:
+                res = '%s ON DELETE RESTRICT' % res
+            else:
+                res = '%s ON DELETE SET NULL' % res
         return res
-    
+   
     def get_create_sql(self):
         model = get_model(self.name)
 

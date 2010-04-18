@@ -163,7 +163,13 @@ class Binary(Field):
 
 
 class ManyToOne(Field):
-    pass
+    
+    _data_type = "integer"
+    
+    def __init__(self, reference, cascade=None, **kw):
+        super(ManyToOne, self).__init__(**kw)
+        self.reference = reference
+        self.cascade = cascade
 
 
 class OneToMany(Field):
