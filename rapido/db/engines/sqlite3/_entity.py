@@ -34,7 +34,8 @@ class Entity(IEntity):
         model = get_model(self.name)
 
         fields = model.fields().values()
-
+        fields.sort(lambda a, b: cmp(a._creation_order, b._creation_order))
+        
         fields_sql = [self.get_pk_sql()] + [self.get_field_sql(f) for f in fields]
         fields_sql = ",\n    ".join(fields_sql)
 

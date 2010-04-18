@@ -24,11 +24,16 @@ def validate(field):
 
 
 class Field(object):
+
+    # for internal use only
+    _creation_order = 0
     
     _data_type = "string"
     
     def __init__(self, label=None, name=None, default=None, size=None,
             required=None, unique=False, indexed=None, selection=None):
+        
+        self._creation_order = Field._creation_order = Field._creation_order + 1
 
         self._label = label
         self._name = name
@@ -43,6 +48,9 @@ class Field(object):
         self._selection_list = [x[0] for x in selection] if selection else []
         
         self._validator = None
+        
+    def __repr__(self):
+        return "<Field name='%s'>" % self.name
 
     def __configure__(self, model_class, name):
         if self._name is None:
