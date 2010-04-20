@@ -65,7 +65,12 @@ class IDatabase(object):
         """Return a dbapi2 complaint cursor instance.
         """
         raise NotImplementedError
-    
+
+    def get(self, name):
+        """Return an `Entity` instance for the given entity name.
+        """
+        raise NotImplementedError
+
     def select(self, entity, condition):
         """Select all the records of the given entity that passes 
         the given condition.
@@ -104,12 +109,7 @@ class IEntity(object):
         """
         self.database = database
         self.name = name
-        
-    def schema(self):
-        """Return the entity schema representation in the underlying database.
-        """
-        raise NotImplementedError
-    
+
     def exists(self):
         """Check whether the entity exists in the database.
         """
@@ -189,3 +189,5 @@ class IEntity(object):
             field: an instance of `db.Field`
         """
         raise NotImplementedError
+
+

@@ -48,9 +48,6 @@ class Entity(IEntity):
         fields_sql = ",\n    ".join(fields_sql)
 
         return 'CREATE TABLE "%s" (\n    %s\n);' % (self.name, fields_sql)
-    
-    def schema(self):
-        return self.get_create_sql()
 
     def create(self):        
         if not self.exists():
