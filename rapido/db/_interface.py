@@ -4,9 +4,10 @@ The implementation is meant for internal use only. Users should use the Model
 API instead.
 """
 
+from threading import local
 from _errors import DatabaseError
 
-class IDatabase(object):
+class IDatabase(local):
     """The Database interface. The backend engines should implement this 
     interface with a class Database.
     """

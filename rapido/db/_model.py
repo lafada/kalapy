@@ -139,7 +139,7 @@ class Model(object):
 
     The `obj` will be a direct instance of `E` other then `D`.
 
-    This way you can easily change the behaviour of existing data models
+    This way you can easily change the behavior of existing data models
     by simply creating subclasses without modifying existing code.
 
     Let's see an use case:
@@ -176,7 +176,7 @@ class Model(object):
     >>>         ...
 
     so now if the html form has `age` field, the above code will work without any change
-    and still saving `age` value. You can also change the behaviour of the base class
+    and still saving `age` value. You can also change the behavior of the base class
     by overriding methods.
     """
     
@@ -195,6 +195,9 @@ class Model(object):
     def __init__(self, **kw):
 
         self._values = {}
+
+        self._key = None
+        self._entity = None
 
         fields = self.fields()
         for name, value in kw.items():
