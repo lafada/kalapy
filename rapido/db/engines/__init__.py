@@ -4,7 +4,7 @@ from rapido.conf import settings
 from rapido.utils import load_module
 
 
-__all__ = ('list_engines', 'connection')
+__all__ = ('list_engines', 'engine', 'database')
 
 
 if not settings.DATABASE_ENGINE:
@@ -36,4 +36,5 @@ database = engine.Database(
     port = settings.DATABASE_PORT,
     user = settings.DATABASE_USER,
     password = settings.DATABASE_PASSWORD)
+
 

@@ -1,14 +1,11 @@
 
-from rapido.db._model import get_model
 from rapido.db._interface import IEntity
 from rapido.db._fields import ManyToOne
-
 
 class Entity(IEntity):
 
     def __init__(self, database, name):
         super(Entity, self).__init__(database, name)
-        self.cursor = self.database.cursor()
 
     def exists(self):
         self.cursor.execute("""
@@ -39,9 +36,7 @@ class Entity(IEntity):
         return res
    
     def get_create_sql(self):
-        model = get_model(self.name)
-
-        fields = model.fields().values()
+        fields = self.model.fields().values()
         fields.sort(lambda a, b: cmp(a._creation_order, b._creation_order))
         
         fields_sql = [self.get_pk_sql()] + [self.get_field_sql(f) for f in fields]

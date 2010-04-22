@@ -1,7 +1,6 @@
 from _base import BaseCommand
 
-from rapido.db.engines import database
-
+#TODO: not implemented yet
 
 class DBCommand(BaseCommand):
     args = "<package package ...>"

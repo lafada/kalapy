@@ -3,22 +3,10 @@ from types import FunctionType
 from _errors import *
 from _fields import *
 
-
-__all__ = ['get_model', 'ModelType', 'Model', 'Query']
-
-
-_model_cache = {}
+from rapido.db.setup import cache as package_cache
 
 
-def get_model(name):
-
-    if not isinstance(name, basestring):
-        name = getattr(name, '_model_name', None)
-
-    try:
-        return _model_cache[name]
-    except KeyError:
-        raise DatabaseError("No such model %s", name)
+__all__ = ['ModelType', 'Model', 'Query']
 
 
 class ModelType(type):
@@ -38,8 +26,13 @@ class ModelType(type):
         # always use the last defined base class in the inheritance chain 
         # to maintain linear hierarchy.
 
-        model_name = getattr(parents[0], '_model_name', name)
-        parent = _model_cache.get(model_name)
+        try:
+            package_name = '.%s' % attrs['__module__'].split('.')[-2]
+        except:
+            package_name = ''
+
+        model_name = getattr(parents[0], '_model_name', package_name + name).lower()
+        parent = package_cache.get_model(model_name)
 
         if parent:
             bases = list(bases)
@@ -53,8 +46,12 @@ class ModelType(type):
         cls._parent = parent
         cls._model_name = model_name
 
+        if not parent:
+            from rapido.db.engines import database
+            cls._entity = database.get(model_name)
+
         # overwrite model class in the cache
-        _model_cache[cls._model_name] = cls
+        package_cache.register_models(cls)
 
         cls._values = None
         cls._fields = getattr(parent, '_fields', {})
@@ -182,6 +179,8 @@ class Model(object):
     
     __metaclass__ = ModelType
 
+    _entity = None
+
     def __new__(cls, **kw):
 
         if cls is Model:
@@ -193,11 +192,9 @@ class Model(object):
 
     
     def __init__(self, **kw):
-
-        self._values = {}
-
+        
         self._key = None
-        self._entity = None
+        self._values = {}
 
         fields = self.fields()
         for name, value in kw.items():
@@ -207,6 +204,11 @@ class Model(object):
     @property
     def key(self):
         pass
+
+    def _get_entity(self):
+        """Get the database entity. For internal use only.
+        """
+        return self.__class__._entity
     
     def put(self):
         pass

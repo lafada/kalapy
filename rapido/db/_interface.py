@@ -7,6 +7,7 @@ API instead.
 from threading import local
 from _errors import DatabaseError
 
+
 class IDatabase(local):
     """The Database interface. The backend engines should implement this 
     interface with a class Database.
@@ -67,11 +68,6 @@ class IDatabase(local):
         """
         raise NotImplementedError
 
-    def get(self, name):
-        """Return an `Entity` instance for the given entity name.
-        """
-        raise NotImplementedError
-
     def select(self, entity, condition):
         """Select all the records of the given entity that passes 
         the given condition.
@@ -82,6 +78,11 @@ class IDatabase(local):
 
         Returns:
             a list of all records matched.
+        """
+        raise NotImplementedError
+
+    def get(self, model_name):
+        """Entity creation factory.
         """
         raise NotImplementedError
 
@@ -102,14 +103,32 @@ class IEntity(object):
     """
 
     def __init__(self, database, name):
-        """Initialize the entity instance.
+        """Initialize the entity for the given model name
 
         Args:
-            database: the database instance
-            name: name of the entity
+            database: database instance
+            name: model model of the entity
         """
-        self.database = database
-        self.name = name
+        self._database = database
+        self._model_name = name
+        self._name = name.replace('.', '_')
+
+    @property
+    def cursor(self):
+        return self.database.cursor()
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def database(self):
+        return self._database
+
+    @property
+    def model(self):
+        from rapido.db.setup import cache
+        return cache.get_model(self._model_name)
 
     def exists(self):
         """Check whether the entity exists in the database.
