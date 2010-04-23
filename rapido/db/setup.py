@@ -2,7 +2,7 @@ import types
 import threading
 
 from rapido.conf import settings
-from rapido.utils import load_module
+from rapido.utils.imp import import_module
 from rapido.utils.collections import OrderedDict
 
 class Cache(object):
@@ -49,7 +49,7 @@ class Cache(object):
             return self.packages[package_name]
 
         try:
-            self.packages[package_name] = load_module("models", package_name)
+            self.packages[package_name] = import_module("models", package_name)
         except ImportError:
             self.packages[package_name] = None
 

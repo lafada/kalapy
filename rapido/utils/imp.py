@@ -1,10 +1,11 @@
 import os, sys, types
 
-__all__ = ('load_module',)
+__all__ = ('import_module',)
 
 
-def load_module(name, package=None):
-    """Dynamically import a given module.
+def import_module(name, package=None):
+    """Dynamically import a given module. Relative import is not 
+    supported though.
 
     If package is given search within the package directory else
     search form `sys.path` directories.

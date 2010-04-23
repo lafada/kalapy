@@ -1,7 +1,7 @@
 import os
 
 from rapido.conf import settings
-from rapido.utils import load_module
+from rapido.utils.imp import import_module
 
 
 __all__ = ('list_engines', 'engine', 'database')
@@ -24,11 +24,10 @@ def load_engine(name):
     if name not in ENGINES:
         raise ValueError("Engine '%s' not supported." % name)
 
-    return load_module('_database', 'rapido.db.engines.%s' % name)
+    return import_module('_database', 'rapido.db.engines.%s' % name)
 
 
 engine = load_engine(settings.DATABASE_ENGINE)
-
 
 database = engine.Database(
     name = settings.DATABASE_NAME,
