@@ -4,8 +4,8 @@ from rapido.db._fields import ManyToOne
 
 class Entity(IEntity):
 
-    def __init__(self, database, name):
-        super(Entity, self).__init__(database, name)
+    def __init__(self, name):
+        super(Entity, self).__init__(name)
 
     def exists(self):
         self.cursor.execute("""

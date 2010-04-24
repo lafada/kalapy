@@ -73,9 +73,6 @@ class Database(IDatabase):
     def cursor(self):
         return self.connection.cursor()
     
-    def get(self, model_name):
-        return Entity(self, model_name)
-
     def select(self, entity, condition):
         raise NotImplementedError("Not implemented yet.")
 

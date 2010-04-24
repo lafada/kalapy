@@ -83,11 +83,6 @@ class IDatabase(local):
         """
         raise NotImplementedError
 
-    def get(self, model_name):
-        """Entity creation factory.
-        """
-        raise NotImplementedError
-
     def get_data_type(self, field):
         """Get the internal datatype for the given field supported by the database.
         """
@@ -104,14 +99,12 @@ class IEntity(object):
     and `entity` in BigTable.
     """
 
-    def __init__(self, database, name):
+    def __init__(self, name):
         """Initialize the entity for the given model name
 
         Args:
-            database: database instance
-            name: model model of the entity
+            name: model name of the entity
         """
-        self._database = database
         self._model_name = name
         self._name = name.replace('.', '_')
 
@@ -125,7 +118,7 @@ class IEntity(object):
 
     @property
     def database(self):
-        return self._database
+        return self.__class__._database
 
     @property
     def model(self):

@@ -35,8 +35,8 @@ class ModelManager(object):
         package, name = self.names(cls._model_name)
         models = self.cache.setdefault(package, {})
         if name not in models:
-            from rapido.db.engines import database
-            cls._entity = database.get(name)
+            from rapido.db.engines import Entity
+            cls._entity = Entity(name)
         models[name] = cls
         
 
