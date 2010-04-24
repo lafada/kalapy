@@ -3,10 +3,44 @@ from types import FunctionType
 from _errors import *
 from _fields import *
 
-from rapido.db.setup import cache as package_cache
-
 
 __all__ = ['ModelType', 'Model', 'Query']
+
+
+class ModelManager(object):
+    
+    def __init__(self):
+        self.cache = {}
+        
+    def names(self, name):
+        name = name.lower()
+        parts = name.split('.')
+        if len(parts) > 1:
+            return parts[0], name
+        return "", name
+    
+    def get_model(self, name):
+        package, name = self.names(name)
+        return self.cache.setdefault(package, {}).get(name)
+    
+    def get_models(self, package=None):
+        if package:
+            self.cache.setdefault(package, {}).values()
+        result = []
+        for models in self.cache.values():
+            result.extend(models)
+        return result
+    
+    def register_model(self, cls):
+        package, name = self.names(cls._model_name)
+        models = self.cache.setdefault(package, {})
+        if name not in models:
+            from rapido.db.engines import database
+            cls._entity = database.get(name)
+        models[name] = cls
+        
+
+cache = ModelManager()
 
 
 class ModelType(type):
@@ -32,7 +66,7 @@ class ModelType(type):
             package_name = ''
 
         model_name = getattr(parents[0], '_model_name', package_name + name).lower()
-        parent = package_cache.get_model(model_name)
+        parent = cache.get_model(model_name)
 
         if parent:
             bases = list(bases)
@@ -46,12 +80,8 @@ class ModelType(type):
         cls._parent = parent
         cls._model_name = model_name
 
-        if not parent:
-            from rapido.db.engines import database
-            cls._entity = database.get(model_name)
-
         # overwrite model class in the cache
-        package_cache.register_models(cls)
+        cache.register_model(cls)
 
         cls._values = None
         cls._fields = getattr(parent, '_fields', {})
@@ -186,8 +216,8 @@ class Model(object):
         if cls is Model:
             raise DatabaseError("You can't create instance of Model class")
 
-        klass = get_model(cls)
-
+        klass = cache.get_model(cls)
+        
         return super(Model, cls).__new__(klass)
 
     

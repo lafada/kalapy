@@ -5,7 +5,9 @@ API instead.
 """
 
 from threading import local
+
 from _errors import DatabaseError
+from _model import cache as model_cache
 
 
 class IDatabase(local):
@@ -127,8 +129,7 @@ class IEntity(object):
 
     @property
     def model(self):
-        from rapido.db.setup import cache
-        return cache.get_model(self._model_name)
+        return model_cache.get_model(self._model_name)
 
     def exists(self):
         """Check whether the entity exists in the database.
