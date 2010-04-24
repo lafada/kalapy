@@ -28,7 +28,7 @@ class ModelManager(object):
             self.cache.setdefault(package, {}).values()
         result = []
         for models in self.cache.values():
-            result.extend(models)
+            result.extend(models.values())
         return result
     
     def register_model(self, cls):
