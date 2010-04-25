@@ -4,15 +4,21 @@ from _errors import *
 from _fields import *
 
 
-__all__ = ['ModelType', 'Model', 'Query']
+__all__ = ['ModelType', 'Model', 'Query', 'get_model', 'get_models']
 
 
-class ModelManager(object):
+class ModelCache(object):
+    """A class to manage cache of all models.
+    """
     
     def __init__(self):
         self.cache = {}
+        self.aliases = {}
         
     def names(self, name):
+        """For internal use only. Will return tuple of (package_name, name) from
+        the given name. The name will be normalized.
+        """
         name = name.lower()
         parts = name.split('.')
         if len(parts) > 1:
@@ -20,10 +26,27 @@ class ModelManager(object):
         return "", name
     
     def get_model(self, name):
+        """Get the model from the cache of the given name.
+        
+        >>> db.get_model("base.user")
+        
+        Args:
+            name: name of the model
+        """
         package, name = self.names(name)
-        return self.cache.setdefault(package, {}).get(name)
+        alias = self.aliases.get(name, name)
+        return self.cache.setdefault(package, {}).get(alias)
     
     def get_models(self, package=None):
+        """Get the list of all models from the cache. If package if provided
+        then only those models belongs to the package.
+        
+        Args:
+            package: name of the package
+            
+        Returns:
+            list of models
+        """
         if package:
             self.cache.setdefault(package, {}).values()
         result = []
@@ -32,15 +55,26 @@ class ModelManager(object):
         return result
     
     def register_model(self, cls):
+        """Register the provided model class to the cache.
+        
+        Args:
+            cls: the model class
+        """
         package, name = self.names(cls._model_name)
         models = self.cache.setdefault(package, {})
         if name not in models:
             from rapido.db.engines import Entity
             cls._entity = Entity(name)
+        alias = cls.__name__.lower()
+        if package:
+            alias = '%s.%s' % (package, alias)
+        self.aliases[alias] = name
         models[name] = cls
-        
 
-cache = ModelManager()
+cache = ModelCache()
+
+get_model = cache.get_model
+get_models = cache.get_models
 
 
 class ModelType(type):
