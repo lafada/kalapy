@@ -4,8 +4,6 @@ import sqlite3
 from rapido.db._errors import DatabaseError
 from rapido.db._interface import IDatabase
 
-from _entity import Entity
-
 
 class Database(IDatabase):
 
@@ -22,11 +20,11 @@ class Database(IDatabase):
         "binary"    :   "BLOB",
     }
 
-    
+
     def __init__(self, name, host=None, port=None, user=None, password=None, autocommit=False):
         super(Database, self).__init__(name, host, port, user, password, autocommit)
         self.connection = None
-        
+
     def connect(self):
 
         if self.connection is not None:
@@ -43,13 +41,13 @@ class Database(IDatabase):
             self.connection.isolation_level = None
 
         return self
-    
+
     def close(self):
         self.connection = None
 
     def commit(self):
         self.connection.commit()
-    
+
     def rollback(self):
         self.connection.rollback()
 
@@ -63,7 +61,7 @@ class Database(IDatabase):
             self.close()
 
         return self
-    
+
     def drop(self):
         self.close()
         if self.name == ":memory:":
@@ -72,7 +70,6 @@ class Database(IDatabase):
 
     def cursor(self):
         return self.connection.cursor()
-    
+
     def select(self, entity, condition):
         raise NotImplementedError("Not implemented yet.")
-

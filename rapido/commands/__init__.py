@@ -13,14 +13,14 @@ _load_commands()
 
 
 class Commander(object):
-    
+
     def __init__(self):
         self.argv = sys.argv[:]
         self.prog = os.path.basename(self.argv[0])
-        
+
     def get_version(self):
         return "1.0"
-    
+
     def print_help(self):
         print "Usage: %s command [options] [args]\n" % self.prog
         print "Options:"
@@ -32,18 +32,18 @@ class Commander(object):
         for command, cls in commands:
             print "  %s" % (command)
         sys.exit(1)
-        
+
     def run(self):
-                
+
         try:
             command = self.argv[1]
         except:
             self.print_help()
-            
+
         if command == "--version":
             print self.get_version()
             sys.exit(1)
-            
+
         if command in ("-h", "--help"):
             self.print_help()
 
@@ -53,10 +53,10 @@ class Commander(object):
                 cls().print_help()
             else:
                 self.print_help()
-                
+
         elif command.startswith("-"):
             self.print_help()
-        
+
         get_command(command)().run(self.argv)
-        
-        
+
+

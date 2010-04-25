@@ -26,11 +26,11 @@ Database = engine.Database
 Entity = engine.Entity
 
 database = Database(
-    name = settings.DATABASE_NAME,
-    host = settings.DATABASE_HOST,
-    port = settings.DATABASE_PORT,
-    user = settings.DATABASE_USER,
-    password = settings.DATABASE_PASSWORD)
+    name=settings.DATABASE_NAME,
+    host=settings.DATABASE_HOST,
+    port=settings.DATABASE_PORT,
+    user=settings.DATABASE_USER,
+    password=settings.DATABASE_PASSWORD)
 
 Entity._database = database
 

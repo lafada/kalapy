@@ -1,5 +1,4 @@
-"""
-This module defines several interfaces to be implemented by database engines.
+"""This module defines several interfaces to be implemented by database engines.
 The implementation is meant for internal use only. Users should use the Model
 API instead.
 """
@@ -16,7 +15,7 @@ class IDatabase(local):
     """
 
     data_types = {}
-    
+
     def __init__(self, name, host=None, port=None, user=None, password=None, autocommit=False):
         """Initialize the database.
 
@@ -34,32 +33,32 @@ class IDatabase(local):
         self.user = user
         self.password = password
         self.autocommit = autocommit
-    
+
     def connect(self):
         """Connect to the database.
         """
         raise NotImplementedError
-    
+
     def close(self):
         """Close the database connection.
         """
         raise NotImplementedError
-        
+
     def commit(self):
         """Commit the changes to the database.
         """
         raise NotImplementedError
-    
+
     def rollback(self):
         """Rollback all the changes made since the last commit.
         """
         raise NotImplementedError
-    
+
     def create(self):
         """Create the database if it doesn't exist.
         """
         raise NotImplementedError
-    
+
     def drop(self):
         """Drop the database.
         """
@@ -128,17 +127,17 @@ class IEntity(object):
         """Check whether the entity exists in the database.
         """
         raise NotImplementedError
-    
+
     def create(self):
         """Create a new entity in the database if it doesn't exist.
         """
         raise NotImplementedError
-    
+
     def drop(self):
         """Drop the current entity if it exists.
         """
         raise NotImplementedError
-    
+
     def rename(self, new_name):
         """Rename the current entity with the given new name.
 
@@ -146,7 +145,7 @@ class IEntity(object):
             new_name: the new name for the entity
         """
         raise NotImplementedError
-    
+
     def insert(self, **kw):
         """Insert a record to the entity with the given values.
 
@@ -154,7 +153,7 @@ class IEntity(object):
             **kw: the key, value pairs for the given record.
         """
         raise NotImplementedError
-    
+
     def update(self, key, **kw):
         """Update a particular record identified with the given key.
 
@@ -163,7 +162,7 @@ class IEntity(object):
             **kw: the items to be updated
         """
         raise NotImplementedError
-    
+
     def delete(self, keys):
         """Delete all the records from the entity identified with the
         given keys.
@@ -172,7 +171,7 @@ class IEntity(object):
             keys: list of keys
         """
         raise NotImplementedError
-    
+
     def field_exists(self, field):
         """Check whether a field exists in the entity.
 
@@ -180,21 +179,21 @@ class IEntity(object):
             field: an instance of `db.Field`
         """
         raise NotImplementedError
-    
+
     def field_add(self, field):
         """Add the field if it doesn't exist.
         Args:
             field: an instance of `db.Field`
         """
         raise NotImplementedError
-    
+
     def field_drop(self, field):
         """Drop the given field.
         Args:
             field: an instance of `db.Field`
         """
         raise NotImplementedError
-    
+
     def field_alter(self, field):
         """Change the definition of the entity field with the changed 
         attributes of the given field.
@@ -203,5 +202,3 @@ class IEntity(object):
             field: an instance of `db.Field`
         """
         raise NotImplementedError
-
-

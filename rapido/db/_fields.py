@@ -27,12 +27,12 @@ class Field(object):
 
     # for internal use only
     _creation_order = 0
-    
+
     _data_type = "string"
-    
+
     def __init__(self, label=None, name=None, default=None, size=None,
             required=None, unique=False, indexed=None, selection=None):
-        
+
         self._creation_order = Field._creation_order = Field._creation_order + 1
 
         self._label = label
@@ -43,12 +43,12 @@ class Field(object):
         self._required = required
         self._unique = unique
         self._indexed = indexed
-        
+
         self._selection = selection
         self._selection_list = [x[0] for x in selection] if selection else []
-        
+
         self._validator = None
-        
+
     def __repr__(self):
         return "<Field name='%s'>" % self.name
 
@@ -65,7 +65,7 @@ class Field(object):
 
         if model_instance is None:
             return self
-        
+
         return model_instance._values.get(self.name)
 
     def __set__(self, model_instance, value):
@@ -76,12 +76,12 @@ class Field(object):
 
         if self.empty(value) and self.required:
             raise ValidationError("Field '%s' is required.", self.name)
-        
+
         if self._selection and value not in self._selection_list:
             raise ValidationError("Field '%s' is '%s'; must be one of %s" % (
                                 self.name, value, self._selection_list))
-         
-        if self._validator:            
+
+        if self._validator:
             self._validator(model_instance, value)
 
         return value
@@ -92,15 +92,15 @@ class Field(object):
     @property
     def data_type(self):
         return self._data_type
-    
+
     @property
     def name(self):
         return self._name
-    
+
     @property
     def label(self):
         return self._label
-    
+
     @property
     def size(self):
         return self._size
@@ -163,9 +163,9 @@ class Binary(Field):
 
 
 class ManyToOne(Field):
-    
+
     _data_type = "integer"
-    
+
     def __init__(self, reference, cascade=None, **kw):
         super(ManyToOne, self).__init__(**kw)
         self.reference = reference

@@ -22,16 +22,16 @@ def get_command(name):
         print "Unknown command: %s" % name
         print "Type '%s help' for usage" % sys.argv[0]
         sys.exit(1)
-        
+
 
 class CommandType(type):
 
     def __init__(cls, name, bases, attrs):
         super(CommandType, cls).__init__(name, bases, attrs)
-        
+
         if "options" in attrs:
             cls.options = CommandType.merge_options(bases, attrs["options"])
-        
+
         if name != "BaseCommand" and "name" in attrs:
             _commands[attrs["name"]] = cls
 
@@ -47,7 +47,7 @@ class CommandType(type):
 
 
 class BaseCommand(object):
-    
+
     __metaclass__ = CommandType
 
     name = ""
@@ -68,7 +68,7 @@ class BaseCommand(object):
         if self.help:
             usage = "%s\n\n%s" % (usage, self.help)
         return usage
-    
+
     def print_help(self):
         self.parser.print_help()
         sys.exit(1)
@@ -78,7 +78,7 @@ class BaseCommand(object):
         try:
             self.execute(*args, **options.__dict__)
         except CommandError, e:
-            print "Error: %s\n" %(str(e))
+            print "Error: %s\n" % (str(e))
             sys.exit(1)
 
     def execute(self, *args, **options):

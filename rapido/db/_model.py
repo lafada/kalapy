@@ -10,11 +10,11 @@ __all__ = ['Model', 'Query', 'get_model', 'get_models']
 class ModelCache(object):
     """A class to manage cache of all models.
     """
-    
+
     def __init__(self):
         self.cache = {}
         self.aliases = {}
-        
+
     def names(self, name):
         """For internal use only. Will return tuple of (package_name, name) from
         the given name. The name will be normalized.
@@ -24,7 +24,7 @@ class ModelCache(object):
         if len(parts) > 1:
             return parts[0], name
         return "", name
-    
+
     def get_model(self, name):
         """Get the model from the cache of the given name.
         
@@ -36,7 +36,7 @@ class ModelCache(object):
         package, name = self.names(name)
         alias = self.aliases.get(name, name)
         return self.cache.setdefault(package, {}).get(alias)
-    
+
     def get_models(self, package=None):
         """Get the list of all models from the cache. If package if provided
         then only those models belongs to the package.
@@ -53,7 +53,7 @@ class ModelCache(object):
         for models in self.cache.values():
             result.extend(models.values())
         return result
-    
+
     def register_model(self, cls):
         """Register the provided model class to the cache.
         
@@ -82,7 +82,7 @@ class ModelType(type):
     def __new__(cls, name, bases, attrs):
 
         super_new = super(ModelType, cls).__new__
-        
+
         parents = [b for b in bases if isinstance(b, ModelType)]
         if not parents:
             # This is not a subclass of Model so do nothing
@@ -129,10 +129,10 @@ class ModelType(type):
                         "Duplicate field, %s, already defined in parent class." % name)
                 cls._fields[name] = attr
                 attr.__configure__(cls, name)
-            
+
             # prepare validators
             if isinstance(attr, FunctionType) and hasattr(attr, '_validates'):
-                
+
                 field = attr._validates
                 if isinstance(field, basestring):
                     field = getattr(cls, field, None)
@@ -240,7 +240,7 @@ class Model(object):
     and still saving `age` value. You can also change the behavior of the base class
     by overriding methods.
     """
-    
+
     __metaclass__ = ModelType
 
     _entity = None
@@ -251,12 +251,12 @@ class Model(object):
             raise DatabaseError("You can't create instance of Model class")
 
         klass = cache.get_model(cls)
-        
+
         return super(Model, cls).__new__(klass)
 
-    
+
     def __init__(self, **kw):
-        
+
         self._key = None
         self._values = {}
 
@@ -273,21 +273,21 @@ class Model(object):
         """Get the database entity. For internal use only.
         """
         return self.__class__._entity
-    
+
     def put(self):
         pass
-    
+
     def delete(self):
         pass
 
     @property
     def json(self):
         pass
-    
+
     @classmethod
     def get(cls, keys):
         pass
-        
+
     @classmethod
     def filter(cls, query, **kw):
         pass
@@ -315,14 +315,14 @@ class Query(object):
             model: the model
         """
         self.model = model
-    
+
     def filter(self, query, **kw):
         """Filter with the given query."
         
         >>> Query(User).filter("name ilike :name and age >= :age", name="some", age=20)
         """
         raise NotImplementedError
-    
+
     def order(self, spec):
         """Order the query result with given spec.
         
@@ -330,7 +330,7 @@ class Query(object):
         >>> q.order("-age")
         """
         raise NotImplementedError
-    
+
     def fetch(self, limit, offset=0):
         """Fetch the given number of records from the query object from the given offset.
         
@@ -339,7 +339,7 @@ class Query(object):
         >>>     print obj.name
         """
         raise NotImplementedError
-    
+
     def count(self):
         """Return the number of records in the query object.
         """
