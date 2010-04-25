@@ -4,7 +4,7 @@ from _errors import *
 from _fields import *
 
 
-__all__ = ['ModelType', 'Model', 'Query', 'get_model', 'get_models']
+__all__ = ['Model', 'Query', 'get_model', 'get_models']
 
 
 class ModelCache(object):
@@ -344,5 +344,3 @@ class Query(object):
         """Return the number of records in the query object.
         """
         raise NotImplementedError
-
-
