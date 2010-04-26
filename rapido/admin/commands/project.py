@@ -50,6 +50,12 @@ def copy_template(template, name):
     if not pat.search(name):
         raise CommandError("Invalid name '%s'" % name)
     
+    try:
+        import_module(name)
+        raise CommandError('name conflicts with existing python module.')
+    except ImportError:
+        pass
+    
     basedir = os.path.dirname(os.path.dirname(__file__))
     basedir = os.path.join(basedir, template)
     
@@ -67,12 +73,6 @@ class NewProject(BaseCommand):
             name = args[0]
         except:
             self.print_help()
-            
-        try:
-            import_module(name)
-            raise CommandError('project name conflicts with existing python module.')
-        except ImportError:
-            pass
         
         copy_template('project_template', name=name)
         
@@ -89,11 +89,5 @@ class NewApp(BaseCommand):
         except:
             self.print_help()
             
-        try:
-            import_module(name)
-            raise CommandError('package name conflicts with existing python module.')
-        except ImportError:
-            pass
-        
         copy_template('package_template', name=name)
 
