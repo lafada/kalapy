@@ -65,8 +65,27 @@ class Admin(object):
 
 
 def setup_environment(settings_mod):
-    pass
-
+    """Prepare the runtime environment. Used by project 'admin.py' script.
+    It will update the configuration settings and load the project.
+    """
+    project_dir = os.path.dirname(settings_mod.__file__)
+    project_name = os.path.basename(project_dir)
+    
+    lib_dir = os.path.join(project_dir, 'lib')
+    
+    # prepend the project_dir/lib to sys.path if exists
+    if os.path.exists(lib_dir):
+        sys.path.insert(0, lib_dir)
+    
+    from rapido.conf import settings
+    settings.update(settings_mod)
+    
+    sys.path.append(os.path.join(project_dir, os.pardir))
+    import_module(project_name)
+    sys.path.pop()
+    
+    return project_dir
+    
 
 def execute(settings_mod=None):
     if settings_mod:

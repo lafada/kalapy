@@ -23,7 +23,8 @@ def import_module(name, package=None):
     if package and isinstance(package, types.ModuleType):
         package = os.path.dirname(package.__file__).replace('/', '.')
 
-    name = ".".join([package or "", name])
+    if package:
+        name = "%s.%s" % (package, name)
 
     try:
         return sys.modules[name]

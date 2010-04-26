@@ -13,7 +13,15 @@ _commands = {}
 
 
 def get_commands():
-    commands = _commands.items()
+    commands = _commands.copy()
+    
+    from rapido.conf import settings
+    if settings.PROJECT_NAME:
+        del commands['new-project']
+    else:
+        del commands['new-package']
+    
+    commands = commands.items()
     commands.sort(lambda a, b: cmp(a[0], b[0]))
     return commands
 
