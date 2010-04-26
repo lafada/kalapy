@@ -2,6 +2,9 @@ import sys
 from optparse import OptionParser
 
 
+__all__ = ['CommandError', 'BaseCommand', 'get_commands', 'get_command']
+
+
 class CommandError(Exception):
     pass
 

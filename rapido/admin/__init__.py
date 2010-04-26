@@ -2,17 +2,21 @@ import os
 import sys
 from optparse import OptionParser
 
-from _base import CommandError, BaseCommand, get_commands, get_command
+from rapido.utils.imp import import_module
+
+from _base import *
+
 
 # import all command modules
 def _load_commands():
-    mods = [f[:-3] for f in os.listdir(__path__[0]) if f.endswith('.py') and not f.startswith('_')]
+    cmddir = os.path.join(__path__[0], 'commands') 
+    mods = [f[:-3] for f in os.listdir(cmddir) if f.endswith('.py') and not f.startswith('_')]
     for m in mods:
-        __import__(m, globals())
+        import_module(m, 'rapido.admin.commands')
 _load_commands()
 
 
-class Commander(object):
+class Admin(object):
 
     def __init__(self):
         self.argv = sys.argv[:]
@@ -60,3 +64,11 @@ class Commander(object):
         get_command(command)().run(self.argv)
 
 
+def setup_environment(settings_mod):
+    pass
+
+
+def execute(settings_mod=None):
+    if settings_mod:
+        setup_environment(settings_mod)
+    Admin().run()

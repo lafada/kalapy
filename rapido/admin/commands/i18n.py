@@ -1,5 +1,5 @@
 from optparse import make_option
-from _base import BaseCommand
+from rapido.admin import BaseCommand
 
 #TODO: not implemented yet
 
