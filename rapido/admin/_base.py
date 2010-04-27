@@ -88,6 +88,9 @@ class BaseCommand(object):
         self.parser.print_help()
         sys.exit(1)
 
+    def error(self, message):
+        self.parser.error(message)
+
     def run(self, argv):
         options, args = self.parser.parse_args(argv[2:])
         try:
