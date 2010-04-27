@@ -95,8 +95,8 @@ class ModelType(type):
         # to maintain linear hierarchy.
 
         try:
-            package_name = '.%s' % attrs['__module__'].split('.')[-2]
-        except:
+            package_name = '%s.' % attrs['__module__'].split('.')[-2]
+        except Exception, e:
             package_name = ''
 
         model_name = getattr(parents[0], '_model_name', package_name + name).lower()

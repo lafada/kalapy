@@ -1,4 +1,4 @@
-import sys
+import os, sys
 from optparse import OptionParser
 
 
@@ -68,7 +68,7 @@ class BaseCommand(object):
     options = ()
 
     def __init__(self):
-        self.parser = OptionParser(prog=sys.argv[0],
+        self.parser = OptionParser(prog=os.path.basename(sys.argv[0]),
                 usage=self.usage,
                 #add_help_option=False,
                 option_list=self.options)
