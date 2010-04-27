@@ -66,18 +66,22 @@ class BaseCommand(object):
     args = ""
 
     options = ()
+    exclusive = ()
 
     def __init__(self):
-        self.parser = OptionParser(prog=os.path.basename(sys.argv[0]),
+        self.parser = OptionParserEx(prog=os.path.basename(sys.argv[0]),
                 usage=self.usage,
                 #add_help_option=False,
                 option_list=self.options)
+        self.parser.exclusive = self.exclusive
 
     @property
     def usage(self):
         usage = "%%prog %s [options] %s" % (self.name, self.args)
         if self.help:
             usage = "%s\n\n%s" % (usage, self.help)
+        if len(self.exclusive):
+            usage = "%s\nOptions %s are mutually exclusive." % (usage, ", ".join(self.exclusive))
         return usage
 
     def print_help(self):
@@ -94,3 +98,24 @@ class BaseCommand(object):
 
     def execute(self, *args, **options):
         raise NotImplementedError
+
+
+class OptionParserEx(OptionParser):
+
+    exclusive = None
+
+    def parse_args(self, args=None, values=None):
+
+        result = OptionParser.parse_args(self, args, values)
+
+        if self.exclusive:
+            x = set([self.get_option(o) for o in self.exclusive])
+            y = set([self.get_option(o) for o in args if o.startswith('-')])
+
+            if len(x - y) != len(x) - 1:
+                #self.error('Options %s are mutually exclusive.' % (', '.join(self.exclusive)))
+                self.print_help()
+                sys.exit(1)
+        
+        return result
+
