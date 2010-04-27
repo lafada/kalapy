@@ -1,4 +1,8 @@
+import threading
 from types import FunctionType
+
+from rapido.conf import settings
+from rapido.utils.imp import import_module
 
 from _errors import *
 from _fields import *
@@ -14,6 +18,8 @@ class ModelCache(object):
     def __init__(self):
         self.cache = {}
         self.aliases = {}
+        self.loaded = False
+        self.lock = threading.RLock()
 
     def names(self, name):
         """For internal use only. Will return tuple of (package_name, name) from
@@ -25,6 +31,17 @@ class ModelCache(object):
             return parts[0], name
         return "", name
 
+    def _populate(self):
+        if self.loaded:
+            return
+        self.lock.acquire()
+        try:
+            for package in settings.INSTALLED_PACKAGES:
+                models = import_module('models', package)
+            self.loaded = True
+        finally:
+            self.lock.release()
+
     def get_model(self, name):
         """Get the model from the cache of the given name.
         
@@ -33,6 +50,7 @@ class ModelCache(object):
         Args:
             name: name of the model
         """
+        self._populate()
         package, name = self.names(name)
         alias = self.aliases.get(name, name)
         return self.cache.setdefault(package, {}).get(alias)
@@ -47,8 +65,9 @@ class ModelCache(object):
         Returns:
             list of models
         """
+        self._populate()
         if package:
-            self.cache.setdefault(package, {}).values()
+            return self.cache.setdefault(package, {}).values()
         result = []
         for models in self.cache.values():
             result.extend(models.values())

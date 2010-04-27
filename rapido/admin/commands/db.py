@@ -44,8 +44,11 @@ class DBCommand(BaseCommand):
             if package not in settings.INSTALLED_PACKAGES:
                 self.error('%r not in INSTALLED_PACKAGES' % package)
 
+        models = []
         for package in packages:
-            print "Importing %s..." % package
+            models.extend(db.get_models(package))
+
+        print "XXXX", models
 
     def sync(self):
         pass
