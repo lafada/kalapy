@@ -162,20 +162,3 @@ class Binary(Field):
     _data_type = "blob"
 
 
-class ManyToOne(Field):
-
-    _data_type = "integer"
-
-    def __init__(self, reference, cascade=None, **kw):
-        super(ManyToOne, self).__init__(**kw)
-        self.reference = reference
-        self.cascade = cascade
-
-
-class OneToMany(Field):
-    pass
-
-
-class ManyToMany(Field):
-    pass
-

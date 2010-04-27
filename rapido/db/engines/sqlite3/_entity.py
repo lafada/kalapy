@@ -1,5 +1,5 @@
 from rapido.db._interface import IEntity
-from rapido.db._fields import ManyToOne
+from rapido.db._reference import ManyToOne
 
 
 class Entity(IEntity):
@@ -26,7 +26,7 @@ class Entity(IEntity):
                 res = "%s UNIQUE" % res
 
         if isinstance(field, ManyToOne):
-            res = '%s REFERENCES "%s" ("id")' % (res, field.reference)
+            res = '%s REFERENCES "%s" ("id")' % (res, field.reference._entity.name)
             if field.cascade:
                 res = '%s ON DELETE CASCADE' % res
             elif field.required:
@@ -43,6 +43,9 @@ class Entity(IEntity):
         fields_sql = ",\n    ".join(fields_sql)
 
         return 'CREATE TABLE "%s" (\n    %s\n);' % (self.name, fields_sql)
+
+    def schema(self):
+        return self.get_create_sql()
 
     def create(self):
         if not self.exists():

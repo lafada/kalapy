@@ -123,6 +123,11 @@ class IEntity(object):
     def model(self):
         return model_cache.get_model(self._model_name)
 
+    def schema(self):
+        """Get the schema representation of the entity.
+        """
+        raise NotImplementedError
+
     def exists(self):
         """Check whether the entity exists in the database.
         """

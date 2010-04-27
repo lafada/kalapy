@@ -51,6 +51,10 @@ class ModelCache(object):
             name: name of the model
         """
         self._populate()
+
+        if isinstance(name, ModelType):
+            name = name._model_name
+
         package, name = self.names(name)
         alias = self.aliases.get(name, name)
         return self.cache.setdefault(package, {}).get(alias)
@@ -89,6 +93,7 @@ class ModelCache(object):
             alias = '%s.%s' % (package, alias)
         self.aliases[alias] = name
         models[name] = cls
+
 
 cache = ModelCache()
 
