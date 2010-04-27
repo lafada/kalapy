@@ -17,9 +17,9 @@ def get_commands():
     
     from rapido.conf import settings
     if settings.PROJECT_NAME:
-        del commands['new-project']
+        del commands['startproject']
     else:
-        del commands['new-package']
+        del commands['startpackage']
     
     commands = commands.items()
     commands.sort(lambda a, b: cmp(a[0], b[0]))

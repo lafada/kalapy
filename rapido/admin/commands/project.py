@@ -62,9 +62,9 @@ def copy_template(template, name):
     os.path.walk(basedir, copy_helper, [basedir, name])
 
 
-class NewProject(BaseCommand):
+class StartProject(BaseCommand):
 
-    name = "new-project"
+    name = "startproject"
     help = "start a new project"
     args = "<name>"
     
@@ -77,9 +77,9 @@ class NewProject(BaseCommand):
         copy_template('project_template', name=name)
         
 
-class NewApp(BaseCommand):
+class StartApp(BaseCommand):
     
-    name = "new-package"
+    name = "startpackage"
     help = "start a new package"
     args = "<name>"
     
