@@ -4,9 +4,10 @@ from rapido.admin import BaseCommand
 
 class DBCommand(BaseCommand):
 
-    name = "database"
-    args = "<package package ...>"
+    name = 'database'
+    args = '<package package ...>'
     help = 'Perform database related tasks.'
+    scope = 'package'
 
     options = (
         make_option('-I', '--info', help='Show the table schema for given packages', 

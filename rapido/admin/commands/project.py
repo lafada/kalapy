@@ -67,6 +67,7 @@ class StartProject(BaseCommand):
     name = "startproject"
     help = "start a new project"
     args = "<name>"
+    scope = "project"
     
     def execute(self, *args, **options):
         try:
@@ -82,6 +83,7 @@ class StartApp(BaseCommand):
     name = "startpackage"
     help = "start a new package"
     args = "<name>"
+    scope = "package"
     
     def execute(self, *args, **options):
         try:

@@ -1,12 +1,10 @@
 import os, sys
 from optparse import OptionParser
 
+from rapido.conf import settings
+
 
 __all__ = ['CommandError', 'BaseCommand', 'get_commands', 'get_command']
-
-
-class CommandError(Exception):
-    pass
 
 
 _commands = {}
@@ -14,13 +12,12 @@ _commands = {}
 
 def get_commands():
     commands = _commands.copy()
-    
-    from rapido.conf import settings
+
     if settings.PROJECT_NAME:
-        del commands['startproject']
+        [commands.pop(k) for k, v in commands.items() if v.scope == 'project']
     else:
-        del commands['startpackage']
-    
+        [commands.pop(k) for k, v in commands.items() if v.scope == 'package']
+
     commands = commands.items()
     commands.sort(lambda a, b: cmp(a[0], b[0]))
     return commands
@@ -33,6 +30,10 @@ def get_command(name):
         print "Unknown command: %s" % name
         print "Type '%s help' for usage" % sys.argv[0]
         sys.exit(1)
+
+
+class CommandError(Exception):
+    pass
 
 
 class CommandType(type):
@@ -58,12 +59,30 @@ class CommandType(type):
 
 
 class BaseCommand(object):
+    """Base class for implementing commands. The commands will be available
+    to the project or package admin scripts depending on the defined scope of
+    the command.
+
+    Attributes:
+        name: name of the command
+        help: help string for the command
+        args: can be used in `usages` string
+        scope: one of `package` or `project` else available in both the scopes
+        options: command options
+        exclusive: list of options which are mutually exclusive
+
+    methods:
+        print_help: print help for the command and exit
+        error: raise command error
+        execute: this method will be called when command is executed
+    """
 
     __metaclass__ = CommandType
 
     name = ""
     help = ""
     args = ""
+    scope = ""
 
     options = ()
     exclusive = ()

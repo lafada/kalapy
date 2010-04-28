@@ -5,9 +5,9 @@ from rapido.admin import BaseCommand
 
 class BabelCommand(BaseCommand):
 
-    name = "babel"
-    args = ""
-    help = "Perform i18n message catalogs tasks."
+    name = 'babel'
+    help = 'Perform i18n message catalogs tasks.'
+    scope = 'package'
 
     options = (
         make_option('-i', '--init', help='Create catalogs',
