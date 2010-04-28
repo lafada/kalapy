@@ -281,16 +281,38 @@ class Model(object):
 
     def __init__(self, **kw):
 
-        self._key = None
+        self._id = None
         self._values = {}
 
         fields = self.fields()
-        for name, value in kw.items():
-            if name in fields:
-                setattr(self, name, value)
+        for field in self.fields().values():
+            if field.name in kw:
+                value = kw[field.name]
+            elif field.default is not None:
+                value = field.default
+            else:
+                continue
+            field.__set__(self, value)
 
     @property
-    def key(self):
+    def id(self):
+        """The unique key id for this entity.
+
+        The property is only available if the entity is already stored in
+        the database.
+        """
+        pass
+
+    @property
+    def saved(self):
+        """Whether the entity is saved in database or not.
+        """
+        pass
+
+    @property
+    def changed(self):
+        """Whether the instance has been changed since it is loaded.
+        """
         pass
 
     def _get_entity(self):
@@ -298,27 +320,69 @@ class Model(object):
         """
         return self.__class__._entity
 
-    def put(self):
+    def save(self):
+        """Writes the entity to the database.
+
+        If the instance is new, a new record will be added to the database
+        else the record will be updated.
+
+        Returns:
+            The unique key id of the entity
+
+        Raises:
+            DatabaseError if entity could not be commited.
+        """
         pass
 
     def delete(self):
-        pass
-
-    @property
-    def json(self):
-        pass
-
-    @classmethod
-    def get(cls, keys):
+        """Deletes the entity from the database.
+        
+        Raises:
+            DatabaseError if entity could not be commited.
+        """
         pass
 
     @classmethod
-    def filter(cls, query, **kw):
+    def get(cls, ids):
+        """Fetch the instance(s) from the database using the provided id(s).
+
+        If `ids` is a single value it will return an instance else if `ids`
+        is a list of `id` then returns list of instances.
+
+        >>> user = User.get(123)
+        >>> isinstance(user, User)
+        ... True
+        >>> users = User.get([123, 456, 789])
+        >>> isinstance(users, list):
+        ... True
+
+        Args:
+            ids: an id or list of ids
+
+        Returns:
+            if ids is single value it will return and instance of the entity
+            model else returns list of entity instances.
+
+        Raises:
+            DatabaseError if entities can be retrieved from the given ids.
+        """
         pass
+
+    @classmethod
+    def all(cls):
+        """Returns a query object over all instances of this model 
+        from the database.
+
+        Returns:
+            Query instance that will retrive all instances of this model.
+        """
+        return Query(cls)
 
     @classmethod
     def fields(cls):
-        return cls._fields
+        """Return the defined fields.
+        """
+        return dict(cls._fields)
 
 
 class Query(object):
@@ -368,3 +432,4 @@ class Query(object):
         """Return the number of records in the query object.
         """
         raise NotImplementedError
+
