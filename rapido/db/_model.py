@@ -168,6 +168,9 @@ class ModelType(type):
                 field._validator = attr
 
         return cls
+    
+    def __repr__(cls):
+        return "<Model %r: class %s>" % (cls._model_name, cls.__name__)
 
 
 class Model(object):
@@ -411,5 +414,8 @@ class Model(object):
         """Return the defined fields.
         """
         return dict(cls._fields)
-
+    
+    def __repr__(self):
+        return "<Model %r: %s object at %s>" % (self._model_name,
+                                          self.__class__.__name__, hex(id(self)))
 

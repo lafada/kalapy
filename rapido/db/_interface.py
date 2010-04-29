@@ -6,7 +6,7 @@ API instead.
 from threading import local
 
 from _errors import DatabaseError
-
+from _model import get_model
 
 class IDatabase(local):
     """The Database interface. The backend engines should implement this 
@@ -79,7 +79,7 @@ class ITable(object):
         Args:
             model: the model class
         """
-        self.model = model
+        self._model_name = model._model_name
         self._name = model._model_name.replace('.', '_')
 
     @property
@@ -93,6 +93,10 @@ class ITable(object):
     @property
     def database(self):
         return self.__class__._database
+    
+    @property
+    def model(self):
+        return get_model(self._model_name)
 
     def schema(self):
         """Get the schema representation of the table.
