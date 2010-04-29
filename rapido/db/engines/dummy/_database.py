@@ -1,10 +1,5 @@
-from rapido.db._interface import IDatabase, ITable
-
+from rapido.db._interface import IDatabase
 
 class Database(IDatabase):
-    pass
-
-
-class Table(ITable):
     pass
 

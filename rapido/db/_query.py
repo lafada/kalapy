@@ -64,9 +64,9 @@ class Query(object):
         params = []
         for q, b in self._all:
             params.extend(b)
-
-        table = self._model._table
-        return table.select(s, params)
+        
+        from rapido.db.engines import database
+        return [self._model._from_db_values(vals) for vals in database.select_from(s, params)]
 
     def count(self):
         """Return the number of records in the query object.
@@ -76,12 +76,14 @@ class Query(object):
         params = []
         for q, b in self._all:
             params.extend(b)
-        return table.count(s, params)
+            
+        from rapido.db.engines import database
+        return database.select_count(s, params)
 
     def _select(self, what, limit=None, offset=None):
         """Build the select statement. For internal use only.
         """
-        result = "SELECT %s FROM \"%s\"" % (what, self._model._table._name)
+        result = "SELECT %s FROM \"%s\"" % (what, self._model._table_name)
         if self._all:
             result = "%s WHERE %s" % (result, " AND ".join(['(%s)' % s for s, b in self._all]))
         if self._order:

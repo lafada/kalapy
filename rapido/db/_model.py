@@ -86,9 +86,6 @@ class ModelCache(object):
         """
         package, name = self.names(cls._model_name)
         models = self.cache.setdefault(package, {})
-        if name not in models:
-            from rapido.db.engines import Table
-            cls._table = Table(cls)
         alias = cls.__name__.lower()
         if package:
             alias = '%s.%s' % (package, alias)
@@ -138,6 +135,7 @@ class ModelType(type):
 
         cls._parent = parent
         cls._model_name = model_name
+        cls._table_name = model_name.replace('.', '_')
 
         # overwrite model class in the cache
         cache.register_model(cls)
@@ -312,12 +310,19 @@ class Model(object):
         """Whether the model is saved in database or not.
         """
         return  self._key is not None
-
-    def _get_table(self):
-        """Get the database table. For internal use only.
+    
+    def _values_for_db(self):
+        """Return values to be stored in database table. For internal use only.
         """
-        return self.__class__._table
-
+        return dict(self._values)
+    
+    @classmethod
+    def _from_db_values(cls, values):
+        obj = cls()
+        obj._key = values.pop('id', None)
+        obj._values.update(values)
+        return obj
+        
     def save(self):
         """Writes the instance to the database.
 
@@ -330,15 +335,8 @@ class Model(object):
         Raises:
             DatabaseError if instance could not be commited.
         """
-
-        values = dict(self._values)
-        
-        table = self._get_table()
-        if self.saved:
-            table.update(self.key, **values)
-        else:
-            self._key = table.insert(**values)
-        return self.key
+        from rapido.db.engines import database
+        return database.insert_into(self)
 
     def delete(self):
         """Deletes the instance from the database.
@@ -348,10 +346,9 @@ class Model(object):
         """
         if not self.saved:
             raise DatabaseError("Can't delete, instance doesn't exists.")
-        table = self._get_table()
-        table.delete(self.key)
-        self._key = None
-
+        from rapido.db.engines import database
+        database.delete_from(self)
+        
     @classmethod
     def get(cls, keys):
         """Fetch the instance(s) from the database using the provided id(s).

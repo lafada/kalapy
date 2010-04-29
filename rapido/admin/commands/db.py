@@ -16,11 +16,9 @@ class DBCommand(BaseCommand):
             action='store_true'),
         make_option('-B', '--backup', help='Create backup of the database.',
             metavar='FILE'),
-        make_option('-R', '--restore', help='Restore the database from the given backup.',
-            metavar='FILE'),
     )
 
-    exclusive = ('-I', '-S', '-B', '-R')
+    exclusive = ('-I', '-S', '-B')
 
     def execute(self, *args, **options):
         if options.get('info'):
@@ -29,8 +27,6 @@ class DBCommand(BaseCommand):
             return self.sync()
         if options.get('backup'):
             return self.backup(options['backup'])
-        if options.get('restore'):
-            return self.restore(options['restore'])
         self.print_help()
 
     def info(self, *packages):
@@ -59,16 +55,32 @@ class DBCommand(BaseCommand):
         database.connect()
         try:
             for model in models:
-                print model._table.schema()
+                print database.schema_table(model)
         finally:
             database.close()
 
     def sync(self):
-        pass
+        from rapido import db
+        from rapido.conf import settings
+        from rapido.utils.imp import import_module
+
+        if settings.DATABASE_ENGINE == "dummy":
+            raise self.error("DATABASE_ENGINE is not configured.")
+
+        models = db.get_models()
+        
+        #TODO: sort models by references
+
+        from rapido.db.engines import database
+
+        database.connect()
+        try:
+            for model in models:
+                database.create_table(model)
+        finally:
+            database.close()
 
     def backup(self, dest):
         pass
 
-    def restore(self, src):
-        pass
 
