@@ -4,8 +4,8 @@ from rapido.db._reference import ManyToOne
 
 class Table(ITable):
 
-    def __init__(self, name):
-        super(Table, self).__init__(name)
+    def __init__(self, model):
+        super(Table, self).__init__(model)
 
     def exists(self):
         self.cursor.execute("""
@@ -74,6 +74,8 @@ class Table(ITable):
 
         self.cursor.execute(sql, vals)
 
+        return self.cursor.lastrowid
+
     def update(self, key, **kw):
 
         items = kw.items()
@@ -87,17 +89,37 @@ class Table(ITable):
                 table=self.name, keys=keys)
 
         vals.append(key)
-
         self.cursor.execute(sql, vals)
 
     def delete(self, keys):
-
         if not isinstance(keys, (list, tuple)):
             keys = [keys]
-
         sql = 'DELETE FROM "%s" WHERE "id" IN (%s)' % (self.name, ", ".join(['?'] * len(keys)))
-
         self.cursor.execute(sql, keys)
+
+    def select(self, query, params):
+        self.cursor.execute(query, params)
+
+        names = [desc[0] for desc in self.cursor.description]
+        result = []
+        for row in self.cursor.fetchall():
+            obj = self.model()
+            for i, name in enumerate(names):
+                if row[i] is None:
+                    continue
+                if name != 'id':
+                    setattr(obj, name, row[i])
+                else:
+                    obj._key = row[i]
+            result.append(obj)
+        return result
+
+    def count(self, query, params):
+        self.cursor.execute(query, params)
+        try:
+            return self.cursor.fetchone()[0]
+        except:
+            return 0
 
     def field_exists(self, field):
         name = field if isinstance(field, basestring) else field.name

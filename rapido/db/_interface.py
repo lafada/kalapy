@@ -6,7 +6,6 @@ API instead.
 from threading import local
 
 from _errors import DatabaseError
-from _model import cache as model_cache
 
 
 class IDatabase(local):
@@ -74,14 +73,14 @@ class ITable(object):
     with name `Table`.
     """
 
-    def __init__(self, name):
-        """Initialize the table for the given model name
+    def __init__(self, model):
+        """Initialize the table for the given model class
 
         Args:
-            name: model name
+            model: the model class
         """
-        self._model_name = name
-        self._name = name.replace('.', '_')
+        self.model = model
+        self._name = model._model_name.replace('.', '_')
 
     @property
     def cursor(self):
@@ -94,10 +93,6 @@ class ITable(object):
     @property
     def database(self):
         return self.__class__._database
-
-    @property
-    def model(self):
-        return model_cache.get_model(self._model_name)
 
     def schema(self):
         """Get the schema representation of the table.
@@ -150,6 +145,32 @@ class ITable(object):
 
         Args:
             keys: list of keys
+        """
+        raise NotImplementedError
+
+    def select(self, query, params):
+        """Execute the given select query bounded with the given params
+        and return list of model instances represented by this table.
+
+        Args:
+            query: select query
+            params: bounding values
+
+        Returns:
+            list of model instances
+        """
+        raise NotImplementedError
+
+    def count(self, query, params):
+        """Same as `select` but returns total number of records counted
+        by the given query.
+
+        Args:
+            query: select count query
+            params: bounding values
+
+        Returns:
+            integer, total number of records counted
         """
         raise NotImplementedError
 

@@ -6,9 +6,10 @@ from rapido.utils.imp import import_module
 
 from _errors import *
 from _fields import *
+from _query import *
 
 
-__all__ = ['Model', 'Query', 'get_model', 'get_models']
+__all__ = ['Model', 'get_model', 'get_models']
 
 
 class ModelCache(object):
@@ -87,7 +88,7 @@ class ModelCache(object):
         models = self.cache.setdefault(package, {})
         if name not in models:
             from rapido.db.engines import Table
-            cls._table = Table(name)
+            cls._table = Table(cls)
         alias = cls.__name__.lower()
         if package:
             alias = '%s.%s' % (package, alias)
@@ -301,19 +302,13 @@ class Model(object):
         The property is only available if the instance is already stored in
         the database.
         """
-        pass
+        return self._key
 
     @property
     def saved(self):
         """Whether the model is saved in database or not.
         """
-        pass
-
-    @property
-    def changed(self):
-        """Whether the instance has been changed since it is loaded.
-        """
-        pass
+        return  self._key is not None
 
     def _get_table(self):
         """Get the database table. For internal use only.
@@ -332,7 +327,15 @@ class Model(object):
         Raises:
             DatabaseError if instance could not be commited.
         """
-        pass
+
+        values = dict(self._values)
+        
+        table = self._get_table()
+        if self.saved:
+            table.update(self.key, **values)
+        else:
+            self._key = table.insert(**values)
+        return self.key
 
     def delete(self):
         """Deletes the instance from the database.
@@ -340,7 +343,11 @@ class Model(object):
         Raises:
             DatabaseError if instance could not be deleted.
         """
-        pass
+        if not self.saved:
+            raise DatabaseError("Can't delete, instance doesn't exists.")
+        table = self._get_table()
+        table.delete(self.key)
+        self._key = None
 
     @classmethod
     def get(cls, keys):
@@ -366,7 +373,15 @@ class Model(object):
         Raises:
             DatabaseError if instances can't be retrieved from the given keys.
         """
-        pass
+        single = False
+        if not isinstance(keys, (list, tuple)):
+            keys = [keys]
+            single = True
+        result = cls.all().filter('id in :keys', keys=keys).fetch(len(keys))
+
+        if single:
+            return result[0] if result else None
+        return result
 
     @classmethod
     def all(cls):
@@ -379,57 +394,22 @@ class Model(object):
         return Query(cls)
 
     @classmethod
+    def filter(cls, query, **params):
+        """Shortcut to `cls.all().filter`
+
+        Args:
+            query: the simple query (see `db.Query`)
+            params: param values
+
+        Returns:
+            Query object
+        """
+        return cls.all().filter(query, **params)
+
+    @classmethod
     def fields(cls):
         """Return the defined fields.
         """
         return dict(cls._fields)
 
-
-class Query(object):
-    """The query object. It provides methods to filter and fetch records
-    from the database with simple pythonic conditions.
-
-    >>> users = Query(User).filter("name ilike :name and age > :age", name="some", age=18)
-    >>> users.order("-age")
-    >>> first_ten = users.fetch(10, offset=0)
-    >>> for user in first_ten:
-    >>>     print "Name:", user.name
-    """
-
-    def __init__(self, model):
-        """Create a new Query for the given model.
-
-        Args:
-            model: the model
-        """
-        self.model = model
-
-    def filter(self, query, **kw):
-        """Filter with the given query."
-        
-        >>> Query(User).filter("name ilike :name and age >= :age", name="some", age=20)
-        """
-        raise NotImplementedError
-
-    def order(self, spec):
-        """Order the query result with given spec.
-        
-        >>> q = Query(User).filter("name ilike :name and age >= :age", name="some", age=20)
-        >>> q.order("-age")
-        """
-        raise NotImplementedError
-
-    def fetch(self, limit, offset=0):
-        """Fetch the given number of records from the query object from the given offset.
-        
-        >>> q = Query(User).filter("name ilike :name and age >= :age", name="some", age=20)
-        >>> for obj in q.fetch(20):
-        >>>     print obj.name
-        """
-        raise NotImplementedError
-
-    def count(self):
-        """Return the number of records in the query object.
-        """
-        raise NotImplementedError
 
