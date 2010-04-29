@@ -56,7 +56,6 @@ class DBCommand(BaseCommand):
 
         from rapido.db.engines import database
 
-        database.create()  # create database if doesn't exists
         database.connect()
         try:
             for model in models:
