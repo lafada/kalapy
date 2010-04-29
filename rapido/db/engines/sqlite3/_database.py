@@ -71,5 +71,3 @@ class Database(IDatabase):
     def cursor(self):
         return self.connection.cursor()
 
-    def select(self, entity, condition):
-        raise NotImplementedError("Not implemented yet.")

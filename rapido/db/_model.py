@@ -86,8 +86,8 @@ class ModelCache(object):
         package, name = self.names(cls._model_name)
         models = self.cache.setdefault(package, {})
         if name not in models:
-            from rapido.db.engines import Entity
-            cls._entity = Entity(name)
+            from rapido.db.engines import Table
+            cls._table = Table(name)
         alias = cls.__name__.lower()
         if package:
             alias = '%s.%s' % (package, alias)
@@ -173,9 +173,9 @@ class Model(object):
     """Model is the super class of all the objects of data entities in
     the database.
 
-    Database entities declared as subclasses of `Model` defines entity
-    properties as class members of type `Field`. So if you want to publish
-    a story with title, body and date, you would do it like:
+    Database tables declared as subclasses of `Model` defines table properties
+    as class members of type `Field`. So if you want to publish a story with 
+    title, body and date, you would do it like:
 
     >>> class Story(Model):
     >>>     title = String(size=100, required=True)
@@ -267,7 +267,7 @@ class Model(object):
 
     __metaclass__ = ModelType
 
-    _entity = None
+    _table = None
 
     def __new__(cls, **kw):
 
@@ -296,16 +296,16 @@ class Model(object):
 
     @property
     def id(self):
-        """The unique key id for this entity.
+        """The unique key id for this model.
 
-        The property is only available if the entity is already stored in
+        The property is only available if the model is already stored in
         the database.
         """
         pass
 
     @property
     def saved(self):
-        """Whether the entity is saved in database or not.
+        """Whether the model is saved in database or not.
         """
         pass
 
@@ -315,30 +315,30 @@ class Model(object):
         """
         pass
 
-    def _get_entity(self):
-        """Get the database entity. For internal use only.
+    def _get_table(self):
+        """Get the database table. For internal use only.
         """
-        return self.__class__._entity
+        return self.__class__._table
 
     def save(self):
-        """Writes the entity to the database.
+        """Writes the instance to the database.
 
-        If the instance is new, a new record will be added to the database
-        else the record will be updated.
+        If the instance is created, a new record will be added to the database
+        else if it is loaded from database, the record will be updated.
 
         Returns:
-            The unique key id of the entity
+            The unique key id
 
         Raises:
-            DatabaseError if entity could not be commited.
+            DatabaseError if instance could not be commited.
         """
         pass
 
     def delete(self):
-        """Deletes the entity from the database.
+        """Deletes the instance from the database.
         
         Raises:
-            DatabaseError if entity could not be commited.
+            DatabaseError if instance could not be deleted.
         """
         pass
 
@@ -360,11 +360,11 @@ class Model(object):
             ids: an id or list of ids
 
         Returns:
-            if ids is single value it will return and instance of the entity
-            model else returns list of entity instances.
+            if ids is single value it will return and instance of the Model else
+            returns list of instances.
 
         Raises:
-            DatabaseError if entities can be retrieved from the given ids.
+            DatabaseError if instances can't be retrieved from the given ids.
         """
         pass
 

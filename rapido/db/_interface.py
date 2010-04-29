@@ -69,19 +69,6 @@ class IDatabase(local):
         """
         raise NotImplementedError
 
-    def select(self, entity, condition):
-        """Select all the records of the given entity that passes 
-        the given condition.
-
-        Args:
-            entity: the name of the entity on which to perform query
-            condition: the filter condition
-
-        Returns:
-            a list of all records matched.
-        """
-        raise NotImplementedError
-
     def get_data_type(self, field):
         """Get the internal datatype for the given field supported by the database.
         """
@@ -92,17 +79,16 @@ class IDatabase(local):
             raise DatabaseError("Unsupported datatype '%s'" % field.data_type)
 
 
-class IEntity(object):
-    """The Entity interface, low level representation of the main storage 
-    structure of the particular database engine.  For example, `table` in RDMBS
-    and `entity` in BigTable.
+class ITable(object):
+    """Table interface. Backend engines should implement this interface 
+    with name `Table`.
     """
 
     def __init__(self, name):
-        """Initialize the entity for the given model name
+        """Initialize the table for the given model name
 
         Args:
-            name: model name of the entity
+            name: model name
         """
         self._model_name = name
         self._name = name.replace('.', '_')
@@ -124,35 +110,35 @@ class IEntity(object):
         return model_cache.get_model(self._model_name)
 
     def schema(self):
-        """Get the schema representation of the entity.
+        """Get the schema representation of the table.
         """
         raise NotImplementedError
 
     def exists(self):
-        """Check whether the entity exists in the database.
+        """Check whether the table exists in the database.
         """
         raise NotImplementedError
 
     def create(self):
-        """Create a new entity in the database if it doesn't exist.
+        """Create a new table in the database if it doesn't exist.
         """
         raise NotImplementedError
 
     def drop(self):
-        """Drop the current entity if it exists.
+        """Drop the current table if it exists.
         """
         raise NotImplementedError
 
     def rename(self, new_name):
-        """Rename the current entity with the given new name.
+        """Rename the current table with the given new name.
 
         Args:
-            new_name: the new name for the entity
+            new_name: the new name for the table
         """
         raise NotImplementedError
 
     def insert(self, **kw):
-        """Insert a record to the entity with the given values.
+        """Insert a record to the table with the given values.
 
         Args:
             **kw: the key, value pairs for the given record.
@@ -169,7 +155,7 @@ class IEntity(object):
         raise NotImplementedError
 
     def delete(self, keys):
-        """Delete all the records from the entity identified with the
+        """Delete all the records from the table identified with the
         given keys.
 
         Args:
@@ -178,7 +164,7 @@ class IEntity(object):
         raise NotImplementedError
 
     def field_exists(self, field):
-        """Check whether a field exists in the entity.
+        """Check whether a field exists in the table.
 
         Args:
             field: an instance of `db.Field`
@@ -200,7 +186,7 @@ class IEntity(object):
         raise NotImplementedError
 
     def field_alter(self, field):
-        """Change the definition of the entity field with the changed 
+        """Change the definition of the table field with the changed 
         attributes of the given field.
 
         Args:

@@ -1,11 +1,11 @@
-from rapido.db._interface import IEntity
+from rapido.db._interface import ITable
 from rapido.db._reference import ManyToOne
 
 
-class Entity(IEntity):
+class Table(ITable):
 
     def __init__(self, name):
-        super(Entity, self).__init__(name)
+        super(Table, self).__init__(name)
 
     def exists(self):
         self.cursor.execute("""
@@ -26,7 +26,7 @@ class Entity(IEntity):
                 res = "%s UNIQUE" % res
 
         if isinstance(field, ManyToOne):
-            res = '%s REFERENCES "%s" ("id")' % (res, field.reference._entity.name)
+            res = '%s REFERENCES "%s" ("id")' % (res, field.reference._table.name)
             if field.cascade:
                 res = '%s ON DELETE CASCADE' % res
             elif field.required:

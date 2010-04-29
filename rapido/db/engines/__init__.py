@@ -23,7 +23,7 @@ def load_engine(name):
 engine = load_engine(settings.DATABASE_ENGINE)
 
 Database = engine.Database
-Entity = engine.Entity
+Table = engine.Table
 
 database = Database(
     name=settings.DATABASE_NAME,
@@ -32,5 +32,5 @@ database = Database(
     user=settings.DATABASE_USER,
     password=settings.DATABASE_PASSWORD)
 
-Entity._database = database
+Table._database = database
 

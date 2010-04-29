@@ -60,7 +60,7 @@ class DBCommand(BaseCommand):
         database.connect()
         try:
             for model in models:
-                print model._entity.schema()
+                print model._table.schema()
         finally:
             database.close()
 

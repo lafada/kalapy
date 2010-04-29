@@ -19,11 +19,6 @@ class ManyToOne(Field):
     def reference(self):
         return get_model(self._reference)
 
-    def __configure__(self, model_class, name):
-        super(ManyToOne, self).__configure__(model_class, name)
-        if not self._name.endswith('_id'):
-            self._name = '%s_id' % self._name
-
 
 class OneToMany(Field):
     pass
