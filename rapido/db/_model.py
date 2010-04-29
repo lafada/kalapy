@@ -281,7 +281,7 @@ class Model(object):
 
     def __init__(self, **kw):
 
-        self._id = None
+        self._key = None
         self._values = {}
 
         fields = self.fields()
@@ -295,10 +295,10 @@ class Model(object):
             field.__set__(self, value)
 
     @property
-    def id(self):
-        """The unique key id for this model.
+    def key(self):
+        """The unique key id for this model instance.
 
-        The property is only available if the model is already stored in
+        The property is only available if the instance is already stored in
         the database.
         """
         pass
@@ -343,11 +343,11 @@ class Model(object):
         pass
 
     @classmethod
-    def get(cls, ids):
+    def get(cls, keys):
         """Fetch the instance(s) from the database using the provided id(s).
 
-        If `ids` is a single value it will return an instance else if `ids`
-        is a list of `id` then returns list of instances.
+        If `keys` is a single value it will return an instance else if `keys`
+        is a list of `key` then returns list of instances.
 
         >>> user = User.get(123)
         >>> isinstance(user, User)
@@ -357,14 +357,14 @@ class Model(object):
         ... True
 
         Args:
-            ids: an id or list of ids
+            keys: an key or list of keys
 
         Returns:
-            if ids is single value it will return and instance of the Model else
+            if `keys` is single value it will return and instance of the Model else
             returns list of instances.
 
         Raises:
-            DatabaseError if instances can't be retrieved from the given ids.
+            DatabaseError if instances can't be retrieved from the given keys.
         """
         pass
 
