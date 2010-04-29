@@ -83,10 +83,6 @@ class ITable(object):
         self._name = model._model_name.replace('.', '_')
 
     @property
-    def cursor(self):
-        return self.database.cursor()
-
-    @property
     def name(self):
         return self._name
 

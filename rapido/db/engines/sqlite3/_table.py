@@ -8,11 +8,12 @@ class Table(ITable):
         super(Table, self).__init__(model)
 
     def exists(self):
-        self.cursor.execute("""
+        cursor = self.database.cursor()
+        cursor.execute("""
             SELECT "name" FROM sqlite_master 
                 WHERE type = "table" AND name = ?;
             """, (self.name,))
-        return bool(self.cursor.fetchone())
+        return bool(cursor.fetchone())
 
     def get_pk_sql(self):
         return '"id" INTEGER PRIMARY KEY AUTOINCREMENT'
@@ -49,15 +50,18 @@ class Table(ITable):
 
     def create(self):
         if not self.exists():
-            self.cursor.execute(self.get_create_sql())
+            cursor = self.database.cursor()
+            cursor.execute(self.get_create_sql())
 
     def drop(self):
         if self.exists():
-            self.cursor.execute('DROP TABLE "%s"' % self.name)
+            cursor = self.database.cursor()
+            cursor.execute('DROP TABLE "%s"' % self.name)
 
     def rename(self, new_name):
         if self.exists():
-            self.cursor.execute('ALTER TABLE "%s" RENAME TO "%s"' % (
+            cursor = self.database.cursor()
+            cursor.execute('ALTER TABLE "%s" RENAME TO "%s"' % (
                 self.name, new_name,))
 
     def insert(self, **kw):
@@ -72,9 +76,10 @@ class Table(ITable):
                 ", ".join(keys),
                 ", ".join(['?'] * len(vals)))
 
-        self.cursor.execute(sql, vals)
+        cursor = self.database.cursor()
+        cursor.execute(sql, vals)
 
-        return self.cursor.lastrowid
+        return cursor.lastrowid
 
     def update(self, key, **kw):
 
@@ -89,20 +94,24 @@ class Table(ITable):
                 table=self.name, keys=keys)
 
         vals.append(key)
-        self.cursor.execute(sql, vals)
+
+        cursor = self.database.cursor()
+        cursor.execute(sql, vals)
 
     def delete(self, keys):
         if not isinstance(keys, (list, tuple)):
             keys = [keys]
         sql = 'DELETE FROM "%s" WHERE "id" IN (%s)' % (self.name, ", ".join(['?'] * len(keys)))
-        self.cursor.execute(sql, keys)
+        cursor = self.database.cursor()
+        cursor.execute(sql, keys)
 
     def select(self, query, params):
-        self.cursor.execute(query, params)
+        cursor = self.database.cursor()
+        cursor.execute(query, params)
 
-        names = [desc[0] for desc in self.cursor.description]
+        names = [desc[0] for desc in cursor.description]
         result = []
-        for row in self.cursor.fetchall():
+        for row in cursor.fetchall():
             obj = self.model()
             for i, name in enumerate(names):
                 if row[i] is None:
@@ -115,9 +124,10 @@ class Table(ITable):
         return result
 
     def count(self, query, params):
-        self.cursor.execute(query, params)
+        cursor = self.database.cursor()
+        cursor.execute(query, params)
         try:
-            return self.cursor.fetchone()[0]
+            return cursor.fetchone()[0]
         except:
             return 0
 
@@ -125,7 +135,8 @@ class Table(ITable):
         name = field if isinstance(field, basestring) else field.name
         sql = 'SELECT "%s" FROM "%s" LIMIT 1' % (name, self.name)
         try:
-            self.cursor.execute(sql)
+            cursor = self.database.cursor()
+            cursor.execute(sql)
             return True
         except:
             return False
@@ -133,7 +144,8 @@ class Table(ITable):
     def field_add(self, field):
         field_sql = self.get_field_sql(field, for_alter=True)
         sql = 'ALTER TABLE "%s" ADD COLUMN %s' % (self.name, field_sql)
-        self.cursor.execute(sql)
+        cursor = self.database.cursor()
+        cursor.execute(sql)
 
     def field_drop(self, field):
         #XXX: not supported

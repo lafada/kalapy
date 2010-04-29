@@ -40,8 +40,6 @@ class Database(IDatabase):
         if self.autocommit:
             self.connection.isolation_level = None
 
-        self._cursor = self.connection.cursor()
-
         return self
 
     def close(self):
@@ -58,5 +56,5 @@ class Database(IDatabase):
     def cursor(self):
         if not self.connection:
             self.connect()
-        return self._cursor
+        return self.connection.cursor()
 
