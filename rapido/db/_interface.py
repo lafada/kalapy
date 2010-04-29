@@ -54,16 +54,6 @@ class IDatabase(local):
         """
         raise NotImplementedError
 
-    def create(self):
-        """Create the database if it doesn't exist.
-        """
-        raise NotImplementedError
-
-    def drop(self):
-        """Drop the database.
-        """
-        raise NotImplementedError
-
     def cursor(self):
         """Return a dbapi2 complaint cursor instance.
         """

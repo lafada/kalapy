@@ -43,6 +43,8 @@ class Database(IDatabase):
         return self
 
     def close(self):
+        if self.connection:
+            self.connection.close()
         self.connection = None
 
     def commit(self):
@@ -51,23 +53,8 @@ class Database(IDatabase):
     def rollback(self):
         self.connection.rollback()
 
-    def create(self):
-
-        if self.connection:
-            return self
-
-        if not os.path.isfile(self.name):
-            self.connection = sqlite3.connect(self.name, detect_types=sqlite3.PARSE_DECLTYPES)
-            self.close()
-
-        return self
-
-    def drop(self):
-        self.close()
-        if self.name == ":memory:":
-            return
-        os.remove(self.name)
-
     def cursor(self):
+        if not self.connection:
+            self.connect()
         return self.connection.cursor()
 
