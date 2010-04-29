@@ -133,7 +133,7 @@ class Parser(object):
         try:
             name, op, var_, var = self.pat_stmt.match(query).groups()
         except:
-            raise Exception('Maleformed query: %s', query)
+            raise Exception('Malformed query: %s', query)
 
         op = op.lower()
         op = self.op_alias.get(op, op)
