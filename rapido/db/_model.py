@@ -33,15 +33,32 @@ class ModelCache(object):
         return "", name
 
     def _populate(self):
+        """Populate the cache with defined models in all INSTALLED_PACKAGES.
+        """
         if self.loaded:
             return
         self.lock.acquire()
         try:
             for package in settings.INSTALLED_PACKAGES:
                 models = import_module('models', package)
-            self.loaded = True
+            self.loaded = True        
+            self._prepare_references()
         finally:
             self.lock.release()
+
+    def _prepare_references(self):
+        """Prepare all reference fields for the registered models.
+        """
+        from _reference import Reference, Collection
+        
+        models = self.get_models()
+        for model in models:
+            fields = model.fields()
+            for name, field in fields.items():
+                if not isinstance(field, (Reference, Collection)):
+                    continue
+                field.prepare(model)
+
 
     def get_model(self, name):
         """Get the model from the cache of the given name.
@@ -51,7 +68,11 @@ class ModelCache(object):
         Args:
             name: name of the model
         """
-        self._populate()
+        return self._get_model(name, True)
+
+    def _get_model(self, name, seed=False):
+        if seed:
+            self._populate()
 
         if isinstance(name, ModelType):
             name = name._model_name
@@ -122,7 +143,7 @@ class ModelType(type):
             package_name = ''
 
         model_name = getattr(parents[0], '_model_name', package_name + name).lower()
-        parent = cache.get_model(model_name)
+        parent = cache._get_model(model_name)
 
         if parent:
             bases = list(bases)

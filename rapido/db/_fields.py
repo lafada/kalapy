@@ -50,7 +50,7 @@ class Field(object):
         self._validator = None
 
     def __repr__(self):
-        return "<Field name='%s'>" % self.name
+        return "<Field %s name='%s'>" % (self.__class__.__name__, self.name)
 
     def __configure__(self, model_class, name):
         if self._name is None:
