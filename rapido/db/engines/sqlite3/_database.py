@@ -3,7 +3,7 @@ import sqlite3
 
 from rapido.db._errors import DatabaseError
 from rapido.db._interface import IDatabase
-from rapido.db._reference import ManyToOne
+from rapido.db._reference import Reference
 
 
 class Database(IDatabase):
@@ -75,7 +75,7 @@ class Database(IDatabase):
             if field.unique:
                 res = "%s UNIQUE" % res
 
-        if isinstance(field, ManyToOne):
+        if isinstance(field, Reference):
             res = '%s REFERENCES "%s" ("id")' % (res, field.reference._table_name)
             if field.cascade:
                 res = '%s ON DELETE CASCADE' % res

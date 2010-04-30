@@ -72,6 +72,17 @@ class Field(object):
         value = self.validate(model_instance, value)
         model_instance._values[self.name] = value
 
+    def to_database_value(self, model_instance):
+        """Get the value to be stored in database for this field.
+        """
+        return self.__get__(model_instance, model_instance.__class__)
+
+    def from_database_value(self, model_instance, value):
+        """Get the value to be stored in model instance from the given
+        value retrieved from database.
+        """
+        return value
+
     def validate(self, model_instance, value):
 
         if self.empty(value) and self.required:

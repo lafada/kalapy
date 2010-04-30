@@ -314,12 +314,24 @@ class Model(object):
     def _values_for_db(self):
         """Return values to be stored in database table. For internal use only.
         """
-        return dict(self._values)
+        values = {}
+        fields = self.fields()
+        for k, v in self._values.items():
+            values[k] = fields[k].to_database_value(self)
+        return values
     
     @classmethod
     def _from_db_values(cls, values):
+
+        values = dict(values)
+
         obj = cls()
         obj._key = values.pop('id', None)
+
+        fields = obj.fields()
+        for k, v in values.items():
+            values[k] = fields[k].from_database_value(obj, v)
+
         obj._values.update(values)
         return obj
         
@@ -336,6 +348,8 @@ class Model(object):
             DatabaseError if instance could not be commited.
         """
         from rapido.db.engines import database
+        if self.saved:
+            return database.update_table(self)
         return database.insert_into(self)
 
     def delete(self):
