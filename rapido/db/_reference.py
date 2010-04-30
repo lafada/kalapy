@@ -25,8 +25,11 @@ class Reference(Field):
             self.collection_name = '%s_set' % (model_class.__name__.lower())
         if self.collection_name in self.reference.fields():
             raise DuplicateFieldError('Duplicate field %r' % self.collection_name)
-        f = Collection(model_class)
+        if hasattr(self.reference, self.collection_name):
+            raise AttributeError('Attribute with same name already exists: %r' % self.collection_name)
+        f = Collection(model_class, self.name)
         setattr(self.reference, self.collection_name, f)
+        f.__configure__(self.reference, self.collection_name)
 
     def __get__(self, model_instance, model_class):
         return super(Reference, self).__get__(model_instance, model_class)
@@ -51,10 +54,24 @@ class Reference(Field):
 
 class Collection(Field):
 
-    def __init__(self, reference, reference_name=None, **kw):
+    def __init__(self, reference, reference_name, **kw):
         super(Collection, self).__init__(**kw)
-        self._reference = reference
-        self._reference_name = reference_name
+        self._ref = reference
+        self._ref_name = reference_name
 
     def prepare(self, model_class):
         pass
+
+    @property
+    def reference(self):
+        return get_model(self._ref)
+
+    def __get__(self, model_instance, model_class):
+        if model_instance is None:
+            return self
+        return self.reference.filter('%s == :key' % self._ref_name, 
+                key=model_instance.key)
+
+    def __set__(self, model_instance, value):
+        raise ValueError("Field %r is readonly." % self.name)
+
