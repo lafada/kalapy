@@ -94,8 +94,24 @@ class Query(object):
             result = "%s OFFSET %d" % (result, offset)
         return result
 
-    def __str__(self):
-        return self._select('*')
+    def __getitem__(self, arg):
+        if isinstance(arg, (int, long)):
+            try:
+                return self.fetch(1, arg)[0]
+            except IndexError:
+                raise IndexError('The query returned fewer then %r results' % arg)
+        else:
+            raise ValueError('Only integer indices are supported.')
+            
+    def __iter__(self):
+        offset = -1
+        try:
+            while True:
+                offset += 1
+                yield self.fetch(1, offset)[0]
+        except Exception, e:
+            pass
+
 
 class Parser(object):
     """Simple regex based query parser.
