@@ -53,12 +53,14 @@ class ModelCache(object):
         
         models = self.get_models()
         for model in models:
+            model._ref_models = ref_models = []
             fields = model.fields()
             for name, field in fields.items():
                 if not isinstance(field, IRelation):
                     continue
                 field.prepare(model)
-
+                if field.reference._model_name not in ref_models:
+                    ref_models.append(field.reference._model_name)
 
     def get_model(self, name):
         """Get the model from the cache of the given name.

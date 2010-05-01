@@ -29,11 +29,27 @@ class DBCommand(BaseCommand):
             return self.backup(options['backup'])
         self.print_help()
 
+    def get_models(self, *packages):
+        from rapido import db
+        if packages:
+            models = []
+            for package in packages:
+                models.extend(db.get_models(package))
+        else:
+            models = db.get_models()
+
+        def _sort(x, y):
+            if x._model_name in y._ref_models:
+                return -1
+            return 1
+
+        models.sort(_sort)
+        return models
+
     def info(self, *packages):
         if not packages:
             self.error("At least one package name required.")
 
-        from rapido import db
         from rapido.conf import settings
         from rapido.utils.imp import import_module
 
@@ -44,11 +60,7 @@ class DBCommand(BaseCommand):
             if package not in settings.INSTALLED_PACKAGES:
                 self.error('%r not in INSTALLED_PACKAGES' % package)
 
-        models = []
-        for package in packages:
-            models.extend(db.get_models(package))
-
-        #TODO: sort models by references
+        models = self.get_models(*packages)
 
         from rapido.db.engines import database
 
@@ -60,17 +72,14 @@ class DBCommand(BaseCommand):
             database.close()
 
     def sync(self):
-        from rapido import db
         from rapido.conf import settings
         from rapido.utils.imp import import_module
 
         if settings.DATABASE_ENGINE == "dummy":
             raise self.error("DATABASE_ENGINE is not configured.")
 
-        models = db.get_models()
+        models = self.get_models()
         
-        #TODO: sort models by references
-
         from rapido.db.engines import database
 
         database.connect()

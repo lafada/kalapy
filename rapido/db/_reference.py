@@ -337,6 +337,8 @@ class ManyToMany(IRelation):
         cls.add_field(ManyToOne(model_class, name='source'))
         cls.add_field(ManyToOne(self.reference, name='target'))
 
+        cls._ref_models = [model_class._model_name, self.reference._model_name]
+
         #XXX: create reverse lookup fields?
         #cls.source.prepare(cls)
         #cls.target.prepare(cls)
