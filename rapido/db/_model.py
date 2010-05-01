@@ -49,13 +49,13 @@ class ModelCache(object):
     def _prepare_references(self):
         """Prepare all reference fields for the registered models.
         """
-        from _reference import Reference, ReferenceSet
+        from _reference import IRelation
         
         models = self.get_models()
         for model in models:
             fields = model.fields()
             for name, field in fields.items():
-                if not isinstance(field, (Reference, ReferenceSet)):
+                if not isinstance(field, IRelation):
                     continue
                 field.prepare(model)
 
@@ -190,6 +190,16 @@ class ModelType(type):
     
     def __repr__(cls):
         return "<Model %r: class %s>" % (cls._model_name, cls.__name__)
+
+
+    def add_field(cls, field):
+        if not field.name:
+            raise ValueError('Field has no name')
+        if hasattr(cls, field.name):
+            raise DuplicateFieldError('Field %r already defined in model %r' % (field.name, cls.__name__))
+        setattr(cls, field.name, field)
+        cls._fields[field.name] = field
+        field.__configure__(cls, field.name)
 
 
 class Model(object):

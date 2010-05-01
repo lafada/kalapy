@@ -3,7 +3,7 @@ import sqlite3
 
 from rapido.db._errors import DatabaseError
 from rapido.db._interface import IDatabase
-from rapido.db._reference import Reference
+from rapido.db._reference import ManyToOne
 
 
 class Database(IDatabase):
@@ -75,7 +75,7 @@ class Database(IDatabase):
             if field.unique:
                 res = "%s UNIQUE" % res
 
-        if isinstance(field, Reference):
+        if isinstance(field, ManyToOne):
             res = '%s REFERENCES "%s" ("id")' % (res, field.reference._table_name)
             if field.cascade:
                 res = '%s ON DELETE CASCADE' % res
@@ -86,7 +86,8 @@ class Database(IDatabase):
         return res
 
     def get_create_sql(self, model):
-        fields = model.fields().values()
+
+        fields = [f for f in model.fields().values() if f._data_type is not None]
         fields.sort(lambda a, b: cmp(a._creation_order, b._creation_order))
 
         fields_sql = [self.get_pk_sql()] + [self.get_field_sql(f) for f in fields]

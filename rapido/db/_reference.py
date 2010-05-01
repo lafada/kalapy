@@ -1,19 +1,42 @@
 
 from _fields import Field
 from _model import get_model, get_models, Model
+from _errors import DuplicateFieldError
 
 
-__all__ = ('Reference', 'ReferenceSet')
+__all__ = ('ManyToOne', 'OneToMany')
 
 
-class Reference(Field):
+
+class IRelation(object):
+
+    is_reference_field = True
+
+    def prepare(self, model_class):
+        pass
+
+
+class ManyToOne(Field, IRelation):
+    """ManyToOne field represents either many-to-one relationship with other model.
+    """
 
     _data_type = 'integer'
 
-    def __init__(self, reference, collection_name=None, cascade=None, **kw):
-        super(Reference, self).__init__(**kw)
+    def __init__(self, reference, reverse_name=None, cascade=None, **kw):
+        """Create a new ManyToOne field referencing the given `reference` model.
+
+        A reverse lookup field of type OneToMany will be created on the referenced
+        model if it doesn't exist.
+
+        Args:
+            reference: reference model class
+            reverse_name: name of the reverse lookup field in the referenced model
+            cascade: None = set null, False = restrict and True = cascade
+            **kw: other field params
+        """
+        super(ManyToOne, self).__init__(**kw)
         self._reference = reference
-        self.collection_name = collection_name
+        self.reverse_name = reverse_name
         self.cascade = cascade
 
     @property
@@ -21,27 +44,33 @@ class Reference(Field):
         return get_model(self._reference)
 
     def prepare(self, model_class):
-        if self.collection_name is None:
-            self.collection_name = '%s_set' % (model_class.__name__.lower())
-        if self.collection_name in self.reference.fields():
-            raise DuplicateFieldError('Duplicate field %r' % self.collection_name)
-        if hasattr(self.reference, self.collection_name):
-            raise AttributeError('Attribute with same name already exists: %r' % self.collection_name)
-        f = ReferenceSet(model_class, self.name)
-        setattr(self.reference, self.collection_name, f)
-        f.__configure__(self.reference, self.collection_name)
+
+        if not self.reverse_name:
+            self.reverse_name = '%s_set' % model_class.__name__.lower()
+        
+        if hasattr(self.reference, self.reverse_name):
+            try:
+                if getattr(self.reference, self.reverse_name).reverse_name == self.name:
+                    return
+            except:
+                pass
+            raise DuplicateFieldError('field %r aleady defined in referenced model %r' % (
+                self.reverse_name, self.reference.__name__))
+
+        f = OneToMany(model_class, self.name, name=self.reverse_name)
+        self.reference.add_field(f)
 
     def __get__(self, model_instance, model_class):
-        return super(Reference, self).__get__(model_instance, model_class)
+        return super(ManyToOne, self).__get__(model_instance, model_class)
         
     def __set__(self, model_instance, value):
         if value is not None and not isinstance(value, self.reference):
-            raise ValueError("Reference field %r value should be an instance of %r" % (
+            raise ValueError("ManyToOne field %r value should be an instance of %r" % (
                 self.name, self._reference.__name__))
-        super(Reference, self).__set__(model_instance, value)
+        super(ManyToOne, self).__set__(model_instance, value)
 
     def to_database_value(self, model_instance):
-        value = super(Reference, self).to_database_value(model_instance)
+        value = super(ManyToOne, self).to_database_value(model_instance)
         if isinstance(value, Model):
             return value.key
         return value
@@ -52,26 +81,44 @@ class Reference(Field):
         return value
 
 
-class ReferenceSet(Field):
+class OneToMany(Field, IRelation):
 
-    def __init__(self, reference, reference_name, **kw):
-        super(ReferenceSet, self).__init__(**kw)
+    _data_type = None
+
+    def __init__(self, reference, reverse_name=None, **kw):
+        super(OneToMany, self).__init__(**kw)
         self._ref = reference
-        self._ref_name = reference_name
-
-    def prepare(self, model_class):
-        pass
+        self.reverse_name = reverse_name
 
     @property
     def reference(self):
         return get_model(self._ref)
 
+    def prepare(self, model_class):
+
+        if not self.reverse_name:
+            self.reverse_name = model_class.__name__.lower()
+        
+        if hasattr(self.reference, self.reverse_name):
+            try:
+                if getattr(self.reference, self.reverse_name).reverse_name == self.name:
+                    return
+            except:
+                pass
+            raise DuplicateFieldError('field %r aleady defined in referenced model %r' % (
+                self.reverse_name, self.reference.__name__))
+
+        f = ManyToOne(model_class, self.name, name=self.reverse_name)
+        self.reference.add_field(f)
+
     def __get__(self, model_instance, model_class):
         if model_instance is None:
             return self
-        return self.reference.filter('%s == :key' % self._ref_name, 
+        return self.reference.filter('%s == :key' % self.reverse_name, 
                 key=model_instance.key)
 
     def __set__(self, model_instance, value):
         raise ValueError("Field %r is readonly." % self.name)
+
+
 
