@@ -81,7 +81,7 @@ class Database(IDatabase):
                 res = '%s ON DELETE CASCADE' % res
             elif field.required:
                 res = '%s ON DELETE RESTRICT' % res
-            else:
+            elif field.cascade is None:
                 res = '%s ON DELETE SET NULL' % res
         return res
 

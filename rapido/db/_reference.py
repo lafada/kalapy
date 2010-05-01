@@ -4,7 +4,7 @@ from _model import get_model, get_models, Model
 from _errors import DuplicateFieldError
 
 
-__all__ = ('ManyToOne', 'OneToMany')
+__all__ = ('ManyToOne', 'OneToOne', 'OneToMany')
 
 
 
@@ -22,7 +22,7 @@ class ManyToOne(Field, IRelation):
 
     _data_type = 'integer'
 
-    def __init__(self, reference, reverse_name=None, cascade=None, **kw):
+    def __init__(self, reference, reverse_name=None, cascade=False, **kw):
         """Create a new ManyToOne field referencing the given `reference` model.
 
         A reverse lookup field of type OneToMany will be created on the referenced
@@ -81,6 +81,14 @@ class ManyToOne(Field, IRelation):
         return value
 
 
+class OneToOne(ManyToOne):
+    """OneToOne is basically ManyToOne with unique constraint.
+    """
+    def __init__(self, reference, reverse_name=None, cascade=False, **kw):
+        kw['unique'] = True
+        super(OneToOne, self).__init__(reference, reverse_name, cascade, **kw)
+
+
 class OneToMany(Field, IRelation):
 
     _data_type = None
@@ -119,6 +127,5 @@ class OneToMany(Field, IRelation):
 
     def __set__(self, model_instance, value):
         raise ValueError("Field %r is readonly." % self.name)
-
 
 
