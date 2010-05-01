@@ -49,13 +49,13 @@ class ModelCache(object):
     def _prepare_references(self):
         """Prepare all reference fields for the registered models.
         """
-        from _reference import Reference, Collection
+        from _reference import Reference, ReferenceSet
         
         models = self.get_models()
         for model in models:
             fields = model.fields()
             for name, field in fields.items():
-                if not isinstance(field, (Reference, Collection)):
+                if not isinstance(field, (Reference, ReferenceSet)):
                     continue
                 field.prepare(model)
 

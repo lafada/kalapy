@@ -3,7 +3,7 @@ from _fields import Field
 from _model import get_model, get_models, Model
 
 
-__all__ = ('Reference', 'Collection')
+__all__ = ('Reference', 'ReferenceSet')
 
 
 class Reference(Field):
@@ -27,7 +27,7 @@ class Reference(Field):
             raise DuplicateFieldError('Duplicate field %r' % self.collection_name)
         if hasattr(self.reference, self.collection_name):
             raise AttributeError('Attribute with same name already exists: %r' % self.collection_name)
-        f = Collection(model_class, self.name)
+        f = ReferenceSet(model_class, self.name)
         setattr(self.reference, self.collection_name, f)
         f.__configure__(self.reference, self.collection_name)
 
@@ -52,10 +52,10 @@ class Reference(Field):
         return value
 
 
-class Collection(Field):
+class ReferenceSet(Field):
 
     def __init__(self, reference, reference_name, **kw):
-        super(Collection, self).__init__(**kw)
+        super(ReferenceSet, self).__init__(**kw)
         self._ref = reference
         self._ref_name = reference_name
 
