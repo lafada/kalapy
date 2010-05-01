@@ -1,3 +1,7 @@
+"""This module defines field classes to define relationship like many-to-one,
+one-to-one, many-to-one and many-to-many between models.
+"""
+
 
 from _fields import Field
 from _model import get_model, get_models, Model
@@ -7,17 +11,29 @@ from _errors import FieldError, DuplicateFieldError
 __all__ = ('ManyToOne', 'OneToOne', 'OneToMany', 'ManyToMany')
 
 
-
 class IRelation(object):
-
-    is_reference_field = True
-
+    """This class defines an interface method prepare which will called
+    once all defined models are loaded. So the field would have chance
+    to resolve early lookup references.
+    """
     def prepare(self, model_class):
+        """The relation field should implement this method to implement
+        support code as at this point all the models will be resolved.
+        """
         pass
 
 
 class ManyToOne(Field, IRelation):
-    """ManyToOne field represents either many-to-one relationship with other model.
+    """ManyToOne field represents many-to-one relationship with other model.
+
+    For example, a ManyToOne field defined in model A that refers to model B forms
+    a many-to-one relationship from A to B. Every instance of B refers to a single
+    instance of A and every instance of A can have many instances of B that refer
+    it.
+
+    A reverse lookup field will be automatically created in the reference model.
+    In this case, a field `a_set` of type `OneToMany` will be automatically created
+    on class B referencing class A.
     """
 
     _data_type = 'integer'
@@ -54,7 +70,7 @@ class ManyToOne(Field, IRelation):
                     return
             except:
                 pass
-            raise DuplicateFieldError('field %r aleady defined in referenced model %r' % (
+            raise DuplicateFieldError('field %r already defined in referenced model %r' % (
                 self.reverse_name, self.reference.__name__))
 
         f = OneToMany(model_class, self.name, name=self.reverse_name)
@@ -90,6 +106,17 @@ class OneToOne(ManyToOne):
 
 
 class OneToMany(Field, IRelation):
+    """OneToMany field represents one-to-many relationship with other model.
+
+    For example, a OneToMany field defined in model A that refers to model B forms
+    a one-to-many relationship from A to B. Every instance of B refers to a single
+    instance of A and every instance of A can have many instances of B that refer
+    it.
+
+    A reverse lookup field will be automatically created in the reference model.
+    In this case, a field `a` of type `ManyToOne` will be automatically created
+    on class B referencing class A.
+    """
 
     _data_type = None
 
@@ -113,7 +140,7 @@ class OneToMany(Field, IRelation):
                     return
             except:
                 pass
-            raise DuplicateFieldError('field %r aleady defined in referenced model %r' % (
+            raise DuplicateFieldError('field %r already defined in referenced model %r' % (
                 self.reverse_name, self.reference.__name__))
 
         f = ManyToOne(model_class, self.name, name=self.reverse_name)
@@ -129,6 +156,8 @@ class OneToMany(Field, IRelation):
 
 
 class O2MSet(object):
+    """A descriptor class to access OneToMany fields.
+    """
 
     def __init__(self, field, instance):
         self.__field = field
@@ -137,10 +166,17 @@ class O2MSet(object):
         self.__ref_field = getattr(field.reference, field.reverse_name)
 
     def all(self):
+        """Returns a `Query` object pre-filtered to return related objects.
+        """
         return self.__ref.filter('%s == :key' % (self.__field.reverse_name),
                 key=self.__obj.key)
 
     def add(self, *objs):
+        """Add new instances to the reference set.
+
+        Raises:
+            TypeError: if any given object is not an instance of referenced model
+        """
         for obj in objs:
             if not isinstance(obj, self.__ref):
                 raise TypeError('%r instance expected.' % self.__ref._model_name)
@@ -148,6 +184,12 @@ class O2MSet(object):
             obj.save()
 
     def remove(self, *objs):
+        """Removes the provided instances from the reference set.
+        
+        Raises:
+            FieldError: if referenced instance field is required field.
+            TypeError: if any given object is not an instance of referenced model
+        """
         if self.__ref_field.required:
             raise FieldError("objects can't be removed from %r, delete the objects instead." % (
                 self.__field.name))
@@ -158,8 +200,15 @@ class O2MSet(object):
         database.delete_from_keys(self.__ref, [obj.key for obj in objs if obj.key])
 
     def clear(self):
+        """Removes all referenced instances from the reference set.
+
+        Raises:
+            FieldError: if referenced instance field is required field.
+            TypeError: if any given object is not an instance of referenced model
+        """
         if self.__ref_field.required:
-            raise FieldError("objects can't be removed from %r, delete the objects instead." % (
+            raise FieldError("objects can't be removed from %r, \
+                    delete the objects instead." % (
                 self.__field.name))
 
         # instead of removing records at once remove them in bunches
@@ -172,6 +221,8 @@ class O2MSet(object):
 
 
 class M2MSet(object):
+    """A descriptor class to access ManyToMany field.
+    """
 
     def __init__(self, field, instance):
         self.__field = field
@@ -180,21 +231,39 @@ class M2MSet(object):
         self.__m2m = field.m2m
 
         if not instance.key:
-            raise ValueError('Model instance must be saved before using ManyToMany field.')
+            raise ValueError(
+                    'Instance must be saved before using ManyToMany field.')
 
     def filter(self, query, **params):
+        """Returns a pre-filtered `Query` object filtering with the given query
+        string. You can pass empty string as query to return original `Query` to
+        deal with every instances of reference set. But this is not recommended
+        as it might cause performance issues if reference set is huge.
+
+        Args:
+            query: filter query string
+            **params: name, value to bound names to the query
+        """
         q = self.__m2m.filter('source == :key', key=self.__obj.key)
         if not query:
             return q
         return q.filter(query, **params)
 
     def objects(self, limit, offset=0):
+        """Returns referenced objects from reference set. A convenient method 
+        to deal with performance issues with large reference set.
+        """
         query = self.filter(None)
         objects = [o.target for o in query.fetch(limit, offset)]
         return objects
 
     def add(self, *objs):
+        """Add new instances to the reference set.
 
+        Raises:
+            TypeError: if any given object is not an instance of referenced model
+            ValueError: if any of the given object is not saved
+        """
         for obj in objs:
             if not isinstance(obj, self.__ref):
                 raise TypeError('%s instances required' % (self.__ref._model_name))
@@ -212,6 +281,11 @@ class M2MSet(object):
             m2m.save()
 
     def remove(self, *objs):
+        """Removes the provided instances from the reference set.
+        
+        Raises:
+            TypeError: if any given object is not an instance of referenced model
+        """
         for obj in objs:
             if not isinstance(obj, self.__ref):
                 raise TypeError('%s instances required' % (self.__ref._model_name))
@@ -223,6 +297,8 @@ class M2MSet(object):
         database.delete_from_keys(self.__m2m, keys)
 
     def clear(self):
+        """Removes all referenced instances from the reference set.
+        """
         # instead of removing records at once remove them in bunches
         l = 100
         result = self.objects(l)
@@ -232,6 +308,16 @@ class M2MSet(object):
 
 
 class ManyToMany(Field, IRelation):
+    """ManyToMany field represents many-to-many relationship with other model.
+
+    For example, a ManyToMany field defined in model A that refers to model B
+    forms a many-to-many relationship from A to B. Every instance of A can have
+    many instances of B referenced by an intermediary model that also refers
+    model A.
+
+    Removing an instance of B from M2MSet will delete instances of the 
+    intermediary model and thus breaking the many-to-many relationship.
+    """
 
     _data_type = None
 
@@ -247,7 +333,7 @@ class ManyToMany(Field, IRelation):
 
         from _model import ModelType, Model
 
-        #create intermediatory model
+        #create intermediary model
         cls = ModelType(self.get_m2m_name(), (Model,), {'__module__': model_class.__module__})
         cls.add_field(ManyToOne(model_class, name='source'))
         cls.add_field(ManyToOne(self.reference, name='target'))
