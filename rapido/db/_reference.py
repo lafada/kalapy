@@ -1,10 +1,10 @@
 
 from _fields import Field
 from _model import get_model, get_models, Model
-from _errors import DuplicateFieldError
+from _errors import FieldError, DuplicateFieldError
 
 
-__all__ = ('ManyToOne', 'OneToOne', 'OneToMany')
+__all__ = ('ManyToOne', 'OneToOne', 'OneToMany', 'ManyToMany')
 
 
 
@@ -122,10 +122,151 @@ class OneToMany(Field, IRelation):
     def __get__(self, model_instance, model_class):
         if model_instance is None:
             return self
-        return self.reference.filter('%s == :key' % self.reverse_name, 
-                key=model_instance.key)
+        return O2MSet(self, model_instance)
 
     def __set__(self, model_instance, value):
         raise ValueError("Field %r is readonly." % self.name)
 
+
+class O2MSet(object):
+
+    def __init__(self, field, instance):
+        self.__field = field
+        self.__obj = instance
+        self.__ref = field.reference
+        self.__ref_field = getattr(field.reference, field.reverse_name)
+
+    def all(self):
+        return self.__ref.filter('%s == :key' % (self.__field.reverse_name),
+                key=self.__obj.key)
+
+    def add(self, *objs):
+        for obj in objs:
+            if not isinstance(obj, self.__ref):
+                raise TypeError('%r instance expected.' % self.__ref._model_name)
+            setattr(obj, self.__field.reverse_name, self.__obj)
+            obj.save()
+
+    def remove(self, *objs):
+        if self.__ref_field.required:
+            raise FieldError("objects can't be removed from %r, delete the objects instead." % (
+                self.__field.name))
+        for obj in objs:
+            if not isinstance(obj, self.__ref):
+                raise TypeError('%r instances expected.' % self.__ref._model_name)
+        from rapido.db.engines import database
+        database.delete_from_keys(self.__ref, [obj.key for obj in objs if obj.key])
+
+    def clear(self):
+        if self.__ref_field.required:
+            raise FieldError("objects can't be removed from %r, delete the objects instead." % (
+                self.__field.name))
+
+        # instead of removing records at once remove them in bunches
+        l = 100
+        q = self.all()
+        result = q.fetch(l)
+        while result:
+            self.remove(*result)
+            result = q.fetch(l)
+
+
+class M2MSet(object):
+
+    def __init__(self, field, instance):
+        self.__field = field
+        self.__obj = instance
+        self.__ref = field.reference
+        self.__m2m = field.m2m
+
+        if not instance.key:
+            raise ValueError('Model instance must be saved before using ManyToMany field.')
+
+    def filter(self, query, **params):
+        q = self.__m2m.filter('source == :key', key=self.__obj.key)
+        if not query:
+            return q
+        return q.filter(query, **params)
+
+    def objects(self, limit, offset=0):
+        query = self.filter(None)
+        objects = [o.target for o in query.fetch(limit, offset)]
+        return objects
+
+    def add(self, *objs):
+
+        for obj in objs:
+            if not isinstance(obj, self.__ref):
+                raise TypeError('%s instances required' % (self.__ref._model_name))
+            if not obj.key:
+                raise ValueError('%r instances must me saved before using with ManyToMany field %r' % (
+                    obj.__class__._model_name, self.__field.name))
+        
+        existing = [o.target for o in self.filter(None)]
+        for obj in objs:
+            if obj.key in existing:
+                continue
+            m2m = self.__m2m()
+            m2m.source = self.__obj
+            m2m.target = obj
+            m2m.save()
+
+    def remove(self, *objs):
+        for obj in objs:
+            if not isinstance(obj, self.__ref):
+                raise TypeError('%s instances required' % (self.__ref._model_name))
+
+        keys = [obj.key for obj in objs if obj.key]
+        keys = [obj.key for obj in self.filter(None) if obj.target.key in keys]
+
+        from rapido.db.engines import database
+        database.delete_from_keys(self.__m2m, keys)
+
+    def clear(self):
+        # instead of removing records at once remove them in bunches
+        l = 100
+        result = self.objects(l)
+        while result:
+            self.remove(*result)
+            result = self.objects(l)
+
+
+class ManyToMany(Field, IRelation):
+
+    _data_type = None
+
+    def __init__(self, reference, **kw):
+        super(ManyToMany, self).__init__(**kw)
+        self._ref = reference
+
+    @property
+    def reference(self):
+        return get_model(self._ref)
+
+    def prepare(self, model_class):
+
+        from _model import ModelType, Model
+
+        #create intermediatory model
+        cls = ModelType(self.get_m2m_name(), (Model,), {'__module__': model_class.__module__})
+        cls.add_field(ManyToOne(model_class, name='source'))
+        cls.add_field(ManyToOne(self.reference, name='target'))
+
+        #XXX: create reverse lookup fields?
+        #cls.source.prepare(cls)
+        #cls.target.prepare(cls)
+
+        self.m2m = cls
+
+    def get_m2m_name(self):
+        return '%s_%s' % (self.model_class._model_name.replace('.', '_'),
+                          self.name)
+
+    def __get__(self, model_instance, model_class):
+        if model_instance is None:
+            return self
+        return M2MSet(self, model_instance)
+
+    def __set__(self, model_instance, value):
+        raise ValueError('Field %r is read-only' % (self.name))
 

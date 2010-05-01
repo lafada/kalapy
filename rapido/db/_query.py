@@ -64,7 +64,7 @@ class Query(object):
         params = []
         for q, b in self._all:
             params.extend(b)
-        
+
         from rapido.db.engines import database
         return [self._model._from_db_values(vals) for vals in database.select_from(s, params)]
 
@@ -90,7 +90,7 @@ class Query(object):
             result = "%s %s" % (result, self._order)
         if limit:
             result = "%s LIMIT %d" % (result, limit)
-        if offset is not None:
+        if limit and offset is not None:
             result = "%s OFFSET %d" % (result, offset)
         return result
 
