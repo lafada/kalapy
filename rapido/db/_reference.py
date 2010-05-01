@@ -11,19 +11,30 @@ from _errors import FieldError, DuplicateFieldError
 __all__ = ('ManyToOne', 'OneToOne', 'OneToMany', 'ManyToMany')
 
 
-class IRelation(object):
+class IRelation(Field):
     """This class defines an interface method prepare which will called
     once all defined models are loaded. So the field would have chance
     to resolve early lookup references.
     """
+
+    def __init__(self, reference, **kw):
+        super(IRelation, self).__init__(**kw)
+        self._reference = reference
+
     def prepare(self, model_class):
         """The relation field should implement this method to implement
         support code as at this point all the models will be resolved.
         """
         pass
 
+    @property
+    def reference(self):
+        """Returns the reference class.
+        """
+        return get_model(self._reference)
 
-class ManyToOne(Field, IRelation):
+
+class ManyToOne(IRelation):
     """ManyToOne field represents many-to-one relationship with other model.
 
     For example, a ManyToOne field defined in model A that refers to model B forms
@@ -50,14 +61,9 @@ class ManyToOne(Field, IRelation):
             cascade: None = set null, False = restrict and True = cascade
             **kw: other field params
         """
-        super(ManyToOne, self).__init__(**kw)
-        self._reference = reference
+        super(ManyToOne, self).__init__(reference, **kw)
         self.reverse_name = reverse_name
         self.cascade = cascade
-
-    @property
-    def reference(self):
-        return get_model(self._reference)
 
     def prepare(self, model_class):
 
@@ -103,56 +109,6 @@ class OneToOne(ManyToOne):
     def __init__(self, reference, reverse_name=None, cascade=False, **kw):
         kw['unique'] = True
         super(OneToOne, self).__init__(reference, reverse_name, cascade, **kw)
-
-
-class OneToMany(Field, IRelation):
-    """OneToMany field represents one-to-many relationship with other model.
-
-    For example, a OneToMany field defined in model A that refers to model B forms
-    a one-to-many relationship from A to B. Every instance of B refers to a single
-    instance of A and every instance of A can have many instances of B that refer
-    it.
-
-    A reverse lookup field will be automatically created in the reference model.
-    In this case, a field `a` of type `ManyToOne` will be automatically created
-    on class B referencing class A.
-    """
-
-    _data_type = None
-
-    def __init__(self, reference, reverse_name=None, **kw):
-        super(OneToMany, self).__init__(**kw)
-        self._ref = reference
-        self.reverse_name = reverse_name
-
-    @property
-    def reference(self):
-        return get_model(self._ref)
-
-    def prepare(self, model_class):
-
-        if not self.reverse_name:
-            self.reverse_name = model_class.__name__.lower()
-        
-        if hasattr(self.reference, self.reverse_name):
-            try:
-                if getattr(self.reference, self.reverse_name).reverse_name == self.name:
-                    return
-            except:
-                pass
-            raise DuplicateFieldError('field %r already defined in referenced model %r' % (
-                self.reverse_name, self.reference.__name__))
-
-        f = ManyToOne(model_class, self.name, name=self.reverse_name)
-        self.reference.add_field(f)
-
-    def __get__(self, model_instance, model_class):
-        if model_instance is None:
-            return self
-        return O2MSet(self, model_instance)
-
-    def __set__(self, model_instance, value):
-        raise ValueError("Field %r is readonly." % self.name)
 
 
 class O2MSet(object):
@@ -307,7 +263,52 @@ class M2MSet(object):
             result = self.objects(l)
 
 
-class ManyToMany(Field, IRelation):
+class OneToMany(IRelation):
+    """OneToMany field represents one-to-many relationship with other model.
+
+    For example, a OneToMany field defined in model A that refers to model B forms
+    a one-to-many relationship from A to B. Every instance of B refers to a single
+    instance of A and every instance of A can have many instances of B that refer
+    it.
+
+    A reverse lookup field will be automatically created in the reference model.
+    In this case, a field `a` of type `ManyToOne` will be automatically created
+    on class B referencing class A.
+    """
+
+    _data_type = None
+
+    def __init__(self, reference, reverse_name=None, **kw):
+        super(OneToMany, self).__init__(reference, **kw)
+        self.reverse_name = reverse_name
+
+    def prepare(self, model_class):
+
+        if not self.reverse_name:
+            self.reverse_name = model_class.__name__.lower()
+        
+        if hasattr(self.reference, self.reverse_name):
+            try:
+                if getattr(self.reference, self.reverse_name).reverse_name == self.name:
+                    return
+            except:
+                pass
+            raise DuplicateFieldError('field %r already defined in referenced model %r' % (
+                self.reverse_name, self.reference.__name__))
+
+        f = ManyToOne(model_class, self.name, name=self.reverse_name)
+        self.reference.add_field(f)
+
+    def __get__(self, model_instance, model_class):
+        if model_instance is None:
+            return self
+        return O2MSet(self, model_instance)
+
+    def __set__(self, model_instance, value):
+        raise ValueError("Field %r is readonly." % self.name)
+
+
+class ManyToMany(IRelation):
     """ManyToMany field represents many-to-many relationship with other model.
 
     For example, a ManyToMany field defined in model A that refers to model B
@@ -322,12 +323,7 @@ class ManyToMany(Field, IRelation):
     _data_type = None
 
     def __init__(self, reference, **kw):
-        super(ManyToMany, self).__init__(**kw)
-        self._ref = reference
-
-    @property
-    def reference(self):
-        return get_model(self._ref)
+        super(ManyToMany, self).__init__(reference, **kw)
 
     def prepare(self, model_class):
 
