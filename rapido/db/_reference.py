@@ -334,7 +334,10 @@ class ManyToMany(Field, IRelation):
         from _model import ModelType, Model
 
         #create intermediary model
-        cls = ModelType(self.get_m2m_name(), (Model,), {'__module__': model_class.__module__})
+
+        name = '%s_%s' % (model_class.__name__.lower(), self.name)
+
+        cls = ModelType(name, (Model,), {'__module__': model_class.__module__})
         cls.add_field(ManyToOne(model_class, name='source'))
         cls.add_field(ManyToOne(self.reference, name='target'))
 
@@ -343,10 +346,6 @@ class ManyToMany(Field, IRelation):
         #cls.target.prepare(cls)
 
         self.m2m = cls
-
-    def get_m2m_name(self):
-        return '%s_%s' % (self.model_class._model_name.replace('.', '_'),
-                          self.name)
 
     def __get__(self, model_instance, model_class):
         if model_instance is None:
