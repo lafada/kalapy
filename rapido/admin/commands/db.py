@@ -38,13 +38,23 @@ class DBCommand(BaseCommand):
         else:
             models = db.get_models()
 
-        def _sort(x, y):
-            if x._model_name in y._ref_models:
-                return -1
-            return 1
+        models.sort(lambda x,y: cmp(x._creation_order, y._creation_order))
 
-        models.sort(_sort)
-        return models
+        result = []
+        pending_refs = {}
+
+        def load_models(args):
+
+            for model in args:
+                if model in result:
+                    continue
+                if model._ref_models:
+                    load_models(model._ref_models)
+                result.append(model)
+
+        load_models(models)
+
+        return result
 
     def info(self, *packages):
         if not packages:

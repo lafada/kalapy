@@ -66,18 +66,21 @@ class ModelCache(object):
         if self.resolved:
             return
 
-        from _reference import IRelation
-        
-        for package, models in self.cache.items():
-            for model in models.values():
-                model._ref_models = ref_models = []
-                fields = model.fields()
-                for name, field in fields.items():
-                    if not isinstance(field, IRelation):
-                        continue
-                    field.prepare(model)
-                    if field.reference._model_name not in ref_models:
-                        ref_models.append(field.reference._model_name)
+        from _reference import IRelation, ManyToOne
+
+        for model in self.get_models():
+            model._ref_models = ref_models = []
+            fields = model.fields()
+            for name, field in fields.items():
+                if not isinstance(field, IRelation):
+                    continue
+                field.prepare(model)
+                if isinstance(field, ManyToOne) and \
+                        field.reference not in ref_models:
+                    if model in getattr(field.reference, '_ref_models', []):
+                        raise FieldError("Recursive dependency, field %r in '%s.%s'" % (
+                            field.name, model.__module__, model.__name__))
+                    ref_models.append(field.reference)
         self.resolved = True
 
     def get_model(self, model_name, package_name=None):
@@ -110,7 +113,7 @@ class ModelCache(object):
                 frame = inspect.currentframe().f_back.f_back
                 try:
                     package_name = frame.f_globals.get('__package__').split('.')[0]
-                    return self.get_model(model_name, package_name)
+                    return self._get_model(model_name, package_name)
                 except:
                     pass
                 finally:
@@ -159,6 +162,8 @@ get_models = cache.get_models
 
 class ModelType(type):
 
+    _creation_order = 0
+
     def __new__(cls, name, bases, attrs):
 
         super_new = super(ModelType, cls).__new__
@@ -195,6 +200,8 @@ class ModelType(type):
             bases = tuple(bases)
 
         cls = super_new(cls, name, bases, attrs)
+
+        cls._creation_order = cls.__class__._creation_order = cls.__class__._creation_order + 1
 
         cls._parent = parent
         cls._model_name = model_name
