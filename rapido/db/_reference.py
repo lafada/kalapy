@@ -33,7 +33,7 @@ class IRelation(Field):
         """
         package_name = None
         if '.' in self.model_class._model_name:
-            package_name = self.model_class._model_name.split('.')
+            package_name = self.model_class._model_name.split('.')[0]
         return get_model(self._reference, package_name)
 
 
