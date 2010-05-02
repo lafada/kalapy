@@ -3,6 +3,7 @@ from types import FunctionType
 
 from rapido.conf import settings
 from rapido.utils.imp import import_module
+from rapido.utils.collections import OrderedDict
 
 from _errors import *
 from _fields import *
@@ -19,7 +20,7 @@ class ModelCache(object):
     # Use the Borg pattern to share state between all instances. Details at
     # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/66531.
     __shared_state = dict(
-            cache = {},
+            cache = OrderedDict(),
             aliases = {},
             loaded = False,
             resolved = False,
@@ -106,7 +107,7 @@ class ModelCache(object):
         package, name = self.names(model_name, package_name)
         alias = self.aliases.get(name, name)
         try:
-            return self.cache.setdefault(package, {})[alias]
+            return self.cache.get(package, {})[alias]
         except KeyError:
             if not package: # try to resolve package_name
                 import inspect
@@ -133,7 +134,7 @@ class ModelCache(object):
         """
         self._populate()
         if package:
-            return self.cache.setdefault(package, {}).values()
+            return self.cache.get(package, {}).values()
         result = []
         for models in self.cache.values():
             result.extend(models.values())
@@ -146,7 +147,7 @@ class ModelCache(object):
             cls: the model class
         """
         package, name = cls._meta.package, cls._meta.name
-        models = self.cache.setdefault(package, {})
+        models = self.cache.setdefault(package, OrderedDict())
         alias = cls.__name__.lower()
         if package:
             alias = '%s.%s' % (package, alias)
@@ -185,8 +186,6 @@ class Options(object):
 
 
 class ModelType(type):
-
-    _creation_order = 0
 
     def __new__(cls, name, bases, attrs):
 
@@ -232,8 +231,6 @@ class ModelType(type):
             bases = tuple(bases)
 
         cls = super_new(cls, name, bases, attrs)
-
-        cls._creation_order = cls.__class__._creation_order = cls.__class__._creation_order + 1
 
         # overwrite model class in the cache
         cache.register_model(cls)

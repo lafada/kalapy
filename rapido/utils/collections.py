@@ -39,7 +39,7 @@ class OrderedDict(dict):
         return [v for k, v in self.items()]
 
     def items(self):
-        return [(k, self[k]) for k in self]
+        return [(k, self[k]) for k in self._keys]
 
     def __iter__(self):
         for k in self._keys:

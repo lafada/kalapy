@@ -38,8 +38,6 @@ class DBCommand(BaseCommand):
         else:
             models = db.get_models()
 
-        models.sort(lambda x,y: cmp(x._creation_order, y._creation_order))
-
         result = []
         pending = []
 
