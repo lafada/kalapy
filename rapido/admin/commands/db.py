@@ -41,19 +41,24 @@ class DBCommand(BaseCommand):
         models.sort(lambda x,y: cmp(x._creation_order, y._creation_order))
 
         result = []
+        pending = []
 
         def load_models(args):
 
             for model in args:
-                if model in result:
+                if model in result or model in pending:
                     continue
                 if model._ref_models:
                     load_models(model._ref_models)
-                result.append(model)
+
+                if model in models:
+                    result.append(model)
+                else:
+                    pending.append(model)
 
         load_models(models)
 
-        return result
+        return result, pending
 
     def info(self, *packages):
         if not packages:
@@ -69,7 +74,7 @@ class DBCommand(BaseCommand):
             if package not in settings.INSTALLED_PACKAGES:
                 self.error('%r not in INSTALLED_PACKAGES' % package)
 
-        models = self.get_models(*packages)
+        models, pending = self.get_models(*packages)
 
         from rapido.db.engines import database
 
@@ -77,6 +82,12 @@ class DBCommand(BaseCommand):
         try:
             for model in models:
                 print database.schema_table(model)
+
+            if pending:
+                print '\n-- the following tables should also be added (from other packages)\n'
+                for model in pending:
+                    print '  --', model._table_name
+                print
         finally:
             database.close()
 
@@ -87,7 +98,7 @@ class DBCommand(BaseCommand):
         if settings.DATABASE_ENGINE == "dummy":
             raise self.error("DATABASE_ENGINE is not configured.")
 
-        models = self.get_models()
+        models, pending = self.get_models()
         
         from rapido.db.engines import database
 
