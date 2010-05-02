@@ -41,7 +41,6 @@ class DBCommand(BaseCommand):
         models.sort(lambda x,y: cmp(x._creation_order, y._creation_order))
 
         result = []
-        pending_refs = {}
 
         def load_models(args):
 
