@@ -31,7 +31,9 @@ class IRelation(Field):
     def reference(self):
         """Returns the reference class.
         """
-        package_name = self.model_class._model_name.split('.')[0]
+        package_name = None
+        if '.' in self.model_class._model_name:
+            package_name = self.model_class._model_name.split('.')
         return get_model(self._reference, package_name)
 
 
@@ -191,28 +193,10 @@ class M2MSet(object):
             raise ValueError(
                     'Instance must be saved before using ManyToMany field.')
 
-    def filter(self, query, **params):
-        """Returns a pre-filtered `Query` object filtering with the given query
-        string. You can pass empty string as query to return original `Query` to
-        deal with every instances of reference set. But this is not recommended
-        as it might cause performance issues if reference set is huge.
-
-        Args:
-            query: filter query string
-            **params: name, value to bound names to the query
+    def all(self):
+        """Returns a `Query` object pre-filtered to return related objects.
         """
-        q = self.__m2m.filter('source == :key', key=self.__obj.key)
-        if not query:
-            return q
-        return q.filter(query, **params)
-
-    def objects(self, limit, offset=0):
-        """Returns referenced objects from reference set. A convenient method 
-        to deal with performance issues with large reference set.
-        """
-        query = self.filter(None)
-        objects = [o.target for o in query.fetch(limit, offset)]
-        return objects
+        return self.__m2m.filter('source == :key', key=self.__obj.key)
 
     def add(self, *objs):
         """Add new instances to the reference set.
@@ -228,7 +212,7 @@ class M2MSet(object):
                 raise ValueError('%r instances must me saved before using with ManyToMany field %r' % (
                     obj.__class__._model_name, self.__field.name))
         
-        existing = [o.target for o in self.filter(None)]
+        existing = [o.target for o in self.all()]
         for obj in objs:
             if obj.key in existing:
                 continue
@@ -248,7 +232,7 @@ class M2MSet(object):
                 raise TypeError('%s instances required' % (self.__ref._model_name))
 
         keys = [obj.key for obj in objs if obj.key]
-        keys = [obj.key for obj in self.filter(None) if obj.target.key in keys]
+        keys = [obj.key for obj in self.all() if obj.target.key in keys]
 
         from rapido.db.engines import database
         database.delete_from_keys(self.__m2m, keys)
@@ -334,7 +318,16 @@ class ManyToMany(IRelation):
 
         name = '%s_%s' % (model_class.__name__.lower(), self.name)
 
-        cls = ModelType(name, (Model,), {'__module__': model_class.__module__})
+        @classmethod
+        def _from_db_values(cls, values):
+            obj = super(cls, cls)._from_db_values(values)
+            return obj.target
+
+        cls = ModelType(name, (Model,), {
+            '__module__': model_class.__module__,
+            '_from_db_values': _from_db_values,
+        })
+
         cls.add_field(ManyToOne(model_class, name='source'))
         cls.add_field(ManyToOne(self.reference, name='target'))
 
