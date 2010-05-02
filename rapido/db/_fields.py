@@ -1,3 +1,4 @@
+import inspect
 
 from _errors import *
 
@@ -22,6 +23,28 @@ def validate(field):
         return func
     return wrapper
 
+
+def unique(*fields):
+    """A helper function to be used to define unique constraints, single or combined,
+    in model classes.
+
+    For example,
+
+    >>> class A(db.Model):
+    >>>     a = db.String()
+    >>>     b = db.String()
+    >>>     c = db.String()
+    >>>
+    >>>     db.unique(a, [b, c])
+
+    Declares uniqueness of `a` and combined uniqueness of `b` & `c`.
+    """
+
+    frame = inspect.currentframe().f_back
+    try:
+        frame.f_locals['__db__unique'] = fields
+    finally:
+        del frame
 
 class Field(object):
 

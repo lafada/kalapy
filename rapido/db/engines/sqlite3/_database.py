@@ -91,6 +91,13 @@ class Database(IDatabase):
         fields.sort(lambda a, b: cmp(a._creation_order, b._creation_order))
 
         fields_sql = [self.get_pk_sql()] + [self.get_field_sql(f) for f in fields]
+
+        # generate unique constraints
+        for item in model._meta.unique:
+            if not isinstance(item, (list, tuple)):
+                item = [item]
+            fields_sql.append('UNIQUE(%s)' % ", ".join(['"%s"' % f.name for f in item]))
+
         fields_sql = ",\n    ".join(fields_sql)
 
         return 'CREATE TABLE "%s" (\n    %s\n);' % (model._meta.table, fields_sql)

@@ -172,18 +172,7 @@ class Options(object):
         self.model = None
         self.fields = {}
         self.ref_models = []
-
-    def update(self, meta):
-        if meta is None:
-            return
-        for name in dir(meta):
-            if name in self.DEFAULT:
-                #TODO: raise exception
-                continue
-            if name.startswith('_'):
-                continue
-            setattr(self, name, getattr(meta, name))
-
+        self.unique = []
 
 class ModelType(type):
 
@@ -205,9 +194,7 @@ class ModelType(type):
         if '_meta' in attrs:
             raise AttributeError("'_meta' is reserved for internal use.")
 
-        meta = getattr(parents[0], '_meta', None) or Options()
-        meta.update(attrs.pop('Meta', None))
-        attrs['_meta'] = meta
+        meta = attrs['_meta'] = getattr(parents[0], '_meta', None) or Options()
 
         if meta.name is None:
             try:
@@ -229,6 +216,10 @@ class ModelType(type):
                 if isinstance(base, ModelType):
                     bases[i] = parent
             bases = tuple(bases)
+
+        unique = attrs.pop('__db__unique', None)
+        if unique and not parent:
+            meta.unique = unique
 
         cls = super_new(cls, name, bases, attrs)
 
