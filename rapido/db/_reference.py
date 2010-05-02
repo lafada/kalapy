@@ -31,7 +31,8 @@ class IRelation(Field):
     def reference(self):
         """Returns the reference class.
         """
-        return get_model(self._reference)
+        package_name = self.model_class._model_name.split('.')[0]
+        return get_model(self._reference, package_name)
 
 
 class ManyToOne(IRelation):

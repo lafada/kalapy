@@ -16,20 +16,30 @@ class ModelCache(object):
     """A class to manage cache of all models.
     """
 
-    def __init__(self):
-        self.cache = {}
-        self.aliases = {}
-        self.loaded = False
-        self.lock = threading.RLock()
+    # Use the Borg pattern to share state between all instances. Details at
+    # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/66531.
+    __shared_state = dict(
+            cache = {},
+            aliases = {},
+            loaded = False,
+            resolved = False,
+            handled = [],
+            lock = threading.RLock(),
+        )
 
-    def names(self, name):
+    def __init__(self):
+        self.__dict__ = self.__shared_state
+
+    def names(self, model_name, package_name=None):
         """For internal use only. Will return tuple of (package_name, name) from
-        the given name. The name will be normalized.
+        the given model_name. The name will be normalized.
         """
-        name = name.lower()
+        name = model_name.lower()
         parts = name.split('.')
         if len(parts) > 1:
             return parts[0], name
+        if package_name:
+            return package_name, '%s.%s' % (package_name, name)
         return "", name
 
     def _populate(self):
@@ -40,48 +50,73 @@ class ModelCache(object):
         self.lock.acquire()
         try:
             for package in settings.INSTALLED_PACKAGES:
+                if package in self.handled: # deal with recursive import
+                    continue
+                self.handled.append(package)
                 models = import_module('models', package)
-            self.loaded = True        
-            self._prepare_references()
+            self.loaded = True
+            self._resolve_references()
         finally:
             self.lock.release()
 
-    def _prepare_references(self):
+    def _resolve_references(self):
         """Prepare all reference fields for the registered models.
         """
+
+        if self.resolved:
+            return
+
         from _reference import IRelation
         
-        models = self.get_models()
-        for model in models:
-            model._ref_models = ref_models = []
-            fields = model.fields()
-            for name, field in fields.items():
-                if not isinstance(field, IRelation):
-                    continue
-                field.prepare(model)
-                if field.reference._model_name not in ref_models:
-                    ref_models.append(field.reference._model_name)
+        for package, models in self.cache.items():
+            for model in models.values():
+                model._ref_models = ref_models = []
+                fields = model.fields()
+                for name, field in fields.items():
+                    if not isinstance(field, IRelation):
+                        continue
+                    field.prepare(model)
+                    if field.reference._model_name not in ref_models:
+                        ref_models.append(field.reference._model_name)
+        self.resolved = True
 
-    def get_model(self, name):
-        """Get the model from the cache of the given name.
+    def get_model(self, model_name, package_name=None):
+        """Get the model from the cache of the given name resolving with the
+        provided package_name if the name is not fully qualified name.
         
-        >>> db.get_model("base.user")
-        
+        >>> db.get_model('base.user')
+        >>> db.get_model('User', 'base')
+
         Args:
-            name: name of the model
+            model_name: name of the model
+            package_name: package name
         """
-        return self._get_model(name, True)
+        return self._get_model(model_name, package_name=package_name, seed=True)
 
-    def _get_model(self, name, seed=False):
+    def _get_model(self, model_name, package_name=None, seed=False):
         if seed:
             self._populate()
 
-        if isinstance(name, ModelType):
-            name = name._model_name
+        if isinstance(model_name, ModelType):
+            model_name = model_name._model_name
 
-        package, name = self.names(name)
+        package, name = self.names(model_name, package_name)
         alias = self.aliases.get(name, name)
-        return self.cache.setdefault(package, {}).get(alias)
+        try:
+            return self.cache.setdefault(package, {})[alias]
+        except KeyError:
+            if not package: # try to resolve package_name
+                import inspect
+                frame = inspect.currentframe().f_back.f_back
+                try:
+                    package_name = frame.f_globals.get('__package__').split('.')[0]
+                    return self.get_model(model_name, package_name)
+                except:
+                    pass
+                finally:
+                    del frame
+            raise KeyError('No such model %r' % model_name)
+
 
     def get_models(self, package=None):
         """Get the list of all models from the cache. If package if provided
@@ -145,7 +180,12 @@ class ModelType(type):
             package_name = ''
 
         model_name = getattr(parents[0], '_model_name', package_name + name).lower()
-        parent = cache._get_model(model_name)
+        parent = None
+        
+        try:
+            parent = cache._get_model(model_name)
+        except KeyError:
+            pass
 
         if parent:
             bases = list(bases)
