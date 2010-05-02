@@ -76,7 +76,7 @@ class Database(IDatabase):
                 res = "%s UNIQUE" % res
 
         if isinstance(field, ManyToOne):
-            res = '%s REFERENCES "%s" ("id")' % (res, field.reference._table_name)
+            res = '%s REFERENCES "%s" ("id")' % (res, field.reference._meta.table)
             if field.cascade:
                 res = '%s ON DELETE CASCADE' % res
             elif field.required:
@@ -93,13 +93,13 @@ class Database(IDatabase):
         fields_sql = [self.get_pk_sql()] + [self.get_field_sql(f) for f in fields]
         fields_sql = ",\n    ".join(fields_sql)
 
-        return 'CREATE TABLE "%s" (\n    %s\n);' % (model._table_name, fields_sql)
+        return 'CREATE TABLE "%s" (\n    %s\n);' % (model._meta.table, fields_sql)
 
     def schema_table(self, model):
         return self.get_create_sql(model)
     
     def create_table(self, model):
-        if not self.exists_table(model._table_name):
+        if not self.exists_table(model._meta.table):
             cursor = self.cursor()
             cursor.execute(self.get_create_sql(model))
 
@@ -112,7 +112,7 @@ class Database(IDatabase):
         cursor = self.cursor()
         if name and self.exists_table(name):
             cursor.execute('ALTER TABLE "%s" RENAME TO "%s"' % (
-                name, model._table_name,))
+                name, model._meta.table,))
         #TODO: alter columns if changed
 
     def insert_into(self, model):
@@ -126,7 +126,7 @@ class Database(IDatabase):
         vals = [x[1] for x in items]
 
         sql = 'INSERT INTO "%s" (%s) VALUES (%s)' % (
-                model._table_name,
+                model._meta.table,
                 ", ".join(keys),
                 ", ".join(['?'] * len(vals)))
 
@@ -146,7 +146,7 @@ class Database(IDatabase):
         keys = ", ".join(['"%s" = ?' % k for k in keys])
 
         sql = 'UPDATE "%(table)s" SET\n    %(keys)s\nWHERE "id" = ?' % dict(
-                table=model._table_name, keys=keys)
+                table=model._meta.table, keys=keys)
 
         vals.append(model.key)
 
@@ -164,7 +164,7 @@ class Database(IDatabase):
         if not isinstance(keys, (list, tuple)):
             keys = [keys]
         sql = 'DELETE FROM "%s" WHERE "id" IN (%s)' % (
-                            model._table_name, ", ".join(['?'] * len(keys)))
+                            model._meta.table, ", ".join(['?'] * len(keys)))
         cursor = self.cursor()
         cursor.execute(sql, keys)
 

@@ -48,8 +48,8 @@ class DBCommand(BaseCommand):
             for model in args:
                 if model in result or model in pending:
                     continue
-                if model._ref_models:
-                    load_models(model._ref_models)
+                if model._meta.ref_models:
+                    load_models(model._meta.ref_models)
 
                 if model in models:
                     result.append(model)
@@ -86,7 +86,7 @@ class DBCommand(BaseCommand):
             if pending:
                 print '\n-- the following tables should also be added (from other packages)\n'
                 for model in pending:
-                    print '  --', model._table_name
+                    print '  --', model._meta.table
                 print
         finally:
             database.close()

@@ -31,10 +31,7 @@ class IRelation(Field):
     def reference(self):
         """Returns the reference class.
         """
-        package_name = None
-        if '.' in self.model_class._model_name:
-            package_name = self.model_class._model_name.split('.')[0]
-        return get_model(self._reference, package_name)
+        return get_model(self._reference, self.model_class._meta.package)
 
 
 class ManyToOne(IRelation):
@@ -138,7 +135,7 @@ class O2MSet(object):
         """
         for obj in objs:
             if not isinstance(obj, self.__ref):
-                raise TypeError('%r instance expected.' % self.__ref._model_name)
+                raise TypeError('%r instance expected.' % self.__ref._meta.name)
             setattr(obj, self.__field.reverse_name, self.__obj)
             obj.save()
 
@@ -154,7 +151,7 @@ class O2MSet(object):
                 self.__field.name))
         for obj in objs:
             if not isinstance(obj, self.__ref):
-                raise TypeError('%r instances expected.' % self.__ref._model_name)
+                raise TypeError('%r instances expected.' % self.__ref._meta.name)
         from rapido.db.engines import database
         database.delete_from_keys(self.__ref, [obj.key for obj in objs if obj.key])
 
@@ -207,10 +204,10 @@ class M2MSet(object):
         """
         for obj in objs:
             if not isinstance(obj, self.__ref):
-                raise TypeError('%s instances required' % (self.__ref._model_name))
+                raise TypeError('%s instances required' % (self.__ref._meta.name))
             if not obj.key:
                 raise ValueError('%r instances must me saved before using with ManyToMany field %r' % (
-                    obj.__class__._model_name, self.__field.name))
+                    obj._meta.name, self.__field.name))
 
         existing = self.all().filter('target in :keys', keys=[obj.key for obj in objs]).fetch(-1)
         existing = [o.key for o in existing]
@@ -231,7 +228,7 @@ class M2MSet(object):
         """
         for obj in objs:
             if not isinstance(obj, self.__ref):
-                raise TypeError('%s instances required' % (self.__ref._model_name))
+                raise TypeError('%s instances required' % (self.__ref._meta.name))
 
         existing = self.all().filter('target in :keys', keys=[obj.key for obj in objs]).fetch(-1)
         keys = [o.key for o in existing]
@@ -334,7 +331,7 @@ class ManyToMany(IRelation):
         cls.add_field(ManyToOne(model_class, name='source'))
         cls.add_field(ManyToOne(self.reference, name='target'))
 
-        cls._ref_models = [model_class, self.reference]
+        cls._meta.ref_models = [model_class, self.reference]
 
         #XXX: create reverse lookup fields?
         #cls.source.prepare(cls)

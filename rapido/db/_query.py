@@ -89,7 +89,7 @@ class Query(object):
     def _select(self, what, limit=None, offset=None):
         """Build the select statement. For internal use only.
         """
-        result = "SELECT %s FROM \"%s\"" % (what, self._model._table_name)
+        result = "SELECT %s FROM \"%s\"" % (what, self._model._meta.table)
         if self._all:
             result = "%s WHERE %s" % (result, " AND ".join(['(%s)' % s for s, b in self._all]))
         if self._order:

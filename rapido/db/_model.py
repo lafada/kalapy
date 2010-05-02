@@ -69,7 +69,7 @@ class ModelCache(object):
         from _reference import IRelation, ManyToOne
 
         for model in self.get_models():
-            model._ref_models = ref_models = []
+            ref_models = model._meta.ref_models
             fields = model.fields()
             for name, field in fields.items():
                 if not isinstance(field, IRelation):
@@ -77,7 +77,7 @@ class ModelCache(object):
                 field.prepare(model)
                 if isinstance(field, ManyToOne) and \
                         field.reference not in ref_models:
-                    if model in getattr(field.reference, '_ref_models', []):
+                    if model in field.reference._meta.ref_models:
                         raise FieldError("Recursive dependency, field %r in '%s.%s'" % (
                             field.name, model.__module__, model.__name__))
                     ref_models.append(field.reference)
@@ -101,7 +101,7 @@ class ModelCache(object):
             self._populate()
 
         if isinstance(model_name, ModelType):
-            model_name = model_name._model_name
+            model_name = model_name._meta.name
 
         package, name = self.names(model_name, package_name)
         alias = self.aliases.get(name, name)
@@ -145,7 +145,7 @@ class ModelCache(object):
         Args:
             cls: the model class
         """
-        package, name = self.names(cls._model_name)
+        package, name = cls._meta.package, cls._meta.name
         models = self.cache.setdefault(package, {})
         alias = cls.__name__.lower()
         if package:
@@ -158,6 +158,30 @@ cache = ModelCache()
 
 get_model = cache.get_model
 get_models = cache.get_models
+
+
+class Options(object):
+
+    DEFAULT = ('package', 'name', 'table', 'model', 'fields', 'ref_models')
+
+    def __init__(self):
+        self.package = None
+        self.name = None
+        self.table = None
+        self.model = None
+        self.fields = {}
+        self.ref_models = []
+
+    def update(self, meta):
+        if meta is None:
+            return
+        for name in dir(meta):
+            if name in self.DEFAULT:
+                #TODO: raise exception
+                continue
+            if name.startswith('_'):
+                continue
+            setattr(self, name, getattr(meta, name))
 
 
 class ModelType(type):
@@ -179,18 +203,26 @@ class ModelType(type):
         # always use the last defined base class in the inheritance chain 
         # to maintain linear hierarchy.
 
-        try:
-            package_name = '%s.' % attrs['__module__'].split('.')[-2]
-        except Exception, e:
-            package_name = ''
+        if '_meta' in attrs:
+            raise AttributeError("'_meta' is reserved for internal use.")
 
-        model_name = getattr(parents[0], '_model_name', package_name + name).lower()
-        parent = None
-        
+        meta = getattr(parents[0], '_meta', None) or Options()
+        meta.update(attrs.pop('Meta', None))
+        attrs['_meta'] = meta
+
+        if meta.name is None:
+            try:
+                meta.package = attrs['__module__'].split('.')[-2]
+                meta.name = meta.package + '.' + name.lower()
+            except:
+                meta.package = ''
+                meta.name = name.lower()
+            meta.table = meta.name.replace('.', '_')
+
         try:
-            parent = cache._get_model(model_name)
+            parent = cache._get_model(meta.name)
         except KeyError:
-            pass
+            parent = None
 
         if parent:
             bases = list(bases)
@@ -203,24 +235,19 @@ class ModelType(type):
 
         cls._creation_order = cls.__class__._creation_order = cls.__class__._creation_order + 1
 
-        cls._parent = parent
-        cls._model_name = model_name
-        cls._table_name = model_name.replace('.', '_')
-
         # overwrite model class in the cache
         cache.register_model(cls)
 
         cls._values = None
-        cls._fields = getattr(parent, '_fields', {})
 
         for name, attr in attrs.items():
 
             # prepare fields
             if isinstance(attr, Field):
-                if name in cls._fields:
+                if name in meta.fields:
                     raise DuplicateFieldError(
                         "Duplicate field, %s, already defined in parent class." % name)
-                cls._fields[name] = attr
+                meta.fields[name] = attr
                 attr.__configure__(cls, name)
 
             # prepare validators
@@ -238,7 +265,7 @@ class ModelType(type):
         return cls
     
     def __repr__(cls):
-        return "<Model %r: class %s>" % (cls._model_name, cls.__name__)
+        return "<Model %r: class %s>" % (cls._meta.name, cls.__name__)
 
 
     def add_field(cls, field):
@@ -247,7 +274,7 @@ class ModelType(type):
         if hasattr(cls, field.name):
             raise DuplicateFieldError('Field %r already defined in model %r' % (field.name, cls.__name__))
         setattr(cls, field.name, field)
-        cls._fields[field.name] = field
+        cls._meta.fields[field.name] = field
         field.__configure__(cls, field.name)
 
 
@@ -349,7 +376,6 @@ class Model(object):
 
     __metaclass__ = ModelType
 
-    _table = None
 
     def __new__(cls, **kw):
 
@@ -504,9 +530,9 @@ class Model(object):
     def fields(cls):
         """Return the defined fields.
         """
-        return dict(cls._fields)
+        return dict(cls._meta.fields)
     
     def __repr__(self):
-        return "<Model %r: %s object at %s>" % (self._model_name,
+        return "<Model %r: %s object at %s>" % (self._meta.name,
                                           self.__class__.__name__, hex(id(self)))
 
