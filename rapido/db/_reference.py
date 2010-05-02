@@ -211,8 +211,10 @@ class M2MSet(object):
             if not obj.key:
                 raise ValueError('%r instances must me saved before using with ManyToMany field %r' % (
                     obj.__class__._model_name, self.__field.name))
-        
-        existing = [o.target for o in self.all()]
+
+        existing = self.all().filter('target in :keys', keys=[obj.key for obj in objs]).fetch(-1)
+        existing = [o.key for o in existing]
+
         for obj in objs:
             if obj.key in existing:
                 continue
@@ -231,8 +233,8 @@ class M2MSet(object):
             if not isinstance(obj, self.__ref):
                 raise TypeError('%s instances required' % (self.__ref._model_name))
 
-        keys = [obj.key for obj in objs if obj.key]
-        keys = [obj.key for obj in self.all() if obj.target.key in keys]
+        existing = self.all().filter('target in :keys', keys=[obj.key for obj in objs]).fetch(-1)
+        keys = [o.key for o in existing]
 
         from rapido.db.engines import database
         database.delete_from_keys(self.__m2m, keys)
@@ -242,10 +244,11 @@ class M2MSet(object):
         """
         # instead of removing records at once remove them in bunches
         l = 100
-        result = self.objects(l)
+        q = self.all()
+        result = q.fetch(l)
         while result:
             self.remove(*result)
-            result = self.objects(l)
+            result = q.fetch(l)
 
 
 class OneToMany(IRelation):

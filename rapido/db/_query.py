@@ -55,10 +55,16 @@ class Query(object):
 
     def fetch(self, limit, offset=None):
         """Fetch the given number of records from the query object from the given offset.
+
+        If limit is `-1` fetch all records.
         
         >>> q = Query(User).filter("name ilike :name and age >= :age", name="some", age=20)
         >>> for obj in q.fetch(20):
         >>>     print obj.name
+
+        Args:
+            limit: number of records to be fetch, if -1 fetch all
+            offset: offset from where to fetch records should be >= 0
         """
         s = self._select('*', limit, offset)
         params = []
@@ -88,10 +94,10 @@ class Query(object):
             result = "%s WHERE %s" % (result, " AND ".join(['(%s)' % s for s, b in self._all]))
         if self._order:
             result = "%s %s" % (result, self._order)
-        if limit:
+        if limit > -1:
             result = "%s LIMIT %d" % (result, limit)
-        if limit and offset is not None:
-            result = "%s OFFSET %d" % (result, offset)
+            if offset > -1:
+                result = "%s OFFSET %d" % (result, offset)
         return result
 
     def __getitem__(self, arg):
