@@ -151,9 +151,7 @@ class Database(IDatabase):
         vals = [x[1] for x in items]
 
         keys = ", ".join(['"%s" = ?' % k for k in keys])
-
-        sql = 'UPDATE "%s" SET %s WHERE "id" = ?' % (
-                model._meta.table, keys=keys)
+        sql = 'UPDATE "%s" SET %s WHERE "id" = ?' % (model._meta.table, keys)
 
         vals.append(model.key)
 
