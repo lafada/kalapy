@@ -96,7 +96,7 @@ class Database(IDatabase):
         for item in model._meta.unique:
             if not isinstance(item, (list, tuple)):
                 item = [item]
-            fields_sql.append('UNIQUE(%s)' % ", ".join(['"%s"' % f.name for f in item]))
+            fields_sql.append('UNIQUE(%s)' % ", ".join(['"%s"' % f for f in item]))
 
         fields_sql = ",\n    ".join(fields_sql)
 

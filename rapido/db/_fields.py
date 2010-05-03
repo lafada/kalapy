@@ -2,50 +2,6 @@ import inspect
 
 from _errors import *
 
-
-def validate(field):
-    """A decorator to assign a validator for a field. Should only be used with 
-    the methods of the class where the field is defined.
-
-    >>>
-    >>> class User(Model):
-    >>>
-    >>>     name = String(size=50)
-    >>>
-    >>>     @validate("name")
-    >>>     def check_name(self, value):
-    >>>         if len(value) < 3:
-    >>>             raise ValidationError("Name is too short.")
-    >>>
-    """
-    def wrapper(func):
-        func._validates = field
-        return func
-    return wrapper
-
-
-def unique(*fields):
-    """A helper function to be used to define unique constraints, single or combined,
-    in model classes.
-
-    For example,
-
-    >>> class A(db.Model):
-    >>>     a = db.String()
-    >>>     b = db.String()
-    >>>     c = db.String()
-    >>>
-    >>>     db.unique(a, [b, c])
-
-    Declares uniqueness of `a` and combined uniqueness of `b` & `c`.
-    """
-
-    frame = inspect.currentframe().f_back
-    try:
-        frame.f_locals['__db__unique'] = fields
-    finally:
-        del frame
-
 class Field(object):
 
     # for internal use only

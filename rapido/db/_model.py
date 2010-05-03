@@ -9,6 +9,8 @@ from _errors import *
 from _fields import *
 from _query import *
 
+from _helpers import MODEL_HELPERNAME
+
 
 __all__ = ['Model', 'get_model', 'get_models']
 
@@ -163,8 +165,6 @@ get_models = cache.get_models
 
 class Options(object):
 
-    DEFAULT = ('package', 'name', 'table', 'model', 'fields', 'ref_models')
-
     def __init__(self):
         self.package = None
         self.name = None
@@ -173,6 +173,8 @@ class Options(object):
         self.fields = {}
         self.ref_models = []
         self.unique = []
+        self.validators = {}
+
 
 class ModelType(type):
 
@@ -217,10 +219,7 @@ class ModelType(type):
                     bases[i] = parent
             bases = tuple(bases)
 
-        unique = attrs.pop('__db__unique', None)
-        if unique and not parent:
-            meta.unique = unique
-
+        helpers = attrs.pop(MODEL_HELPERNAME, [])
         cls = super_new(cls, name, bases, attrs)
 
         # overwrite model class in the cache
@@ -249,6 +248,10 @@ class ModelType(type):
                     raise FieldError("Field '%s' is not defined." % attr._validates)
 
                 field._validator = attr
+
+        # call all model helpers like validate, unique etc.
+        for helper in helpers:
+            helper(cls)
 
         return cls
     
