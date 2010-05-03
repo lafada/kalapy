@@ -152,8 +152,8 @@ class Database(IDatabase):
 
         keys = ", ".join(['"%s" = ?' % k for k in keys])
 
-        sql = 'UPDATE "%(table)s" SET\n    %(keys)s\nWHERE "id" = ?' % dict(
-                table=model._meta.table, keys=keys)
+        sql = 'UPDATE "%s" SET %s WHERE "id" = ?' % (
+                model._meta.table, keys=keys)
 
         vals.append(model.key)
 
@@ -164,7 +164,7 @@ class Database(IDatabase):
     
     def delete_from(self, instance):
         if instance.saved:
-            self.delete_from_keys(instance.key)
+            self.delete_from_keys(instance.__class__, instance.key)
             instance._key = None
             
     def delete_from_keys(self, model, keys):
@@ -189,5 +189,4 @@ class Database(IDatabase):
             return cursor.fetchone()[0]
         except:
             return 0
- 
-    
+
