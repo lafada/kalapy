@@ -1,7 +1,7 @@
 import os
 
 from rapido.conf import settings
-from rapido.utils.imp import import_module
+from rapido.utils.implib import import_module
 
 
 __all__ = ('list_engines', 'engine', 'database')

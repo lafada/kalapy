@@ -63,7 +63,7 @@ class DBCommand(BaseCommand):
             self.error("At least one package name required.")
 
         from rapido.conf import settings
-        from rapido.utils.imp import import_module
+        from rapido.utils.implib import import_module
 
         if settings.DATABASE_ENGINE == "dummy":
             raise self.error("DATABASE_ENGINE is not configured.")
@@ -91,7 +91,7 @@ class DBCommand(BaseCommand):
 
     def sync(self):
         from rapido.conf import settings
-        from rapido.utils.imp import import_module
+        from rapido.utils.implib import import_module
 
         if settings.DATABASE_ENGINE == "dummy":
             raise self.error("DATABASE_ENGINE is not configured.")

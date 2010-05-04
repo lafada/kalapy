@@ -1,7 +1,4 @@
 
-from UserDict import IterableUserDict
-
-
 class OrderedDict(dict):
 
     def __init__(self, *args, **kw):

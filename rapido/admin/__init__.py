@@ -2,7 +2,7 @@ import os
 import sys
 from optparse import OptionParser
 
-from rapido.utils.imp import import_module
+from rapido.utils.implib import import_module
 
 from _base import *
 

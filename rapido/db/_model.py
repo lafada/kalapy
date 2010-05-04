@@ -2,8 +2,8 @@ import threading
 from types import FunctionType
 
 from rapido.conf import settings
-from rapido.utils.imp import import_module
-from rapido.utils.collections import OrderedDict
+from rapido.utils.implib import import_module
+from rapido.utils.containers import OrderedDict
 
 from _errors import *
 from _fields import *

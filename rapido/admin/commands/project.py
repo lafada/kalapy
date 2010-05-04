@@ -1,7 +1,7 @@
 import os, sys, re, shutil, string
 
 from rapido.admin import BaseCommand, CommandError
-from rapido.utils.imp import import_module
+from rapido.utils.implib import import_module
 
 
 def copy_helper(arg, path, files):
