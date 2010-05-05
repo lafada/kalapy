@@ -452,31 +452,15 @@ class Model(object):
         return obj
 
     def _get_related(self):
-
         from _reference import IRelation
 
-        before = []
-        after = []
-
-        for name, field in self._meta.fields.items() + self._meta.virtual_fields.items():
-
-            if not (isinstance(field, IRelation) and field.name in self._values):
-                continue
-
-            values = self._values[field.name]
-
-            if not isinstance(values, list):
-                values = [values]
-
-            for val in values:
-                if not val.is_dirty:
-                    continue
-                if field.is_virtual:
-                    after.append(val)
-                else:
-                    before.append(val)
-
-        return before, after
+        related = []
+        for name, field in self._meta.fields.items():
+            if isinstance(field, IRelation) and field.name in self._values:
+                value = self._values[field.name]
+                if isinstance(value, Model) and value.is_dirty:
+                    related.append(val)
+        return related
         
     def save(self):
         """Writes the instance to the database.
@@ -492,16 +476,12 @@ class Model(object):
         """
         from rapido.db.engines import database
 
-        before, after = self._get_related()
-
-        [o.save() for o in before]
+        [o.save() for o in self._get_related()]
 
         if self.saved:
             key = database.update_table(self)
         key = database.insert_into(self)
         self._dirty = False
-
-        [o.save() for o in after]
 
         return key
 

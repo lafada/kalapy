@@ -180,9 +180,18 @@ class O2MSet(object):
         self.__ref = field.reference
         self.__ref_field = getattr(field.reference, field.reverse_name)
 
+    def __check(self, *objs):
+        for obj in objs:
+            if not isinstance(obj, self.__ref):
+                raise TypeError('%s instances required' % (self.__ref._meta.name))
+        if not self.__obj.saved:
+            self.__obj.save()
+        return objs
+
     def all(self):
         """Returns a `Query` object pre-filtered to return related objects.
         """
+        self.__check()
         return self.__ref.filter('%s == :key' % (self.__field.reverse_name),
                 key=self.__obj.key)
 
@@ -192,13 +201,9 @@ class O2MSet(object):
         Raises:
             TypeError: if any given object is not an instance of referenced model
         """
-        for obj in objs:
-            if not isinstance(obj, self.__ref):
-                raise TypeError('%r instance expected.' % self.__ref._meta.name)
+        for obj in self.__check(*objs):
             setattr(obj, self.__field.reverse_name, self.__obj)
-
-            self.__obj._values.setdefault(self.__field.name, []).append(obj)
-            #obj.save()
+            obj.save()
 
     def remove(self, *objs):
         """Removes the provided instances from the reference set.
@@ -210,11 +215,11 @@ class O2MSet(object):
         if self.__ref_field.required:
             raise FieldError("objects can't be removed from %r, delete the objects instead." % (
                 self.__field.name))
-        for obj in objs:
-            if not isinstance(obj, self.__ref):
-                raise TypeError('%r instances expected.' % self.__ref._meta.name)
+        
         from rapido.db.engines import database
-        database.delete_from_keys(self.__ref, [obj.key for obj in objs if obj.key])
+
+        keys = [obj.key for obj in self.__check(*objs) if obj.key]
+        database.delete_from_keys(self.__ref, keys)
 
     def clear(self):
         """Removes all referenced instances from the reference set.
@@ -223,17 +228,22 @@ class O2MSet(object):
             FieldError: if referenced instance field is required field.
             TypeError: if any given object is not an instance of referenced model
         """
+        if not self.__obj.saved:
+            return
+
         if self.__ref_field.required:
             raise FieldError("objects can't be removed from %r, \
                     delete the objects instead." % (
                 self.__field.name))
+
+        from rapido.db.engines import database
 
         # instead of removing records at once remove them in bunches
         l = 100
         q = self.all()
         result = q.fetch(l)
         while result:
-            self.remove(*result)
+            database.delete_from_keys(self.__ref, [o.key for o in result])
             result = q.fetch(l)
 
 
@@ -247,15 +257,24 @@ class M2MSet(object):
         self.__ref = field.reference
         self.__m2m = field.m2m
 
+        self.__source_in = '%s in :keys' % field.source
+        self.__target_in = '%s in :keys' % field.target
+        self.__source_eq = '%s == :key' % field.source
+
+    def __check(self, *objs):
+        for obj in objs:
+            if not isinstance(obj, self.__ref):
+                raise TypeError('%s instances required' % (self.__ref._meta.name))
+        if not self.__obj.saved:
+            self.__obj.save()
+        return objs
+
     def all(self):
         """Returns a `Query` object pre-filtered to return related objects.
         """
-        if not self.__obj.key:
-            raise ValueError(
-                    'Instance must be saved before using \'all\'.')
-
+        self.__check()
         return Query(self.__m2m, lambda obj: getattr(obj, self.__field.target)).filter(
-                '%s == :key' % self.__field.source, key=self.__obj.key)
+                self.__source_eq, key=self.__obj.key)
 
     def add(self, *objs):
         """Add new instances to the reference set.
@@ -264,25 +283,20 @@ class M2MSet(object):
             TypeError: if any given object is not an instance of referenced model
             ValueError: if any of the given object is not saved
         """
-        for obj in objs:
-            if not isinstance(obj, self.__ref):
-                raise TypeError('%s instances required' % (self.__ref._meta.name))
+        keys = [obj.key for obj in self.__check(*objs) if obj.key]
 
-        existing = []
-        if obj.key:
-            query = '%s in :keys' % self.__field.target
-            existing = self.all().filter(query, keys=[obj.key for obj in objs]).fetch(-1)
-            existing = [o.key for o in existing]
+        existing = self.all().filter(self.__target_in, keys=keys).fetch(-1)
+        existing = [o.key for o in existing]
 
         for obj in objs:
             if obj.key in existing:
                 continue
+            if not obj.saved:
+                obj.save()
             m2m = self.__m2m()
-
             setattr(m2m, self.__field.source, self.__obj)
             setattr(m2m, self.__field.target, obj)
-
-            m2m.source._values.setdefault(self.__field.name, []).append(m2m)
+            m2m.save()
 
     def remove(self, *objs):
         """Removes the provided instances from the reference set.
@@ -290,13 +304,7 @@ class M2MSet(object):
         Raises:
             TypeError: if any given object is not an instance of referenced model
         """
-        for obj in objs:
-            if not isinstance(obj, self.__ref):
-                raise TypeError('%s instances required' % (self.__ref._meta.name))
-
-        query = '%s in :keys' % self.__field.target
-        existing = self.all().filter(query, keys=[obj.key for obj in objs]).fetch(-1)
-        keys = [o.key for o in existing]
+        keys = [obj.key for obj in self.__check(*objs) if obj.key]
 
         from rapido.db.engines import database
         database.delete_from_keys(self.__m2m, keys)
@@ -304,12 +312,17 @@ class M2MSet(object):
     def clear(self):
         """Removes all referenced instances from the reference set.
         """
+        if not self.__obj.saved:
+            return
+
+        from rapido.db.engines import database
+
         # instead of removing records at once remove them in bunches
         l = 100
         q = self.all()
         result = q.fetch(l)
         while result:
-            self.remove(*result)
+            database.delete_from_keys(self.__m2m, [o.key for o in result])
             result = q.fetch(l)
 
 
@@ -422,13 +435,19 @@ class ManyToMany(IRelation):
             self.target = 'source'
 
         if not reverse_field and self.reverse_name:
+            # create reverse lookup field
             f = ManyToMany(model_class, reverse_name=self.name, name=self.reverse_name)
             self.reference._meta.contribute_to_class(self._reference, f.name, f)
             f.prepare(self.reference)
 
     def __get__(self, model_instance, model_class):
+
         if model_instance is None:
             return self
+
+        #if not model_instance.saved:
+        #    raise AttributeError('%r can\'t be accessed unless instance is saved' % self.name)
+
         return M2MSet(self, model_instance)
 
     def __set__(self, model_instance, value):
