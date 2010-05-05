@@ -23,8 +23,8 @@ class Field(object):
         self._unique = unique
         self._indexed = indexed
 
-        self._selection = selection
-        self._selection_list = [x[0] for x in selection] if selection else []
+        self._selection = selection() if callable(selection) else selection
+        self._selection_list = [x[0] for x in self._selection] if self._selection else []
 
         self._validator = None
 
@@ -51,14 +51,16 @@ class Field(object):
         value = self.validate(model_instance, value)
         model_instance._values[self.name] = value
 
-    def to_database_value(self, model_instance):
-        """Get the value to be stored in database for this field.
+    def to_python(self, value):
+        """Convert the given value to expected Python data type, raising 
+        `db.ValidationError` if the value can't be converted. Subclasses
+        should override this method.
         """
-        return self.__get__(model_instance, model_instance.__class__)
+        return value
 
-    def from_database_value(self, model_instance, value):
-        """Get the value to be stored in model instance from the given
-        value retrieved from database.
+    def to_database(self, value):
+        """Convert the given Python value suitable to store in the database.
+        Subclasses should override this method.
         """
         return value
 
@@ -97,6 +99,8 @@ class Field(object):
 
     @property
     def default(self):
+        if callable(self._default):
+            return self._default()
         return self._default
 
     @property

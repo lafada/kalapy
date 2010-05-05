@@ -445,7 +445,7 @@ class Model(object):
         fields = self.fields()
         for k, v in fields.items():
             if k in self._values:
-                values[k] = fields[k].to_database_value(self)
+                values[k] = fields[k].to_database(self._values[k])
         return values
     
     @classmethod
@@ -458,7 +458,7 @@ class Model(object):
 
         fields = obj.fields()
         for k, v in values.items():
-            values[k] = fields[k].from_database_value(obj, v)
+            values[k] = fields[k].to_python(v)
 
         obj._values.update(values)
         obj._dirty = False
