@@ -81,7 +81,7 @@ class ManyToOne(IRelation):
 
         c = reverse_class or OneToMany
         f = c(model_class, name=self.reverse_name, reverse_name=self.name)
-        self.reference.add_field(f)
+        self.reference._meta.add_field(f)
 
     def __get__(self, model_instance, model_class):
         return super(ManyToOne, self).__get__(model_instance, model_class)
@@ -305,7 +305,7 @@ class OneToMany(IRelation):
                 self.reverse_name, self.reference.__name__))
 
         f = ManyToOne(model_class, self.name, name=self.reverse_name)
-        self.reference.add_field(f)
+        self.reference._meta.add_field(f)
 
     def __get__(self, model_instance, model_class):
         if model_instance is None:
@@ -351,8 +351,8 @@ class ManyToMany(IRelation):
             '_from_db_values': _from_db_values,
         })
 
-        cls.add_field(ManyToOne(model_class, name='source'))
-        cls.add_field(ManyToOne(self.reference, name='target'))
+        cls._meta.add_field(ManyToOne(model_class, name='source'))
+        cls._meta.add_field(ManyToOne(self.reference, name='target'))
 
         cls._meta.ref_models = [model_class, self.reference]
 

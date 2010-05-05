@@ -169,11 +169,22 @@ class Options(object):
         self.package = None
         self.name = None
         self.table = None
-        self.model = None
         self.fields = {}
         self.ref_models = []
         self.unique = []
-        self.validators = {}
+
+    @property
+    def model(self):
+        return get_model(self.name)
+
+    def add_field(self, field):
+        if not field.name:
+            raise ValueError('Field has no name')
+        if hasattr(self.model, field.name):
+            raise DuplicateFieldError('Field %r already defined in model %r' % (field.name, self.name))
+        setattr(self.model, field.name, field)
+        self.fields[field.name] = field
+        field.__configure__(self.model, field.name)
 
 
 class ModelType(type):
@@ -257,16 +268,6 @@ class ModelType(type):
     
     def __repr__(cls):
         return "<Model %r: class %s>" % (cls._meta.name, cls.__name__)
-
-
-    def add_field(cls, field):
-        if not field.name:
-            raise ValueError('Field has no name')
-        if hasattr(cls, field.name):
-            raise DuplicateFieldError('Field %r already defined in model %r' % (field.name, cls.__name__))
-        setattr(cls, field.name, field)
-        cls._meta.fields[field.name] = field
-        field.__configure__(cls, field.name)
 
 
 class Model(object):
