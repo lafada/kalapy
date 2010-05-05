@@ -73,8 +73,8 @@ class ModelCache(object):
 
         for model in self.get_models():
             ref_models = model._meta.ref_models
-            fields = model.fields()
-            for name, field in fields.items():
+            fields = model._meta.fields.items() + model._meta.virtual_fields.items()
+            for name, field in fields:
                 if not isinstance(field, IRelation):
                     continue
                 field.prepare(model)
@@ -170,6 +170,7 @@ class Options(object):
         self.name = None
         self.table = None
         self.fields = {}
+        self.virtual_fields = {}
         self.ref_models = []
         self.unique = []
 
@@ -177,14 +178,28 @@ class Options(object):
     def model(self):
         return get_model(self.name)
 
-    def add_field(self, field):
-        if not field.name:
+    def contribute_to_class(self, cls, name, attr):
+
+        if not isinstance(attr, Field):
+            return setattr(cls, name, attr)
+
+        field = attr
+        name = field.name or name
+
+        if not name:
             raise ValueError('Field has no name')
-        if hasattr(self.model, field.name):
-            raise DuplicateFieldError('Field %r already defined in model %r' % (field.name, self.name))
-        setattr(self.model, field.name, field)
-        self.fields[field.name] = field
-        field.__configure__(self.model, field.name)
+
+        if hasattr(cls, name):
+            raise DuplicateFieldError('Field %r already defined in model %r' % (name, cls.__name__))
+
+        setattr(cls, name, field)
+
+        from _reference import IRelation
+        if isinstance(field, IRelation) and field.is_virtual:
+            self.virtual_fields[name] = field
+        else:
+            self.fields[name] = field
+        field.__configure__(cls, name)
 
 
 class ModelType(type):
@@ -207,7 +222,7 @@ class ModelType(type):
         if '_meta' in attrs:
             raise AttributeError("'_meta' is reserved for internal use.")
 
-        meta = attrs['_meta'] = getattr(parents[0], '_meta', None) or Options()
+        meta = getattr(parents[0], '_meta', None) or Options()
 
         if meta.name is None:
             try:
@@ -231,7 +246,9 @@ class ModelType(type):
             bases = tuple(bases)
 
         helpers = attrs.pop(MODEL_HELPERNAME, [])
-        cls = super_new(cls, name, bases, attrs)
+        cls = super_new(cls, name, bases, {
+            '_meta': meta,
+            '__module__': attrs.pop('__module__')})
 
         # overwrite model class in the cache
         cache.register_model(cls)
@@ -240,13 +257,7 @@ class ModelType(type):
 
         for name, attr in attrs.items():
 
-            # prepare fields
-            if isinstance(attr, Field):
-                if name in meta.fields:
-                    raise DuplicateFieldError(
-                        "Duplicate field, %s, already defined in parent class." % name)
-                meta.fields[name] = attr
-                attr.__configure__(cls, name)
+            meta.contribute_to_class(cls, name, attr)
 
             # prepare validators
             if isinstance(attr, FunctionType) and hasattr(attr, '_validates'):
@@ -383,6 +394,7 @@ class Model(object):
 
         self._key = None
         self._values = {}
+        self._dirty = True
 
         fields = self.fields()
         for field in self.fields().values():
@@ -408,14 +420,19 @@ class Model(object):
         """Whether the model is saved in database or not.
         """
         return  self._key is not None
+
+    @property
+    def is_dirty(self):
+        return self._dirty
     
     def _values_for_db(self):
         """Return values to be stored in database table. For internal use only.
         """
         values = {}
         fields = self.fields()
-        for k, v in self._values.items():
-            values[k] = fields[k].to_database_value(self)
+        for k, v in fields.items():
+            if k in self._values:
+                values[k] = fields[k].to_database_value(self)
         return values
     
     @classmethod
@@ -431,7 +448,35 @@ class Model(object):
             values[k] = fields[k].from_database_value(obj, v)
 
         obj._values.update(values)
+        obj._dirty = False
         return obj
+
+    def _get_related(self):
+
+        from _reference import IRelation
+
+        before = []
+        after = []
+
+        for name, field in self._meta.fields.items() + self._meta.virtual_fields.items():
+
+            if not (isinstance(field, IRelation) and field.name in self._values):
+                continue
+
+            values = self._values[field.name]
+
+            if not isinstance(values, list):
+                values = [values]
+
+            for val in values:
+                if not val.is_dirty:
+                    continue
+                if field.is_virtual:
+                    after.append(val)
+                else:
+                    before.append(val)
+
+        return before, after
         
     def save(self):
         """Writes the instance to the database.
@@ -446,9 +491,19 @@ class Model(object):
             DatabaseError if instance could not be commited.
         """
         from rapido.db.engines import database
+
+        before, after = self._get_related()
+
+        [o.save() for o in before]
+
         if self.saved:
-            return database.update_table(self)
-        return database.insert_into(self)
+            key = database.update_table(self)
+        key = database.insert_into(self)
+        self._dirty = False
+
+        [o.save() for o in after]
+
+        return key
 
     def delete(self):
         """Deletes the instance from the database.

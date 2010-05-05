@@ -21,16 +21,23 @@ class Query(object):
     You should use `==` for exact match.
     """
 
-    def __init__(self, model):
-        """Create a new Query for the given model.
+    def __init__(self, model, mapper=None):
+        """Create a new Query for the given model. The result set will be mapped
+        with the given mapper.
 
         Args:
             model: the model
+            mapper: a callback function to map query result
         """
+        if mapper and not callable(mapper):
+            raise TypeError('mapper should be callable')
+
         self._model = model
         self._parser = Parser()
         self._all = []
         self._order = None
+        self._mapper = mapper
+
 
     def filter(self, query, **kw):
         """Filter with the given query."
@@ -72,7 +79,11 @@ class Query(object):
             params.extend(b)
 
         from rapido.db.engines import database
-        return [self._model._from_db_values(vals) for vals in database.select_from(s, params)]
+
+        result = map(self._model._from_db_values, database.select_from(s, params))
+        if self._mapper:
+            return map(self._mapper, result)
+        return result
 
     def count(self):
         """Return the number of records in the query object.

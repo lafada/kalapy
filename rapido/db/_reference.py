@@ -5,6 +5,7 @@ one-to-one, many-to-one and many-to-many between models.
 
 from _fields import Field
 from _model import get_model, get_models, Model
+from _query import Query
 from _errors import FieldError, DuplicateFieldError
 
 
@@ -32,6 +33,10 @@ class IRelation(Field):
         """Returns the reference class.
         """
         return get_model(self._reference, self.model_class._meta.package)
+
+    @property
+    def is_virtual(self):
+        return self._data_type is None
 
 
 class ManyToOne(IRelation):
@@ -81,7 +86,7 @@ class ManyToOne(IRelation):
 
         c = reverse_class or OneToMany
         f = c(model_class, name=self.reverse_name, reverse_name=self.name)
-        self.reference._meta.add_field(f)
+        self.reference._meta.contribute_to_class(self.reference, f.name, f)
 
     def __get__(self, model_instance, model_class):
         return super(ManyToOne, self).__get__(model_instance, model_class)
@@ -111,28 +116,59 @@ class OneToOne(ManyToOne):
         kw['unique'] = True
         super(OneToOne, self).__init__(reference, reverse_name, cascade, **kw)
 
+    def __set__(self, model_instance, value):
+        super(OneToOne, self).__set__(model_instance, value)
+        setattr(value, self.reverse_name, model_instance)
+
     def prepare(self, model_class):
         super(OneToOne, self).prepare(model_class, 
                 reverse_name=model_class.__name__.lower(),
                 reverse_class=O2ORel)
 
-class O2ORel(Field):
+class O2ORel(IRelation):
     """OneToOne reverse lookup field to prevent recursive
     dependencies.
     """
+
+    _data_type = None
+
     def __init__(self, reference, reverse_name, **kw):
-        super(O2ORel, self).__init__(**kw)
-        self.reference = reference
+        super(O2ORel, self).__init__(reference, **kw)
         self.reverse_name = reverse_name
 
     def __get__(self, model_instance, model_class):
-        return self.reference.filter('%s == :key' % self.reverse_name,
-                key=model_instance.key).fetch(1)[0]
+
+        if model_instance is None:
+            return self
+
+        try: # if already fetched
+            return model_instance._values[self.name]
+        except:
+            pass
+
+        if model_instance.saved:
+            value = self.reference.filter('%s == :key' % self.reverse_name,
+                        key=model_instance.key).fetch(1)[0]
+            model_instance._values[self.name] = value
+            return value
+
+        return None
 
     def __set__(self, model_instance, value):
+
+        if model_instance is None:
+            raise AttributeError('%r must be accessed with model instance' % (self.name))
+
         if not isinstance(value, self.reference):
             raise TypeError('Expected %r instance' % (self.reference._meta.name))
-        setattr(value, self.reverse_name, model_instance)
+
+        super(O2ORel, self).__set__(model_instance, value)
+        if getattr(value, self.reverse_name, None) != model_instance:
+            setattr(value, self.reverse_name, model_instance)
+
+    def prepare(self, model_class):
+        pass
+
 
 class O2MSet(object):
     """A descriptor class to access OneToMany fields.
@@ -160,7 +196,9 @@ class O2MSet(object):
             if not isinstance(obj, self.__ref):
                 raise TypeError('%r instance expected.' % self.__ref._meta.name)
             setattr(obj, self.__field.reverse_name, self.__obj)
-            obj.save()
+
+            self.__obj._values.setdefault(self.__field.name, []).append(obj)
+            #obj.save()
 
     def remove(self, *objs):
         """Removes the provided instances from the reference set.
@@ -209,14 +247,15 @@ class M2MSet(object):
         self.__ref = field.reference
         self.__m2m = field.m2m
 
-        if not instance.key:
-            raise ValueError(
-                    'Instance must be saved before using ManyToMany field.')
-
     def all(self):
         """Returns a `Query` object pre-filtered to return related objects.
         """
-        return self.__m2m.filter('source == :key', key=self.__obj.key)
+        if not self.__obj.key:
+            raise ValueError(
+                    'Instance must be saved before using \'all\'.')
+
+        return Query(self.__m2m, lambda obj: getattr(obj, self.__field.target)).filter(
+                '%s == :key' % self.__field.source, key=self.__obj.key)
 
     def add(self, *objs):
         """Add new instances to the reference set.
@@ -228,20 +267,22 @@ class M2MSet(object):
         for obj in objs:
             if not isinstance(obj, self.__ref):
                 raise TypeError('%s instances required' % (self.__ref._meta.name))
-            if not obj.key:
-                raise ValueError('%r instances must me saved before using with ManyToMany field %r' % (
-                    obj._meta.name, self.__field.name))
 
-        existing = self.all().filter('target in :keys', keys=[obj.key for obj in objs]).fetch(-1)
-        existing = [o.key for o in existing]
+        existing = []
+        if obj.key:
+            query = '%s in :keys' % self.__field.target
+            existing = self.all().filter(query, keys=[obj.key for obj in objs]).fetch(-1)
+            existing = [o.key for o in existing]
 
         for obj in objs:
             if obj.key in existing:
                 continue
             m2m = self.__m2m()
-            m2m.source = self.__obj
-            m2m.target = obj
-            m2m.save()
+
+            setattr(m2m, self.__field.source, self.__obj)
+            setattr(m2m, self.__field.target, obj)
+
+            m2m.source._values.setdefault(self.__field.name, []).append(m2m)
 
     def remove(self, *objs):
         """Removes the provided instances from the reference set.
@@ -253,7 +294,8 @@ class M2MSet(object):
             if not isinstance(obj, self.__ref):
                 raise TypeError('%s instances required' % (self.__ref._meta.name))
 
-        existing = self.all().filter('target in :keys', keys=[obj.key for obj in objs]).fetch(-1)
+        query = '%s in :keys' % self.__field.target
+        existing = self.all().filter(query, keys=[obj.key for obj in objs]).fetch(-1)
         keys = [o.key for o in existing]
 
         from rapido.db.engines import database
@@ -305,7 +347,7 @@ class OneToMany(IRelation):
                 self.reverse_name, self.reference.__name__))
 
         f = ManyToOne(model_class, self.name, name=self.reverse_name)
-        self.reference._meta.add_field(f)
+        self.reference._meta.contribute_to_class(self.reference, f.name, f)
 
     def __get__(self, model_instance, model_class):
         if model_instance is None:
@@ -330,37 +372,59 @@ class ManyToMany(IRelation):
 
     _data_type = None
 
-    def __init__(self, reference, **kw):
+    def __init__(self, reference, reverse_name=None, **kw):
         super(ManyToMany, self).__init__(reference, **kw)
+        self.reverse_name = reverse_name
+
+    def get_reverse_field(self):
+
+        if self.reverse_name is None:
+            self.reverse_name = '%s_set' % (self.model_class.__name__.lower())
+
+        if not self.reverse_name:
+            return None
+
+        reverse_field = getattr(self.reference, self.reverse_name, None)
+        
+        if reverse_field and reverse_field.reverse_name != self.name:
+            raise DuplicateFieldError('field %r already defined in referenced model %r' % (
+                self.reverse_name, self.reference.__name__))
+
+        return reverse_field
 
     def prepare(self, model_class):
 
-        from _model import ModelType, Model
+        reverse_field = self.get_reverse_field()
 
-        #create intermediary model
+        if not reverse_field:
 
-        name = '%s_%s' % (model_class.__name__.lower(), self.name)
+            from _model import ModelType, Model
 
-        @classmethod
-        def _from_db_values(cls, values):
-            obj = super(cls, cls)._from_db_values(values)
-            return obj.target
+            #create intermediary model
 
-        cls = ModelType(name, (Model,), {
-            '__module__': model_class.__module__,
-            '_from_db_values': _from_db_values,
-        })
+            name = '%s_%s' % (model_class.__name__.lower(), self.name)
 
-        cls._meta.add_field(ManyToOne(model_class, name='source'))
-        cls._meta.add_field(ManyToOne(self.reference, name='target'))
+            cls = ModelType(name, (Model,), {
+                '__module__': model_class.__module__
+            })
 
-        cls._meta.ref_models = [model_class, self.reference]
+            cls._meta.contribute_to_class(cls, 'source', ManyToOne(model_class, name='source'))
+            cls._meta.contribute_to_class(cls, 'target', ManyToOne(self.reference, name='target'))
 
-        #XXX: create reverse lookup fields?
-        #cls.source.prepare(cls)
-        #cls.target.prepare(cls)
+            cls._meta.ref_models = [model_class, self.reference]
 
-        self.m2m = cls
+            self.m2m = cls
+            self.source = 'source'
+            self.target = 'target'
+        else:
+            self.m2m = reverse_field.m2m
+            self.source = 'target'
+            self.target = 'source'
+
+        if not reverse_field and self.reverse_name:
+            f = ManyToMany(model_class, reverse_name=self.name, name=self.reverse_name)
+            self.reference._meta.contribute_to_class(self._reference, f.name, f)
+            f.prepare(self.reference)
 
     def __get__(self, model_instance, model_class):
         if model_instance is None:
