@@ -421,18 +421,19 @@ class ManyToMany(IRelation):
                 '__module__': model_class.__module__
             })
 
-            cls.add_field(ManyToOne(model_class, name='source'))
-            cls.add_field(ManyToOne(self.reference, name='target'))
+            self.source = '%s' % model_class.__name__.lower()
+            self.target = '%s' % self.reference.__name__.lower()
+
+            cls.add_field(ManyToOne(model_class, name=self.source))
+            cls.add_field(ManyToOne(self.reference, name=self.target))
 
             cls._meta.ref_models = [model_class, self.reference]
 
             self.m2m = cls
-            self.source = 'source'
-            self.target = 'target'
         else:
             self.m2m = reverse_field.m2m
-            self.source = 'target'
-            self.target = 'source'
+            self.source = reverse_field.target
+            self.target = reverse_field.source
 
         if not reverse_field and self.reverse_name:
             # create reverse lookup field
@@ -444,9 +445,6 @@ class ManyToMany(IRelation):
 
         if model_instance is None:
             return self
-
-        #if not model_instance.saved:
-        #    raise AttributeError('%r can\'t be accessed unless instance is saved' % self.name)
 
         return M2MSet(self, model_instance)
 
