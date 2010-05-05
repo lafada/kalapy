@@ -65,11 +65,11 @@ class ManyToOne(IRelation):
         self.reverse_name = reverse_name
         self.cascade = cascade
 
-    def prepare(self, model_class):
+    def prepare(self, model_class, reverse_name=None, reverse_class=None):
 
         if not self.reverse_name:
-            self.reverse_name = '%s_set' % model_class.__name__.lower()
-        
+            self.reverse_name = reverse_name or ('%s_set' % model_class.__name__.lower())
+
         if hasattr(self.reference, self.reverse_name):
             try:
                 if getattr(self.reference, self.reverse_name).reverse_name == self.name:
@@ -79,7 +79,8 @@ class ManyToOne(IRelation):
             raise DuplicateFieldError('field %r already defined in referenced model %r' % (
                 self.reverse_name, self.reference.__name__))
 
-        f = OneToMany(model_class, self.name, name=self.reverse_name)
+        c = reverse_class or OneToMany
+        f = c(model_class, name=self.reverse_name, reverse_name=self.name)
         self.reference.add_field(f)
 
     def __get__(self, model_instance, model_class):
@@ -110,6 +111,28 @@ class OneToOne(ManyToOne):
         kw['unique'] = True
         super(OneToOne, self).__init__(reference, reverse_name, cascade, **kw)
 
+    def prepare(self, model_class):
+        super(OneToOne, self).prepare(model_class, 
+                reverse_name=model_class.__name__.lower(),
+                reverse_class=O2ORel)
+
+class O2ORel(Field):
+    """OneToOne reverse lookup field to prevent recursive
+    dependencies.
+    """
+    def __init__(self, reference, reverse_name, **kw):
+        super(O2ORel, self).__init__(**kw)
+        self.reference = reference
+        self.reverse_name = reverse_name
+
+    def __get__(self, model_instance, model_class):
+        return self.reference.filter('%s == :key' % self.reverse_name,
+                key=model_instance.key).fetch(1)[0]
+
+    def __set__(self, model_instance, value):
+        if not isinstance(value, self.reference):
+            raise TypeError('Expected %r instance' % (self.reference._meta.name))
+        setattr(value, self.reverse_name, model_instance)
 
 class O2MSet(object):
     """A descriptor class to access OneToMany fields.
