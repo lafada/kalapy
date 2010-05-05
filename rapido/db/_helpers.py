@@ -4,6 +4,8 @@ of the model class.
 
 import re, types, inspect
 
+from _fields import Field
+
 
 __all__ = ('validate', 'unique')
 
@@ -47,7 +49,6 @@ def validate(field):
     
     @classhelper
     def handler(cls, func, field):
-        from _fields import Field
 
         if isinstance(field, Field) and field.name not in cls._meta.fields:
             raise ValueError('No such field %r' % field.name)
@@ -86,20 +87,19 @@ def unique(*fields):
 
     @classhelper
     def handler(cls, *fields):
-        from _fields import Field
-
-        unique = []
+        cls._meta.unique = unique = []
         for items in fields:
             if not isinstance(items, (list, tuple)):
                 items = [items]
-            items = list(items)
             for i, field in enumerate(items):
-                if isinstance(field, basestring) and field not in cls._meta.fields:
-                    raise ValueError('No such field %r' % field)
-                if isinstance(field, Field):
+                if isinstance(field, basestring):
+                    if field not in cls._meta.fields:
+                        raise ValueError('No such field %r' % field)
+                elif isinstance(field, Field):
                     items[i] = field.name
-
-        cls._meta.unique = fields
+                else:
+                    raise TypeError('Expected field type')
+            unique.append(items)
 
     handler(*fields)
 
