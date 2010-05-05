@@ -190,29 +190,6 @@ class Options(object):
                     self.virtual_fields[x]._creation_order,
                     self.virtual_fields[y]._creation_order))
 
-    def contribute_to_class(self, cls, name, attr):
-
-        if not isinstance(attr, Field):
-            return setattr(cls, name, attr)
-
-        field = attr
-        name = field.name or name
-
-        if not name:
-            raise ValueError('Field has no name')
-
-        if hasattr(cls, name):
-            raise DuplicateFieldError('Field %r already defined in model %r' % (name, cls.__name__))
-
-        setattr(cls, name, field)
-
-        from _reference import IRelation
-        if isinstance(field, IRelation) and field.is_virtual:
-            self.virtual_fields[name] = field
-        else:
-            self.fields[name] = field
-        field.__configure__(cls, name)
-
 
 class ModelType(type):
 
@@ -269,7 +246,10 @@ class ModelType(type):
 
         for name, attr in attrs.items():
 
-            meta.contribute_to_class(cls, name, attr)
+            if isinstance(attr, Field):
+                cls.add_field(attr, name)
+            else:
+                setattr(cls, name, attr)
 
             # prepare validators
             if isinstance(attr, FunctionType) and hasattr(attr, '_validates'):
@@ -290,6 +270,25 @@ class ModelType(type):
         meta.prepare()
 
         return cls
+
+    def add_field(cls, field, name=None):
+        
+        name = field.name or name
+
+        if not name:
+            raise ValueError('Field has no name')
+
+        if hasattr(cls, name):
+            raise DuplicateFieldError('Field %r already defined in model %r' % (name, cls.__name__))
+
+        setattr(cls, name, field)
+
+        if getattr(field, 'is_virtual', None):
+            cls._meta.virtual_fields[name] = field
+        else:
+            cls._meta.fields[name] = field
+
+        field.__configure__(cls, name)
     
     def __repr__(cls):
         return "<Model %r: class %s>" % (cls._meta.name, cls.__name__)
