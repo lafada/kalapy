@@ -541,6 +541,30 @@ class Model(object):
         return Query(cls)
 
     @classmethod
+    def select(cls, *fields):
+        """Mimics SELECT column query. If fields are not given it is
+        equivalent to `all()`.
+
+        >>> names = User.select('name').fetch(-1)
+        >>> print names
+        ... ['a', 'b', 'c', ...]
+        >>> name_dob = User.select('name', 'dob').fetch(-1)
+        >>> print name_dob
+        ... [('a', '01-11-2001'), ...]
+        >>> users = User.select().fetch(-1)
+        >>> print users
+        ... [<Object ...> ...]
+        """
+        def mapper(obj):
+            if not fields:
+                return obj
+            if len(fields) > 1:
+                return tuple([getattr(obj, name) for name in fields])
+            return getattr(obj, fields[0])
+
+        return Query(cls, mapper)
+
+    @classmethod
     def filter(cls, query, **params):
         """Shortcut to `cls.all().filter`
 

@@ -273,7 +273,7 @@ class M2MSet(object):
         """Returns a `Query` object pre-filtered to return related objects.
         """
         self.__check()
-        return Query(self.__m2m, lambda obj: getattr(obj, self.__field.target)).filter(
+        return self.__m2m.select(self.__field.target).filter(
                 self.__source_eq, key=self.__obj.key)
 
     def add(self, *objs):
