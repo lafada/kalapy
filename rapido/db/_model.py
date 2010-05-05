@@ -169,14 +169,26 @@ class Options(object):
         self.package = None
         self.name = None
         self.table = None
-        self.fields = {}
-        self.virtual_fields = {}
+        self.fields = OrderedDict()
+        self.virtual_fields = OrderedDict()
         self.ref_models = []
         self.unique = []
 
     @property
     def model(self):
         return get_model(self.name)
+
+    def prepare(self):
+
+        self.fields._keys.sort(
+                lambda x, y: cmp(
+                    self.fields[x]._creation_order,
+                    self.fields[y]._creation_order))
+
+        self.virtual_fields._keys.sort(
+                lambda x, y: cmp(
+                    self.virtual_fields[x]._creation_order,
+                    self.virtual_fields[y]._creation_order))
 
     def contribute_to_class(self, cls, name, attr):
 
@@ -274,6 +286,8 @@ class ModelType(type):
         # call all model helpers like validate, unique etc.
         for helper in helpers:
             helper(cls)
+
+        meta.prepare()
 
         return cls
     
@@ -390,7 +404,7 @@ class Model(object):
         return super(Model, cls).__new__(klass)
 
 
-    def __init__(self, **kw):
+    def __init__(self, *args, **kw):
 
         self._key = None
         self._values = {}
@@ -581,7 +595,7 @@ class Model(object):
     def fields(cls):
         """Return the defined fields.
         """
-        return dict(cls._meta.fields)
+        return OrderedDict(cls._meta.fields)
     
     def __repr__(self):
         return "<Model %r: %s object at %s>" % (self._meta.name,

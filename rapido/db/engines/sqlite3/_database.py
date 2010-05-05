@@ -88,8 +88,6 @@ class Database(IDatabase):
     def get_create_sql(self, model):
 
         fields = [f for f in model.fields().values() if f._data_type is not None]
-        fields.sort(lambda a, b: cmp(a._creation_order, b._creation_order))
-
         fields_sql = [self.get_pk_sql()] + [self.get_field_sql(f) for f in fields]
 
         # generate unique constraints
