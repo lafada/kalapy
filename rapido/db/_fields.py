@@ -129,7 +129,7 @@ class AutoKey(Field):
 
     def __init__(self):
         super(AutoKey, self).__init__(name="key")
-        # nagative serial id so that it becomes first field in the model
+        # nagative serial id so that it become first field in the model
         self._serial = - self._serial
 
     def __get__(self, model_instance, model_class):
@@ -167,10 +167,17 @@ class Decimal(Float):
         except:
             raise ValidationError('Expected Decimal value')
 
+    def to_database(self, value):
+        if value is None:
+            return None
+        return str(value)
+
 class Boolean(Field):
     _data_type = "boolean"
 
     def to_python(self, value):
+        if value is None:
+            return value
         if isinstance(value, int):
             return bool(value)
         if value in (True, False): return value
