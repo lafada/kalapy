@@ -103,7 +103,9 @@ class ManyToOne(IRelation):
         return value
 
     def to_python(self, value):
-        if value is not None:
+        if value is None:
+            return value
+        if not isinstance(value, self.reference):
             return self.reference.get(value)
         return value
 

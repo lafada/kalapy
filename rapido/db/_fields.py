@@ -1,6 +1,10 @@
 import inspect
+import decimal, datetime
+from time import time
+
 
 from _errors import *
+
 
 class Field(object):
 
@@ -76,7 +80,7 @@ class Field(object):
         if self._validator:
             self._validator(model_instance, value)
 
-        return value
+        return self.to_python(value)
 
     def empty(self, value):
         return not value
@@ -117,7 +121,7 @@ class Field(object):
 
 
 class String(Field):
-    pass
+    _data_type = 'char'
 
 
 class Text(String):
@@ -132,13 +136,32 @@ class Float(Field):
     _data_type = "float"
 
 
-class Numeric(Float):
+class Decimal(Float):
     _data_type = "decimal"
 
+    def to_python(self, value):
+        if value is None:
+            return None
+        try:
+            return decimal.Decimal(value)
+        except:
+            raise ValidationError('Expected Decimal value')
 
 class Boolean(Field):
-    _data_type = "bool"
+    _data_type = "boolean"
 
+    def to_python(self, value):
+        if isinstance(value, int):
+            return bool(value)
+        if value in (True, False): return value
+        if value in ('t', 'True', 'y', 'Yes', '1'): return True
+        if value in ('f', 'False', 'n', 'No', '0'): return False
+        raise ValidationError('Value should be either True or False')
+
+    def to_database(self, value):
+        if value is None:
+            return None
+        return bool(value)
 
 class DateTime(Field):
     _data_type = "datetime"

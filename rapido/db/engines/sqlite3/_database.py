@@ -1,10 +1,28 @@
-import os
+import os, decimal, types
 import sqlite3
 
 from rapido.db._errors import DatabaseError
 from rapido.db._interface import IDatabase
 from rapido.db._reference import ManyToOne
+from rapido.db._model import ModelType, Model
 
+from rapido.db.engines import utils
+
+sqlite3.register_converter('date', utils.date_to_py)
+sqlite3.register_converter('time', utils.time_to_py)
+sqlite3.register_converter('datetime', utils.datetime_to_py)
+sqlite3.register_converter('decimal', utils.decimal_to_py)
+sqlite3.register_adapter(decimal.Decimal, utils.decimal_to_db)
+sqlite3.register_adapter(str, utils.str_to_db)
+
+def adapt_list(items):
+    result = []
+    for x in items:
+        if isinstance(x, Model):
+            result.append(x.key)
+        else:
+            result.append(x)
+    return result
 
 class Database(IDatabase):
     
@@ -13,7 +31,7 @@ class Database(IDatabase):
         "text"      :   "VARCHAR",
         "integer"   :   "INTEGER",
         "float"     :   "FLOAT",
-        "numeric"   :   "DECIMAL",
+        "decimal"   :   "DECIMAL",
         "boolean"   :   "BOOL",
         "datetime"  :   "DATETIME",
         "date"      :   "DATE",
