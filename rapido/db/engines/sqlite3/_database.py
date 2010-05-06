@@ -8,6 +8,7 @@ from rapido.db._model import ModelType, Model
 
 from rapido.db.engines import utils
 
+sqlite3.register_converter('bool', lambda s: s == '1')
 sqlite3.register_converter('date', utils.date_to_python)
 sqlite3.register_converter('time', utils.time_to_python)
 sqlite3.register_converter('datetime', utils.datetime_to_python)
@@ -28,7 +29,7 @@ class Database(IDatabase):
     
     data_types = {
         "key"       :   "INTEGER PRIMARY KEY AUTOINCREMENT",
-        "string"    :   "CHAR",
+        "char"      :   "CHAR",
         "text"      :   "VARCHAR",
         "integer"   :   "INTEGER",
         "float"     :   "FLOAT",
