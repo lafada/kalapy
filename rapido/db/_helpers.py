@@ -44,6 +44,15 @@ def unique(*fields):
 
     Declares uniqueness of `a` and combined uniqueness of `b` & `c`.
     """
+
+    def chk(item):
+        if isinstance(item, (list, tuple)):
+            return map(chk, item)
+        if not isinstance(item, Field):
+            raise TypeError('Field expected')
+
+    map(chk, fields)
+
     for items in fields:
 
         if not isinstance(items, (list, tuple)):
@@ -61,7 +70,5 @@ def unique(*fields):
         first._unique_with = unique_with = [first]
 
         for field in items[1:]:
-            if not isinstance(field, Field):
-                raise TypeError('Field expected')
             unique_with.append(field)
 
