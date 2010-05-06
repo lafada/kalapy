@@ -9,8 +9,6 @@ from _errors import *
 from _fields import *
 from _query import *
 
-from _helpers import MODEL_HELPERNAME
-
 
 __all__ = ['Model', 'get_model', 'get_models']
 
@@ -234,7 +232,6 @@ class ModelType(type):
                     bases[i] = parent
             bases = tuple(bases)
 
-        helpers = attrs.pop(MODEL_HELPERNAME, [])
         cls = super_new(cls, name, bases, {
             '_meta': meta,
             '__module__': attrs.pop('__module__')})
@@ -255,6 +252,11 @@ class ModelType(type):
             else:
                 setattr(cls, name, attr)
 
+            # prepare unique constraints
+            if isinstance(attr, Field) and hasattr(attr, '_unique_with'):
+                meta.unique.append(attr._unique_with[:])
+                del attr._unique_with
+
             # prepare validators
             if isinstance(attr, FunctionType) and hasattr(attr, '_validates'):
 
@@ -266,10 +268,6 @@ class ModelType(type):
                     raise FieldError("Field '%s' is not defined." % attr._validates)
 
                 field._validator = attr
-
-        # call all model helpers like validate, unique etc.
-        for helper in helpers:
-            helper(cls)
 
         meta.prepare()
 

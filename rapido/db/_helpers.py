@@ -2,33 +2,10 @@
 of the model class.
 """
 
-import re, types, inspect
-
 from _fields import Field
 
 
 __all__ = ('validate', 'unique')
-
-
-MODEL_HELPERNAME = '__model_helpers_'
-
-
-def classhelper(func):
-
-    def wrapper(*args, **kw):
-
-        def handler(cls):
-            return func(cls, *args, **kw)
-
-        frame = inspect.currentframe().f_back.f_back
-        try:
-            helpers = frame.f_locals.setdefault(MODEL_HELPERNAME, [])
-            helpers.append(handler)
-        finally:
-            del frame
-
-        return func
-    return wrapper
 
 
 def validate(field):
@@ -46,27 +23,10 @@ def validate(field):
     >>>             raise ValidationError('Name is too short.')
     >>>
     """
-    
-    @classhelper
-    def handler(cls, func, field):
-
-        if isinstance(field, Field) and field.name not in cls._meta.fields:
-            raise ValueError('No such field %r' % field.name)
-
-        if isinstance(field, basestring):
-            if field not in cls._meta.fields:
-                raise ValueError('No such field %r' % field)
-            field = cls._meta.fields[field]
-
-        assert isinstance(field, Field)
-
-        field._validator = func
-
-    def wrapper(func):
-        handler(func, field)
+    def decore(func):
+        func._validates = field
         return func
-
-    return wrapper
+    return decore
 
 
 def unique(*fields):
@@ -84,22 +44,24 @@ def unique(*fields):
 
     Declares uniqueness of `a` and combined uniqueness of `b` & `c`.
     """
+    for items in fields:
 
-    @classhelper
-    def handler(cls, *fields):
-        cls._meta.unique = unique = []
-        for items in fields:
-            if not isinstance(items, (list, tuple)):
-                items = [items]
-            for i, field in enumerate(items):
-                if isinstance(field, basestring):
-                    if field not in cls._meta.fields:
-                        raise ValueError('No such field %r' % field)
-                elif isinstance(field, Field):
-                    items[i] = field.name
-                else:
-                    raise TypeError('Expected field type')
-            unique.append(items)
+        if not isinstance(items, (list, tuple)):
+            items._unique = True
+            continue
 
-    handler(*fields)
+        if len(items) == 1:
+            items[0]._unique = True
+            continue
+
+        if not items:
+            continue
+
+        first = items[0]
+        first._unique_with = unique_with = [first]
+
+        for field in items[1:]:
+            if not isinstance(field, Field):
+                raise TypeError('Field expected')
+            unique_with.append(field)
 
