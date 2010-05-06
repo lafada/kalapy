@@ -1,5 +1,7 @@
 import re
 
+from _errors import FieldError
+
 
 __all__ = ('Query',)
 
@@ -33,11 +35,10 @@ class Query(object):
             raise TypeError('mapper should be callable')
 
         self._model = model
-        self._parser = Parser()
+        self._parser = Parser(model)
         self._all = []
         self._order = None
         self._mapper = mapper
-
 
     def filter(self, query, **kw):
         """Filter with the given query."
@@ -149,6 +150,14 @@ class Parser(object):
         'not in': 'not_in',
     }
 
+    name_alias = {
+        'key': 'id',
+        '__key__': 'id',
+    }
+
+    def __init__(self, model):
+        self.model = model
+
     def split(self, query):
         """Split the query by `and` or `or` and return list of list of substrings.
         """
@@ -170,11 +179,18 @@ class Parser(object):
         except:
             raise Exception('Malformed query: %s', query)
 
+        if name.lower() not in self.name_alias and \
+                name not in self.model._meta.fields:
+            raise FieldError('No such field %r in model %r' % (
+                name, self.model._meta.name))
+
         op = op.lower()
         op = self.op_alias.get(op, op)
+        name = self.name_alias.get(name.lower(), name)
 
         handler = getattr(self, 'handle_%s' % op)
         value = params[var]
+
         return handler(name, value), value
 
     def handle_in(self, name, value):

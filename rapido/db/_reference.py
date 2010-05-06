@@ -272,8 +272,11 @@ class M2MSet(object):
         """Returns a `Query` object pre-filtered to return related objects.
         """
         self.__check()
-        return self.__m2m.select(self.__field.target).filter(
-                self.__source_eq, key=self.__obj.key)
+        #XXX: think about a better solution
+        # Use nested SELECT or JOIN, but some backends might not support that
+        keys = self.__m2m.select(self.__field.target).filter(self.__source_eq, key=self.__obj.key).fetch(-1)
+        keys = [o.key for o in keys]
+        return self.__ref.filter('key in :keys', keys=keys)
 
     def add(self, *objs):
         """Add new instances to the reference set.
@@ -284,12 +287,12 @@ class M2MSet(object):
         """
         keys = [obj.key for obj in self.__check(*objs) if obj.key]
 
-        existing = self.all().filter(self.__target_in, keys=keys).fetch(-1)
-        existing = [o.key for o in existing]
+        if keys:
+            existing = self.__m2m.filter(self.__target_in, keys=keys).fetch(-1)
+            existing = [o.key for o in existing]
+            objs = [o for o in objs if o.key not in existing]
 
         for obj in objs:
-            if obj.key in existing:
-                continue
             if not obj.saved:
                 obj.save()
             m2m = self.__m2m()
