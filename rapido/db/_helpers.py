@@ -59,16 +59,11 @@ def unique(*fields):
             items._unique = True
             continue
 
-        if len(items) == 1:
-            items[0]._unique = True
-            continue
-
         if not items:
             continue
 
-        first = items[0]
-        first._unique_with = unique_with = [first]
-
-        for field in items[1:]:
-            unique_with.append(field)
+        if len(items) == 1:
+            items[0]._unique = True
+        else:
+            items[0]._unique_with = items
 
