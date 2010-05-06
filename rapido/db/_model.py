@@ -246,11 +246,13 @@ class ModelType(type):
         cls._values = None
 
         for name, attr in attrs.items():
-
             if isinstance(attr, Field):
                 cls.add_field(attr, name)
             else:
                 setattr(cls, name, attr)
+
+        # loop again so that every attributes are set
+        for name, attr in attrs.items():
 
             # prepare unique constraints
             if isinstance(attr, Field) and hasattr(attr, '_unique_with'):
