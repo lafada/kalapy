@@ -128,14 +128,14 @@ class AutoKey(Field):
     _data_type = 'key'
 
     def __init__(self):
-        super(AutoKey, self).__init__(name="id")
+        super(AutoKey, self).__init__(name="key")
         # nagative serial id so that it becomes first field in the model
         self._serial = - self._serial
 
     def __get__(self, model_instance, model_class):
         if model_instance is None:
             return self
-        return model_instance.key
+        return model_instance._key
 
     def __set__(self, model_instance, value):
         raise AttributeError('%r is a read-only primary key field.' % self.name)

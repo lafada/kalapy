@@ -90,7 +90,7 @@ class Query(object):
         """Return the number of records in the query object.
         """
         table = self._model._table
-        s = self._select('count("id")')
+        s = self._select('count("key")')
         params = []
         for q, b in self._all:
             params.extend(b)
@@ -150,10 +150,6 @@ class Parser(object):
         'not in': 'not_in',
     }
 
-    name_alias = {
-        'key': 'id',
-    }
-
     def __init__(self, model):
         self.model = model
 
@@ -178,17 +174,14 @@ class Parser(object):
         except:
             raise Exception('Malformed query: %s', query)
 
-        if name.lower() not in self.name_alias and \
-                name not in self.model._meta.fields:
+        if name not in self.model._meta.fields:
             raise FieldError('No such field %r in model %r' % (
                 name, self.model._meta.name))
 
-        name = self.name_alias.get(name, name)
         field = self.model._meta.fields[name]
 
         op = op.lower()
         op = self.op_alias.get(op, op)
-        name = self.name_alias.get(name.lower(), name)
 
         handler = getattr(self, 'handle_%s' % op)
         validator = getattr(self, 'validate_%s' % op, lambda f, v: v)

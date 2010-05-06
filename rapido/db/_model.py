@@ -424,15 +424,6 @@ class Model(object):
             field.__set__(self, value)
 
     @property
-    def key(self):
-        """The unique key id for this model instance.
-
-        The property is only available if the instance is already stored in
-        the database.
-        """
-        return self._key
-
-    @property
     def saved(self):
         """Whether the model is saved in database or not.
         """
@@ -458,7 +449,7 @@ class Model(object):
         values = dict(values)
 
         obj = cls()
-        obj._key = values.pop('id', None)
+        obj._key = values.pop('key', None)
 
         fields = obj.fields()
         for k, v in values.items():

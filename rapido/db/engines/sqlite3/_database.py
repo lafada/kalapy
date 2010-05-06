@@ -92,7 +92,7 @@ class Database(IDatabase):
                 res = "%s UNIQUE" % res
 
         if isinstance(field, ManyToOne):
-            res = '%s REFERENCES "%s" ("id")' % (res, field.reference._meta.table)
+            res = '%s REFERENCES "%s" ("key")' % (res, field.reference._meta.table)
             if field.cascade:
                 res = '%s ON DELETE CASCADE' % res
             elif field.required:
@@ -165,7 +165,7 @@ class Database(IDatabase):
         vals = [x[1] for x in items]
 
         keys = ", ".join(['"%s" = ?' % k for k in keys])
-        sql = 'UPDATE "%s" SET %s WHERE "id" = ?' % (model._meta.table, keys)
+        sql = 'UPDATE "%s" SET %s WHERE "key" = ?' % (model._meta.table, keys)
 
         vals.append(model.key)
 
@@ -182,7 +182,7 @@ class Database(IDatabase):
     def delete_from_keys(self, model, keys):
         if not isinstance(keys, (list, tuple)):
             keys = [keys]
-        sql = 'DELETE FROM "%s" WHERE "id" IN (%s)' % (
+        sql = 'DELETE FROM "%s" WHERE "key" IN (%s)' % (
                             model._meta.table, ", ".join(['?'] * len(keys)))
         cursor = self.cursor()
         cursor.execute(sql, keys)
