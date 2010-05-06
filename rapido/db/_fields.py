@@ -1,4 +1,3 @@
-import inspect
 import decimal, datetime
 from time import time
 
@@ -51,7 +50,7 @@ class Field(object):
         return model_instance._values.get(self.name)
 
     def __set__(self, model_instance, value):
-        value = self.validate(model_instance, value)
+        value = self._validate(model_instance, value)
         model_instance._values[self.name] = value
 
     def python_to_database(self, value):
@@ -64,8 +63,10 @@ class Field(object):
         """
         return value
 
-    def validate(self, model_instance, value):
-
+    def _validate(self, model_instance, value):
+        """Validate the given value. For internal use only, subclasses should
+        override `validate` method instead.
+        """
         if self.empty(value) and self.required:
             raise ValidationError("Field '%s' is required.", self.name)
 
@@ -76,6 +77,14 @@ class Field(object):
         if self._validator:
             self._validator(model_instance, value)
 
+        return self.validate(value)
+
+    def validate(self, value):
+        """Check whether the given value is compatible with this field.
+        Subclasses should override this method to convert provided value
+        in compatible form and should raise `ValidationError` if the value
+        is not compatible and can't be converted to proper value.
+        """
         return value
 
     def empty(self, value):

@@ -267,7 +267,8 @@ class ModelType(type):
                 if not isinstance(field, Field):
                     raise FieldError("Field '%s' is not defined." % attr._validates)
 
-                field._validator = attr
+                # use bound method
+                field._validator = getattr(cls, name)
 
         meta.prepare()
 
