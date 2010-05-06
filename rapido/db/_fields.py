@@ -9,14 +9,14 @@ from _errors import *
 class Field(object):
 
     # for internal use only
-    _creation_order = 0
+    _serial = 0
 
     _data_type = "string"
 
     def __init__(self, label=None, name=None, default=None, size=None,
             required=None, unique=False, indexed=None, selection=None):
 
-        self._creation_order = Field._creation_order = Field._creation_order + 1
+        self._serial = Field._serial = Field._serial + 1
 
         self._label = label
         self._name = name
@@ -36,13 +36,12 @@ class Field(object):
         return "<Field %s name='%s'>" % (self.__class__.__name__, self.name)
 
     def __configure__(self, model_class, name):
-        if self._name is None:
-            self._name = name
+
+        self._name = name
+        self.model_class = model_class
 
         if self._label is None:
             self._label = name.title()
-
-        self.model_class = model_class
 
     def __get__(self, model_instance, model_class):
 
@@ -94,6 +93,10 @@ class Field(object):
         return self._name
 
     @property
+    def col_name(self):
+        return self._col_name
+
+    @property
     def label(self):
         return self._label
 
@@ -120,8 +123,15 @@ class Field(object):
         return self._indexed
 
 
+class AutoKey(Field):
+    _data_type = 'key'
+    def __init__(self):
+        super(AutoKey, self).__init__(name="id")
+        # nagative serial id so that it becomes first field in the model
+        self._serial = - self._serial
+
 class String(Field):
-    _data_type = 'char'
+    pass
 
 
 class Text(String):

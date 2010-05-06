@@ -152,7 +152,6 @@ class Parser(object):
 
     name_alias = {
         'key': 'id',
-        '__key__': 'id',
     }
 
     def __init__(self, model):
@@ -184,17 +183,24 @@ class Parser(object):
             raise FieldError('No such field %r in model %r' % (
                 name, self.model._meta.name))
 
+        name = self.name_alias.get(name, name)
+        field = self.model._meta.fields[name]
+
         op = op.lower()
         op = self.op_alias.get(op, op)
         name = self.name_alias.get(name.lower(), name)
 
         handler = getattr(self, 'handle_%s' % op)
-        value = params[var]
+        validator = getattr(self, 'validate_%s' % op, lambda f, v: v)
+        value = validator(field, params[var])
 
         return handler(name, value), value
 
-    def handle_in(self, name, value):
+    def validate_in(self, field, value):
         assert isinstance(value, (list, tuple))
+        return [field.to_database(v) for v in value]
+
+    def handle_in(self, name, value):
         return '"%s" IN (%s)' % (name, ', '.join(['?'] * len(value)))
 
     def handle_not_in(self, name, value):

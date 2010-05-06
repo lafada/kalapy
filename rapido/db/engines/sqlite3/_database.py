@@ -27,6 +27,7 @@ def adapt_list(items):
 class Database(IDatabase):
     
     data_types = {
+        "key"       :   "INTEGER PRIMARY KEY AUTOINCREMENT",
         "string"    :   "CHAR",
         "text"      :   "VARCHAR",
         "integer"   :   "INTEGER",
@@ -82,9 +83,6 @@ class Database(IDatabase):
             """, (name,))
         return bool(cursor.fetchone())
 
-    def get_pk_sql(self):
-        return '"id" INTEGER PRIMARY KEY AUTOINCREMENT'
-
     def get_field_sql(self, field, for_alter=False):
         res = '"%s" %s' % (field.name, self.get_data_type(field))
         if not for_alter:
@@ -106,7 +104,7 @@ class Database(IDatabase):
     def get_create_sql(self, model):
 
         fields = [f for f in model.fields().values() if f._data_type is not None]
-        fields_sql = [self.get_pk_sql()] + [self.get_field_sql(f) for f in fields]
+        fields_sql = [self.get_field_sql(f) for f in fields]
 
         # generate unique constraints
         for item in model._meta.unique:

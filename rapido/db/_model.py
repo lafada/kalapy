@@ -182,13 +182,13 @@ class Options(object):
 
         self.fields._keys.sort(
                 lambda x, y: cmp(
-                    self.fields[x]._creation_order,
-                    self.fields[y]._creation_order))
+                    self.fields[x]._serial,
+                    self.fields[y]._serial))
 
         self.virtual_fields._keys.sort(
                 lambda x, y: cmp(
-                    self.virtual_fields[x]._creation_order,
-                    self.virtual_fields[y]._creation_order))
+                    self.virtual_fields[x]._serial,
+                    self.virtual_fields[y]._serial))
 
 
 class ModelType(type):
@@ -239,6 +239,10 @@ class ModelType(type):
             '_meta': meta,
             '__module__': attrs.pop('__module__')})
 
+        # create primary key field if it is root model
+        if not parent:
+            cls.add_field(AutoKey())
+
         # overwrite model class in the cache
         cache.register_model(cls)
 
@@ -273,7 +277,7 @@ class ModelType(type):
 
     def add_field(cls, field, name=None):
         
-        name = field.name or name
+        name = name or field.name
 
         if not name:
             raise ValueError('Field has no name')
