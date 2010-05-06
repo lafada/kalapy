@@ -184,10 +184,13 @@ class Parser(object):
         op = self.op_alias.get(op, op)
 
         handler = getattr(self, 'handle_%s' % op)
-        validator = getattr(self, 'validate_%s' % op, lambda f, v: v)
+        validator = getattr(self, 'validate_%s' % op, self.validate)
         value = validator(field, params[var])
 
         return handler(name, value), value
+
+    def validate(self, field, value):
+        return field.to_database(value)
 
     def validate_in(self, field, value):
         assert isinstance(value, (list, tuple))
