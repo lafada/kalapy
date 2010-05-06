@@ -43,7 +43,7 @@ class Query(object):
     def filter(self, query, **kw):
         """Filter with the given query."
         
-        >>> Query(User).filter("name ilike :name and age >= :age", name="some", age=20)
+        >>> Query(User).filter("name = :name and age >= :age", name="some", age=20)
         """
         self._all.append(self._parser.parse(query, **kw))
         return self
@@ -51,7 +51,7 @@ class Query(object):
     def order(self, spec):
         """Order the query result with given spec.
         
-        >>> q = Query(User).filter("name ilike :name and age >= :age", name="some", age=20)
+        >>> q = Query(User).filter("name = :name and age >= :age", name="some", age=20)
         >>> q.order("-age")
         """
         self._order = "ORDER BY"
@@ -66,7 +66,7 @@ class Query(object):
 
         If limit is `-1` fetch all records.
         
-        >>> q = Query(User).filter("name ilike :name and age >= :age", name="some", age=20)
+        >>> q = Query(User).filter("name = :name and age >= :age", name="some", age=20)
         >>> for obj in q.fetch(20):
         >>>     print obj.name
 
@@ -195,6 +195,9 @@ class Parser(object):
     def validate_in(self, field, value):
         assert isinstance(value, (list, tuple))
         return [field.python_to_database(v) for v in value]
+
+    def validate_not_in(self, field, value):
+        return self.validate_in(field, value)
 
     def handle_in(self, name, value):
         return '"%s" IN (%s)' % (name, ', '.join(['?'] * len(value)))
