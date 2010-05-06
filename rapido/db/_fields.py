@@ -54,16 +54,13 @@ class Field(object):
         value = self.validate(model_instance, value)
         model_instance._values[self.name] = value
 
-    def to_python(self, value):
-        """Convert the given value to expected Python data type, raising 
-        `db.ValidationError` if the value can't be converted. Subclasses
-        should override this method.
+    def python_to_database(self, value):
+        """Database representation of this field value.
         """
         return value
 
-    def to_database(self, value):
-        """Convert the given Python value suitable to store in the database.
-        Subclasses should override this method.
+    def database_to_python(self, value):
+        """Convert the given value to python representation for this field.
         """
         return value
 
@@ -79,7 +76,7 @@ class Field(object):
         if self._validator:
             self._validator(model_instance, value)
 
-        return self.to_python(value)
+        return value
 
     def empty(self, value):
         return not value
@@ -159,36 +156,10 @@ class Float(Field):
 class Decimal(Float):
     _data_type = "decimal"
 
-    def to_python(self, value):
-        if value is None:
-            return None
-        try:
-            return decimal.Decimal(value)
-        except:
-            raise ValidationError('Expected Decimal value')
-
-    def to_database(self, value):
-        if value is None:
-            return None
-        return str(value)
 
 class Boolean(Field):
     _data_type = "boolean"
 
-    def to_python(self, value):
-        if value is None:
-            return value
-        if isinstance(value, int):
-            return bool(value)
-        if value in (True, False): return value
-        if value in ('t', 'True', 'y', 'Yes', '1'): return True
-        if value in ('f', 'False', 'n', 'No', '0'): return False
-        raise ValidationError('Value should be either True or False')
-
-    def to_database(self, value):
-        if value is None:
-            return None
-        return bool(value)
 
 class DateTime(Field):
     _data_type = "datetime"

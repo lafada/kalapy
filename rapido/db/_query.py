@@ -190,11 +190,11 @@ class Parser(object):
         return handler(name, value), value
 
     def validate(self, field, value):
-        return field.to_database(value)
+        return field.python_to_database(value)
 
     def validate_in(self, field, value):
         assert isinstance(value, (list, tuple))
-        return [field.to_database(v) for v in value]
+        return [field.python_to_database(v) for v in value]
 
     def handle_in(self, name, value):
         return '"%s" IN (%s)' % (name, ', '.join(['?'] * len(value)))

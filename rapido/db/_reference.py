@@ -97,12 +97,12 @@ class ManyToOne(IRelation):
                 self.name, self._reference.__name__))
         super(ManyToOne, self).__set__(model_instance, value)
 
-    def to_database(self, value):
+    def python_to_database(self, value):
         if isinstance(value, Model):
             return value.key
         return value
 
-    def to_python(self, value):
+    def database_to_python(self, value):
         if value is None:
             return value
         if not isinstance(value, self.reference):
