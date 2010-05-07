@@ -91,6 +91,12 @@ class Field(object):
         return value
 
     def empty(self, value):
+        """Determine if value is empty in the context of this field.
+
+        In most cases, this is equivalent to "not value" but some fields
+        like Boolean the test is more subtle, so subclasses should override
+        this method if necessary.
+        """
         return not value
 
     @property
@@ -181,6 +187,16 @@ class Integer(Field):
                     % (self.name, type(value).__name__))
         return value
 
+    def empty(self, value):
+        """Is integer property empty?
+
+        0 is not an empty value.
+
+        Returns:
+            True if value is None, else False
+        """
+        return value is None
+
 
 class Float(Field):
 
@@ -197,6 +213,16 @@ class Float(Field):
                     'Property %s must be a float, not a %s'
                     % (self.name, type(value).__name__))
         return value
+
+    def empty(self, value):
+        """Is Float property empty?
+
+        0.0 is not an empty value.
+
+        Returns:
+            True if value is None, else False
+        """
+        return value is None
 
 
 class Decimal(Float):
@@ -215,6 +241,16 @@ class Decimal(Float):
                     % (self.name, type(value).__name__))
         return value
 
+    def empty(self, value):
+        """Is Decimal property empty?
+
+        Decimal('0.0') is not an empty value.
+
+        Returns:
+            True if value is None, else False
+        """
+        return value is None
+
 
 class Boolean(Field):
 
@@ -227,6 +263,16 @@ class Boolean(Field):
         if value in ('t', 'True', 'y', 'Yes', '1'): return True
         if value in ('f', 'False', 'n', 'No', '0'): return False
         raise ValidationError('Expected either True or False')
+
+    def empty(self, value):
+        """Is Boolean property empty?
+
+        False is not an empty value.
+
+        Returns:
+            True if value is None, else False
+        """
+        return value is None
 
 
 class DateTime(Field):
@@ -266,6 +312,16 @@ class DateTime(Field):
     @staticmethod
     def now():
         return datetime.datetime.now()
+
+    def empty(self, value):
+        """Is Time property empty?
+
+        "0:0" (midnight) time is not empty
+
+        Return:
+            True if value is None
+        """
+        return value is None
 
 
 def _date_to_datetime(value):
