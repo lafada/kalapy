@@ -458,9 +458,12 @@ class Model(object):
         """
         values = {}
         fields = self.fields()
-        for k, v in fields.items():
-            if k in self._values:
-                values[k] = fields[k].python_to_database(self._values[k])
+        for name, field in fields.items():
+            #if k in self._values:
+            #    values[k] = fields[k].python_to_database(self._values[k])
+            if field.is_dirty:
+                values[name] = field.python_to_database(self._values[name])
+
         return values
     
     @classmethod
@@ -533,6 +536,10 @@ class Model(object):
             key = database.update_table(self)
         key = database.insert_into(self)
         self._dirty = False
+
+        #TODO: use signal to inform all fields
+        for field in self.fields().values():
+            field._dirty = False
 
         return key
 
