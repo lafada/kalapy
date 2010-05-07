@@ -77,6 +77,9 @@ class Field(object):
         if self._validator:
             self._validator(model_instance, value)
 
+        if value is None:
+            return value
+
         return self.validate(value)
 
     def validate(self, value):
@@ -155,8 +158,6 @@ class String(Field):
     _data_type = "char"
 
     def validate(self, value):
-        if value is None:
-            return value
         if not isinstance(value, basestring):
             raise ValidationError(
                     'Property %r must be a str or unicode instance, not %r'
@@ -173,8 +174,6 @@ class Integer(Field):
     _data_type = "integer"
 
     def validate(self, value):
-        if value is None:
-            return value
         if isinstance(value, basestring):
             try:
                 return int(value)
@@ -192,8 +191,6 @@ class Float(Field):
     _data_type = "float"
 
     def validate(self, value):
-        if value is None:
-            return value
         if isinstance(value, basestring):
             try:
                 return float(value)
@@ -211,8 +208,6 @@ class Decimal(Float):
     _data_type = "decimal"
 
     def validate(self, value):
-        if value is None:
-            return value
         if isinstance(value, basestring):
             try:
                 return decimal.Decimal(value)
@@ -230,8 +225,6 @@ class Boolean(Field):
     _data_type = "boolean"
 
     def validate(self, value):
-        if value is None:
-            return value
         if isinstance(value, int):
             return bool(value)
         if value in (True, False): return value
@@ -251,8 +244,6 @@ class DateTime(Field):
         self.auto_now_add = auto_now_add
 
     def validate(self, value):
-        if value is None:
-            return value
         #TODO: try to convert the string value in to datetime
         if not isinstance(value, self._python_type):
             raise ValidationError('Property %r must be a %r' %
@@ -348,5 +339,4 @@ class Time(DateTime):
 
 class Binary(Field):
     _data_type = "blob"
-
 
