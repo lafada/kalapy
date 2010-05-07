@@ -399,22 +399,35 @@ class Model(object):
 
 
     def __new__(cls, **kw):
-
         if cls is Model:
             raise DatabaseError("You can't create instance of Model class")
 
         klass = cache.get_model(cls)
-
         return super(Model, cls).__new__(klass)
 
+    def __init__(self, **kw):
+        """Create a new instance of this model.
 
-    def __init__(self, *args, **kw):
+        Instanciate a model, initialize it's properties and call save() to save
+        the instance in database.
 
+        >>> u = User()
+        >>> u.name = "Some"
+        >>> u.save()
+
+        Properties can also be initialized by providing keyword arguments to the
+        model constructor.
+
+        >>> u = User(name="some")
+        >>> u.save()
+        
+        Args:
+            **kw: keyword arguments mapping to instance properties.
+        """
         self._key = None
         self._values = {}
         self._dirty = True
 
-        fields = self.fields()
         for field in self.fields().values():
             if field.name in kw:
                 value = kw[field.name]
@@ -432,6 +445,12 @@ class Model(object):
 
     @property
     def is_dirty(self):
+        """Check if the instance is dirty. An instance is dirty if it's 
+        properties are changed since it is saved last time.
+
+        Returns:
+            True if dirty, else False
+        """
         return self._dirty
     
     def _values_for_db(self):
@@ -446,7 +465,15 @@ class Model(object):
     
     @classmethod
     def _from_db_values(cls, values):
+        """Create an instance of this model which properties initialized with
+        the given values. For internal use only.
 
+        Args:
+            values: mapping of name, value to instance properties
+
+        Returns:
+            an instance of this Model
+        """
         values = dict(values)
 
         obj = cls()
@@ -461,6 +488,15 @@ class Model(object):
         return obj
 
     def _get_related(self):
+        """Get the list of all related model instances associated with this
+        model instance. Used to get all dirty instances of related model
+        instances referenced by ManyToOne and OneToOne properties.
+        
+        For internal use only.
+
+        Returns:
+            list of related model instances
+        """
         from _reference import IRelation
 
         related = []
@@ -477,12 +513,18 @@ class Model(object):
         If the instance is created, a new record will be added to the database
         else if it is loaded from database, the record will be updated.
 
+        It also saves all dirty instances of related model instances referenced
+        by many-to-one and one-to-many properties.
+
         Returns:
             The unique key id
 
         Raises:
             DatabaseError if instance could not be commited.
         """
+        if self.saved and not self.is_dirty:
+            return self.key
+
         from rapido.db.engines import database
 
         [o.save() for o in self._get_related()]
@@ -504,6 +546,8 @@ class Model(object):
             raise DatabaseError("Can't delete, instance doesn't exists.")
         from rapido.db.engines import database
         database.delete_from(self)
+        self._key = None
+        self._dirty = True
         
     @classmethod
     def get(cls, keys):
