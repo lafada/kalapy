@@ -176,18 +176,6 @@ class Options(object):
     def model(self):
         return get_model(self.name)
 
-    def prepare(self):
-
-        self.fields._keys.sort(
-                lambda x, y: cmp(
-                    self.fields[x]._serial,
-                    self.fields[y]._serial))
-
-        self.virtual_fields._keys.sort(
-                lambda x, y: cmp(
-                    self.virtual_fields[x]._serial,
-                    self.virtual_fields[y]._serial))
-
 
 class ModelType(type):
 
@@ -245,14 +233,19 @@ class ModelType(type):
 
         cls._values = None
 
-        for name, attr in attrs.items():
+        attributes = attrs.items()
+        attributes.sort(lambda a, b: cmp(
+            getattr(a[1], '_serial', 0), getattr(b[1], '_serial', 0)))
+
+        for name, attr in attributes:
             if isinstance(attr, Field):
                 cls.add_field(attr, name)
             else:
                 setattr(cls, name, attr)
 
-        # loop again so that every attributes are set
-        for name, attr in attrs.items():
+        # loop again so that every attributes are set before preparing 
+        # validators and unique constraints
+        for name, attr in attributes:
 
             # prepare unique constraints
             if isinstance(attr, Field) and hasattr(attr, '_unique_with'):
@@ -271,8 +264,6 @@ class ModelType(type):
 
                 # use bound method
                 field._validator = getattr(cls, name)
-
-        meta.prepare()
 
         return cls
 
@@ -397,11 +388,9 @@ class Model(object):
 
     __metaclass__ = ModelType
 
-
     def __new__(cls, **kw):
         if cls is Model:
             raise DatabaseError("You can't create instance of Model class")
-
         klass = cache.get_model(cls)
         return super(Model, cls).__new__(klass)
 
