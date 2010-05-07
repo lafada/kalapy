@@ -2,12 +2,9 @@
 one-to-one, many-to-one and many-to-many between models.
 """
 
-
 from _fields import Field
-from _model import get_model, get_models, Model
-from _query import Query
+from _model import ModelType, Model, get_model
 from _errors import FieldError, DuplicateFieldError
-
 
 __all__ = ('ManyToOne', 'OneToOne', 'OneToMany', 'ManyToMany')
 
@@ -413,12 +410,8 @@ class ManyToMany(IRelation):
 
         reverse_field = self.get_reverse_field()
 
-        if not reverse_field:
-
-            from _model import ModelType, Model
-
-            #create intermediary model
-
+        if not reverse_field: #create intermediary model
+            
             name = '%s_%s' % (model_class.__name__.lower(), self.name)
 
             cls = ModelType(name, (Model,), {

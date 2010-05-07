@@ -89,7 +89,6 @@ class Query(object):
     def count(self):
         """Return the number of records in the query object.
         """
-        table = self._model._table
         s = self._select('count("key")')
         params = []
         for q, b in self._all:
@@ -127,7 +126,7 @@ class Query(object):
             while True:
                 offset += 1
                 yield self.fetch(1, offset)[0]
-        except Exception, e:
+        except Exception:
             pass
 
 
@@ -170,7 +169,7 @@ class Parser(object):
             to be bounded to the statement.
         """
         try:
-            name, op, var_, var = self.pat_stmt.match(query).groups()
+            name, op, __var, var = self.pat_stmt.match(query).groups()
         except:
             raise Exception('Malformed query: %s', query)
 

@@ -63,7 +63,7 @@ class DBCommand(BaseCommand):
             self.error("At least one package name required.")
 
         from rapido.conf import settings
-        from rapido.utils.implib import import_module
+        from rapido.db.engines import database
 
         if settings.DATABASE_ENGINE == "dummy":
             raise self.error("DATABASE_ENGINE is not configured.")
@@ -71,12 +71,10 @@ class DBCommand(BaseCommand):
         for package in packages:
             if package not in settings.INSTALLED_PACKAGES:
                 self.error('%r not in INSTALLED_PACKAGES' % package)
+                
+        database.connect()
 
         models, pending = self.get_models(*packages)
-
-        from rapido.db.engines import database
-
-        database.connect()
         try:
             for model in models:
                 print database.schema_table(model)
@@ -91,16 +89,14 @@ class DBCommand(BaseCommand):
 
     def sync(self):
         from rapido.conf import settings
-        from rapido.utils.implib import import_module
-
+        from rapido.db.engines import database
+        
         if settings.DATABASE_ENGINE == "dummy":
             raise self.error("DATABASE_ENGINE is not configured.")
 
-        models, pending = self.get_models()
-        
-        from rapido.db.engines import database
-
         database.connect()
+        
+        models, __pending = self.get_models()
         try:
             for model in models:
                 database.create_table(model)
@@ -109,5 +105,3 @@ class DBCommand(BaseCommand):
 
     def backup(self, dest):
         pass
-
-

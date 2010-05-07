@@ -1,4 +1,4 @@
-"""This module defines some class helpers to modify the behaviour/properties
+"""This module defines some class helpers to modify the behavior/properties
 of the model class.
 """
 

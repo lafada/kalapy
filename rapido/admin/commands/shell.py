@@ -47,4 +47,3 @@ class ShellCommand(BaseCommand):
 
         import code
         code.interact(local=imported_objects)
-

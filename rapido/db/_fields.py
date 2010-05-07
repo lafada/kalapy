@@ -1,6 +1,4 @@
 import decimal, datetime
-from time import time
-
 
 from _errors import *
 
@@ -150,7 +148,7 @@ class AutoKey(Field):
 
     def __init__(self):
         super(AutoKey, self).__init__(name="key")
-        # nagative serial id so that it become first field in the model
+        # negative serial id so that it become first field in the model
         self._serial = - self._serial
 
     def __get__(self, model_instance, model_class):
@@ -332,31 +330,31 @@ class DateTime(Field):
 
 
 def _date_to_datetime(value):
-  """Convert a date to a datetime for datastore storage.
-
-  Args:
-    value: A datetime.date object.
-
-  Returns:
-    A datetime object with time set to 0:00.
-  """
-  assert isinstance(value, datetime.date)
-  return datetime.datetime(value.year, value.month, value.day)
+    """Convert a date to a datetime for datastore storage.
+    
+    Args:
+        value: A datetime.date object.
+    
+    Returns:
+        A datetime object with time set to 0:00.
+    """
+    assert isinstance(value, datetime.date)
+    return datetime.datetime(value.year, value.month, value.day)
 
 
 def _time_to_datetime(value):
-  """Convert a time to a datetime for datastore storage.
-
-  Args:
-    value: A datetime.time object.
-
-  Returns:
-    A datetime object with date set to 1970-01-01.
-  """
-  assert isinstance(value, datetime.time)
-  return datetime.datetime(1970, 1, 1,
-                           value.hour, value.minute, value.second,
-                           value.microsecond)
+    """Convert a time to a datetime for datastore storage.
+    
+    Args:
+        value: A datetime.time object.
+    
+    Returns:
+        A datetime object with date set to 1970-01-01.
+    """
+    assert isinstance(value, datetime.time)
+    return datetime.datetime(1970, 1, 1,
+                             value.hour, value.minute, value.second,
+                             value.microsecond)
 
 
 def _parse_datetime(value, type=datetime.datetime):

@@ -54,7 +54,7 @@ class ModelCache(object):
                 if package in self.handled: # deal with recursive import
                     continue
                 self.handled.append(package)
-                models = import_module('models', package)
+                import_module('models', package)
             self.loaded = True
             self._resolve_references()
         finally:
@@ -71,8 +71,8 @@ class ModelCache(object):
 
         for model in self.get_models():
             ref_models = model._meta.ref_models
-            fields = model._meta.fields.items() + model._meta.virtual_fields.items()
-            for name, field in fields:
+            fields = model._meta.fields.values() + model._meta.virtual_fields.values()
+            for field in fields:
                 if not isinstance(field, IRelation):
                     continue
                 field.prepare(model)
@@ -267,27 +267,27 @@ class ModelType(type):
 
         return cls
 
-    def add_field(cls, field, name=None):
+    def add_field(self, field, name=None):
         
         name = name or field.name
 
         if not name:
             raise ValueError('Field has no name')
 
-        if hasattr(cls, name):
-            raise DuplicateFieldError('Field %r already defined in model %r' % (name, cls.__name__))
+        if hasattr(self, name):
+            raise DuplicateFieldError('Field %r already defined in model %r' % (name, self.__name__))
 
-        setattr(cls, name, field)
+        setattr(self, name, field)
 
         if getattr(field, 'is_virtual', None):
-            cls._meta.virtual_fields[name] = field
+            self._meta.virtual_fields[name] = field
         else:
-            cls._meta.fields[name] = field
+            self._meta.fields[name] = field
 
-        field.__configure__(cls, name)
+        field.__configure__(self, name)
     
-    def __repr__(cls):
-        return "<Model %r: class %s>" % (cls._meta.name, cls.__name__)
+    def __repr__(self):
+        return "<Model %r: class %s>" % (self._meta.name, self.__name__)
 
 
 class Model(object):
@@ -492,11 +492,11 @@ class Model(object):
         from _reference import IRelation
 
         related = []
-        for name, field in self._meta.fields.items():
+        for field in self._meta.fields.values():
             if isinstance(field, IRelation) and field.name in self._values:
                 value = self._values[field.name]
                 if isinstance(value, Model) and value.is_dirty:
-                    related.append(val)
+                    related.append(value)
         return related
         
     def save(self):
@@ -523,7 +523,8 @@ class Model(object):
 
         if self.saved:
             key = database.update_table(self)
-        key = database.insert_into(self)
+        else:
+            key = database.insert_into(self)
         self._dirty = False
 
         #TODO: use signal to inform all fields
@@ -585,7 +586,7 @@ class Model(object):
         from the database.
 
         Returns:
-            Query instance that will retrive all instances of this model.
+            Query instance that will retrieve all instances of this model.
         """
         return Query(cls)
 

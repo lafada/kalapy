@@ -106,7 +106,7 @@ class IDatabase(local):
         Args:
             instance: and instance of Model
         """
-        raise NotImplementedErrors
+        raise NotImplementedError
     
     def delete_from(self, instance):
         """Delete the model instance from the database table.

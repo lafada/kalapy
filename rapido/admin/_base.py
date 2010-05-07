@@ -127,17 +127,11 @@ class OptionParserEx(OptionParser):
     exclusive = None
 
     def parse_args(self, args=None, values=None):
-
         result = OptionParser.parse_args(self, args, values)
-
         if self.exclusive:
             x = set([self.get_option(o) for o in self.exclusive])
             y = set([self.get_option(o) for o in args if o.startswith('-')])
-
             if len(x - y) != len(x) - 1:
-                #self.error('Options %s are mutually exclusive.' % (', '.join(self.exclusive)))
                 self.print_help()
                 sys.exit(1)
-        
         return result
-

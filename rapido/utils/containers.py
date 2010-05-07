@@ -8,7 +8,7 @@ class OrderedDict(dict):
         for arg in args:
             self.update(arg)
 
-        for k, v in kw.items():
+        for k in kw.keys():
             if k not in self._keys:
                 self._keys.append(k)
 
@@ -18,7 +18,7 @@ class OrderedDict(dict):
             self._keys.append(key)
 
     def __delitem__(self, key):
-        super(OrderedDict, self).__delitem__(key, value)
+        super(OrderedDict, self).__delitem__(key)
         self._keys.remove(key)
 
     def update(self, data):
@@ -33,7 +33,7 @@ class OrderedDict(dict):
         return self._keys[:]
 
     def values(self):
-        return [v for k, v in self.items()]
+        return [v for __k, v in self.items()]
 
     def items(self):
         return [(k, self[k]) for k in self._keys]
@@ -82,5 +82,3 @@ class OrderedDict(dict):
 
     def __repr__(self):
         return '{%s}' % ', '.join(['%r: %r' % (k, v) for k, v in self.items()])
-
-

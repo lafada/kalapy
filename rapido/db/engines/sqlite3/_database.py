@@ -1,4 +1,4 @@
-import os, decimal, types
+import os, decimal
 import sqlite3
 
 from rapido.db._errors import DatabaseError
@@ -185,4 +185,3 @@ class Database(IDatabase):
             return cursor.fetchone()[0]
         except:
             return 0
-

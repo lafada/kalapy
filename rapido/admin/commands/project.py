@@ -92,4 +92,3 @@ class StartApp(BaseCommand):
             self.print_help()
             
         copy_template('package_template', name=name)
-

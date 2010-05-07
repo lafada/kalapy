@@ -1,4 +1,4 @@
-"""This module defines saveral utility functions to type cast values from
+"""This module defines several utility functions to type cast values from
 python to database and vice versa.
 """
 
