@@ -1,60 +1,55 @@
 """This module defines saveral utility functions to type cast values from
-python to database and vice versa (most functions are adjopted from django).
+python to database and vice versa.
 """
 
-import datetime, decimal
-from time import time
+import re, decimal, datetime
 
-
-def date_to_python(value):
-    return datetime.date(*map(int, value.split('-'))) if value else None
-
-def time_to_python(value):
-    if not value: 
-        return None
-    hour, minutes, seconds = value.split(':')
-    if '.' in seconds: # check whether seconds have a fractional part
-        seconds, microseconds = seconds.split('.')
-    else:
-        microseconds = '0'
-    return datetime.time(int(hour), int(minutes), int(seconds), int(float('.'+microseconds) * 1000000))
+re_datetime = re.compile(
+    "(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)(?:.(\d+)(?:-(\d+))?)?")
 
 def datetime_to_python(value):
-    # "2005-07-29 15:48:00.590358-05"
-    # "2005-07-29 09:56:00-05"
+    """Convert the string date value in python datetime.datetime striping out
+    tzinfo as we always store the datetime with UTC timezone. The `DateTime`
+    field should convert user input datetime values to UTC datetime considering
+    current timezone.
+
+    >>> datetime_to_python('2010-05-07 11:34:00.530134-05')
+    ... datetime.datetime(2010, 5, 7, 11, 34, 00, 530134)
+    >>> datetime_to_python('2009-07-11 09:57:00-05')
+    ... datetime.datetime(2009, 7, 11, 9, 57, 0)
+
+    Returns:
+        datetime.datetime instance
+    """
     if not value: return None
-    if not ' ' in value: return date_to_python(value)
-    d, t = value.split()
-    # Extract timezone information, if it exists. Currently we just throw
-    # it away, but in the future we may make use of it.
-    if '-' in t:
-        t, tz = t.split('-', 1)
-        tz = '-' + tz
-    elif '+' in t:
-        t, tz = t.split('+', 1)
-        tz = '+' + tz
-    else:
-        tz = ''
-    dates = d.split('-')
-    times = t.split(':')
-    seconds = times[2]
-    if '.' in seconds: # check whether seconds have a fractional part
-        seconds, microseconds = seconds.split('.')
-    else:
-        microseconds = '0'
-    return datetime.datetime(int(dates[0]), int(dates[1]), int(dates[2]),
-        int(times[0]), int(times[1]), int(seconds), int(float('.'+microseconds) * 1000000))
+    times = list(re_datetime.match(value).groups())
+
+    # strip out the timezone info
+    if len(times) == 8: 
+        times.pop()
+
+    # no microseconds?
+    if times[-1] is None:
+        times.pop()
+
+    return datetime.datetime(*map(int, times))
 
 def decimal_to_python(value):
-    if value is None:
-        return None
+    """Convert the given value into decimal.Decimal
+    """
+    if value is None: return None
     return decimal.Decimal(value)
 
 def decimal_to_database(value):
-    if value is None:
-        return None
+    """Convert the given decimal.Decimal value to
+    string to be stored in database.
+    """
+    if value is None: return None
     return str(value)
 
 def str_to_database(value):
+    """Adapter to convert string value into unicode
+    if database doesn't support str values.
+    """
     return value.decode('utf-8')
 

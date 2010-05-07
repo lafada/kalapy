@@ -9,8 +9,6 @@ from rapido.db._model import ModelType, Model
 from rapido.db.engines import utils
 
 sqlite3.register_converter('bool', lambda s: s == '1')
-sqlite3.register_converter('date', utils.date_to_python)
-sqlite3.register_converter('time', utils.time_to_python)
 sqlite3.register_converter('datetime', utils.datetime_to_python)
 sqlite3.register_converter('decimal', utils.decimal_to_python)
 sqlite3.register_adapter(decimal.Decimal, utils.decimal_to_database)
@@ -36,8 +34,6 @@ class Database(IDatabase):
         "decimal"   :   "DECIMAL",
         "boolean"   :   "BOOL",
         "datetime"  :   "DATETIME",
-        "date"      :   "DATE",
-        "time"      :   "TIME",
         "binary"    :   "BLOB",
     }
 

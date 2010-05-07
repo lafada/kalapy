@@ -236,22 +236,29 @@ class Boolean(Field):
 class DateTime(Field):
 
     _data_type = "datetime"
-    _python_type = datetime.datetime
 
-    def __init__(self, label=None, auto_now=False, auto_now_add=False, **kw):
+    def __init__(self, label=None, auto_now=False, default_now=False, **kw):
+        """Create a new instance of DateTime.
+
+        Args:
+            label: verbose label
+            auto_now: if true the value will be updated with current time every
+                time it is saved to database. Use full to create a property to
+                track object update time.
+            default_now: if true, use current time as default value
+        """
         super(DateTime, self).__init__(label=label, **kw)
         self.auto_now = auto_now
-        self.auto_now_add = auto_now_add
+        self.default_now = default_now
 
     def validate(self, value):
-        #TODO: try to convert the string value in to datetime
-        if not isinstance(value, self._python_type):
-            raise ValidationError('Property %r must be a %r' %
-                          (self.name, self._data_type))
+        value = _parse_datetime(value, datetime.datetime)
+        if not isinstance(value, datetime.datetime):
+            raise ValidationError('Property %r must be a datetime' % self.name)
         return value
 
     def default_value(self):
-        if self.auto_now or self.auto_now_add:
+        if self.auto_now or self.default_now:
             return self.now()
         return super(DateTime, self).default_value()
 
@@ -292,16 +299,55 @@ def _time_to_datetime(value):
                            value.hour, value.minute, value.second,
                            value.microsecond)
 
+
+def _parse_datetime(value, type=datetime.datetime):
+    """Convert a string value in to given type, type can be one of
+    datetime.datetime, datetime.date and datetime.time.
+
+    Uses current locale and timezone settings to convert the value.
+
+    Args:
+        value: string value
+        type: one of datetime, date or time
+
+    Returns:
+        instance of provided type
+
+    Raises:
+        ValidationError if value can't be converted
+    """
+    assert type in (datetime.datetime, datetime.date, datetime.time)
+    if not isinstance(value, basestring):
+        return value
+    #TODO: use current locale and timezone info to parse to value
+    formats = {
+        datetime.datetime: '%Y-%m-%d %H:%M:%S',
+        datetime.date: '%Y-%m-%d',
+        datetime.time: '%H:%M:%S'
+    }
+    format = formats[type]
+    try:
+        value = datetime.datetime.strptime(value, format)
+    except ValueError, e:
+        raise ValidationError(e)
+    try:
+        return getattr(value, type.__name__)()
+    except:
+        return value
+
 class Date(DateTime):
 
-    _data_type = "date"
-    _python_type = datetime.date
+    def validate(self, value):
+        value = _parse_datetime(value, datetime.date)
+        if not isinstance(value, datetime.date):
+            raise ValidationError('Property %r must be a date' % self.name)
+        return value
 
     def python_to_database(self, value):
         value = super(Date, self).python_to_database(value)
         if value is not None:
             assert isinstance(value, datetime.date)
-        value = _date_to_datetime(value)
+            value = _date_to_datetime(value)
         return value
 
     def database_to_python(self, value):
@@ -316,20 +362,23 @@ class Date(DateTime):
     
 class Time(DateTime):
 
-    _data_type = "time"
-    _python_type = datetime.time
+    def validate(self, value):
+        value = _parse_datetime(value, datetime.time)
+        if not isinstance(value, datetime.time):
+            raise ValidationError('Property %r must be a time' % self.name)
+        return value
 
     def python_to_database(self, value):
         value = super(Time, self).python_to_database(value)
         if value is not None:
             assert isinstance(value, datetime.time), repr(value)
-        value = _time_to_datetime(value)
+            value = _time_to_datetime(value)
         return value
 
     def database_to_python(self, value):
         if value is not None:
             assert isinstance(value, datetime.datetime)
-        value = value.time()
+            value = value.time()
         return value
 
     @staticmethod
