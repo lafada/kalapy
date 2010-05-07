@@ -427,7 +427,7 @@ class Model(object):
             field.__set__(self, value)
 
     @property
-    def saved(self):
+    def is_saved(self):
         """Whether the model is saved in database or not.
         """
         return  self._key is not None
@@ -514,14 +514,14 @@ class Model(object):
         Raises:
             DatabaseError if instance could not be commited.
         """
-        if self.saved and not self.is_dirty:
+        if self.is_saved and not self.is_dirty:
             return self.key
 
         from rapido.db.engines import database
 
         [o.save() for o in self._get_related()]
 
-        if self.saved:
+        if self.is_saved:
             key = database.update_table(self)
         else:
             key = database.insert_into(self)
@@ -539,7 +539,7 @@ class Model(object):
         Raises:
             DatabaseError if instance could not be deleted.
         """
-        if not self.saved:
+        if not self.is_saved:
             raise DatabaseError("Can't delete, instance doesn't exists.")
         from rapido.db.engines import database
         database.delete_from(self)

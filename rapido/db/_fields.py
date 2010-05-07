@@ -68,7 +68,7 @@ class Field(object):
         """Validate the given value. For internal use only, subclasses should
         override `validate` method instead.
         """
-        if self.empty(value) and self.required:
+        if self.empty(value) and self.is_required:
             raise ValidationError("Field '%s' is required.", self.name)
 
         if self._selection and value not in self._selection_list:
@@ -126,15 +126,15 @@ class Field(object):
         return self._default
 
     @property
-    def required(self):
+    def is_required(self):
         return self._required
 
     @property
-    def unique(self):
+    def is_unique(self):
         return self._unique
 
     @property
-    def indexed(self):
+    def is_indexed(self):
         return self._indexed
 
     @property

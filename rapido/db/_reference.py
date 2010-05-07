@@ -144,7 +144,7 @@ class O2ORel(IRelation):
         except:
             pass
 
-        if model_instance.saved:
+        if model_instance.is_saved:
             value = self.reference.filter('%s == :key' % self.reverse_name,
                         key=model_instance.key).fetch(1)[0]
             model_instance._values[self.name] = value
@@ -181,8 +181,8 @@ class O2MSet(object):
     def __check(self, *objs):
         for obj in objs:
             if not isinstance(obj, self.__ref):
-                raise TypeError('%s instances required' % (self.__ref._meta.name))
-        if not self.__obj.saved:
+                raise TypeError('%s instances is_required' % (self.__ref._meta.name))
+        if not self.__obj.is_saved:
             self.__obj.save()
         return objs
 
@@ -210,7 +210,7 @@ class O2MSet(object):
             FieldError: if referenced instance field is required field.
             TypeError: if any given object is not an instance of referenced model
         """
-        if self.__ref_field.required:
+        if self.__ref_field.is_required:
             raise FieldError("objects can't be removed from %r, delete the objects instead." % (
                 self.__field.name))
         
@@ -226,10 +226,10 @@ class O2MSet(object):
             FieldError: if referenced instance field is required field.
             TypeError: if any given object is not an instance of referenced model
         """
-        if not self.__obj.saved:
+        if not self.__obj.is_saved:
             return
 
-        if self.__ref_field.required:
+        if self.__ref_field.is_required:
             raise FieldError("objects can't be removed from %r, \
                     delete the objects instead." % (
                 self.__field.name))
@@ -263,7 +263,7 @@ class M2MSet(object):
         for obj in objs:
             if not isinstance(obj, self.__ref):
                 raise TypeError('%s instances required' % (self.__ref._meta.name))
-        if not self.__obj.saved:
+        if not self.__obj.is_saved:
             self.__obj.save()
         return objs
 
@@ -292,7 +292,7 @@ class M2MSet(object):
             objs = [o for o in objs if o.key not in existing]
 
         for obj in objs:
-            if not obj.saved:
+            if not obj.is_saved:
                 obj.save()
             m2m = self.__m2m()
             setattr(m2m, self.__field.source, self.__obj)
@@ -313,7 +313,7 @@ class M2MSet(object):
     def clear(self):
         """Removes all referenced instances from the reference set.
         """
-        if not self.__obj.saved:
+        if not self.__obj.is_saved:
             return
 
         from rapido.db.engines import database

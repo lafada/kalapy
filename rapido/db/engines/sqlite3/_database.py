@@ -72,16 +72,16 @@ class Database(IDatabase):
     def get_field_sql(self, field, for_alter=False):
         res = '"%s" %s' % (field.name, self.get_data_type(field))
         if not for_alter:
-            if field.required:
+            if field.is_required:
                 res = "%s NOT NULL" % res
-            if field.unique:
+            if field.is_unique:
                 res = "%s UNIQUE" % res
 
         if isinstance(field, ManyToOne):
             res = '%s REFERENCES "%s" ("key")' % (res, field.reference._meta.table)
             if field.cascade:
                 res = '%s ON DELETE CASCADE' % res
-            elif field.required:
+            elif field.is_required:
                 res = '%s ON DELETE RESTRICT' % res
             elif field.cascade is None:
                 res = '%s ON DELETE SET NULL' % res
@@ -122,7 +122,7 @@ class Database(IDatabase):
 
     def insert_into(self, model):
         
-        if model.saved:
+        if model.is_saved:
             return self.update_table(model)
         
         items = model._values_for_db().items()
@@ -159,7 +159,7 @@ class Database(IDatabase):
         return model.key
     
     def delete_from(self, instance):
-        if instance.saved:
+        if instance.is_saved:
             self.delete_from_keys(instance.__class__, instance.key)
             instance._key = None
             
