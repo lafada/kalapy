@@ -448,11 +448,8 @@ class Model(object):
         values = {}
         fields = self.fields()
         for name, field in fields.items():
-            #if k in self._values:
-            #    values[k] = fields[k].python_to_database(self._values[k])
             if field.is_dirty:
                 values[name] = field.python_to_database(self._values[name])
-
         return values
     
     @classmethod
@@ -520,18 +517,15 @@ class Model(object):
         from rapido.db.engines import database
 
         [o.save() for o in self._get_related()]
-
-        if self.is_saved:
-            key = database.update_table(self)
-        else:
-            key = database.insert_into(self)
+        
+        self._key = database.update_table(self) if self.is_saved else \
+                    database.insert_into(self)
         self._dirty = False
 
-        #TODO: use signal to inform all fields
         for field in self.fields().values():
             field._dirty = False
 
-        return key
+        return self.key
 
     def delete(self):
         """Deletes the instance from the database.
@@ -636,4 +630,3 @@ class Model(object):
     def __repr__(self):
         return "<Model %r: %s object at %s>" % (self._meta.name,
                                           self.__class__.__name__, hex(id(self)))
-
