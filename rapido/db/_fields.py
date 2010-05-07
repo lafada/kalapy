@@ -102,10 +102,6 @@ class Field(object):
         return self._name
 
     @property
-    def col_name(self):
-        return self._col_name
-
-    @property
     def label(self):
         return self._label
 

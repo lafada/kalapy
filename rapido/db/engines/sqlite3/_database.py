@@ -4,7 +4,6 @@ import sqlite3
 from rapido.db._errors import DatabaseError
 from rapido.db._interface import IDatabase
 from rapido.db._reference import ManyToOne
-from rapido.db._model import ModelType, Model
 
 from rapido.db.engines import utils
 
@@ -13,15 +12,6 @@ sqlite3.register_converter('datetime', utils.datetime_to_python)
 sqlite3.register_converter('decimal', utils.decimal_to_python)
 sqlite3.register_adapter(decimal.Decimal, utils.decimal_to_database)
 sqlite3.register_adapter(str, utils.str_to_database)
-
-def adapt_list(items):
-    result = []
-    for x in items:
-        if isinstance(x, Model):
-            result.append(x.key)
-        else:
-            result.append(x)
-    return result
 
 class Database(IDatabase):
     
@@ -72,7 +62,6 @@ class Database(IDatabase):
         return self.connection.cursor()
         
     def exists_table(self, name):
-        #TODO: use cache
         cursor = self.cursor()
         cursor.execute("""
             SELECT "name" FROM sqlite_master 
