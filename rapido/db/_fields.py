@@ -28,7 +28,6 @@ class Field(object):
         self._selection_list = [x[0] for x in self._selection] if self._selection else []
 
         self._validator = None
-        self._dirty = False
 
     def __repr__(self):
         return "<Field %s name='%s'>" % (self.__class__.__name__, self.name)
@@ -51,8 +50,7 @@ class Field(object):
     def __set__(self, model_instance, value):
         value = self._validate(model_instance, value)
         model_instance._values[self.name] = value
-        model_instance._dirty = True
-        self._dirty = True
+        model_instance._dirty[self.name] = True
 
     def python_to_database(self, value):
         """Database representation of this field value.
@@ -136,10 +134,6 @@ class Field(object):
     @property
     def is_indexed(self):
         return self._indexed
-
-    @property
-    def is_dirty(self):
-        return self._dirty
 
 
 class AutoKey(Field):

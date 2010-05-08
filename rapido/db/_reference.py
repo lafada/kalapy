@@ -293,6 +293,7 @@ class M2MSet(object):
 
         for obj in objs:
             if not obj.is_saved:
+                print "oooooooooooo", obj.name
                 obj.save()
             m2m = self.__m2m()
             setattr(m2m, self.__field.source, self.__obj)

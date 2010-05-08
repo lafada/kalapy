@@ -415,7 +415,7 @@ class Model(object):
         """
         self._key = None
         self._values = {}
-        self._dirty = True
+        self._dirty = {}
 
         for field in self.fields().values():
             if field.name in kw:
@@ -440,7 +440,7 @@ class Model(object):
         Returns:
             True if dirty, else False
         """
-        return self._dirty
+        return not self.is_saved or self._dirty
     
     def _values_for_db(self):
         """Return values to be stored in database table. For internal use only.
@@ -448,7 +448,7 @@ class Model(object):
         values = {}
         fields = self.fields()
         for name, field in fields.items():
-            if field.is_dirty:
+            if name in self._dirty:
                 values[name] = field.python_to_database(self._values[name])
         return values
     
@@ -473,7 +473,7 @@ class Model(object):
             values[k] = fields[k].database_to_python(v)
 
         obj._values.update(values)
-        obj._dirty = False
+        obj._dirty.clear()
         return obj
 
     def _get_related(self):
@@ -520,10 +520,7 @@ class Model(object):
         
         self._key = database.update_table(self) if self.is_saved else \
                     database.insert_into(self)
-        self._dirty = False
-
-        for field in self.fields().values():
-            field._dirty = False
+        self._dirty.clear()
 
         return self.key
 
@@ -538,7 +535,6 @@ class Model(object):
         from rapido.db.engines import database
         database.delete_from(self)
         self._key = None
-        self._dirty = True
         
     @classmethod
     def get(cls, keys):
