@@ -34,6 +34,7 @@ def build_suite(name):
     try:
         test_module = __import__('%s.%s' % (package, TEST_MODULE), {}, {}, TEST_MODULE)
     except ImportError:
+        raise
         raise Exception('No such package %r' % package)
 
     suite = unittest.TestSuite()

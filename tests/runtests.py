@@ -21,7 +21,7 @@ def run_rapido_tests(*args):
     # load all models
     db.get_models()
 
-    run_tests(args)
+    run_tests(args, 2)
 
 
 if __name__ == "__main__":

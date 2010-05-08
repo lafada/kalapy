@@ -4,5 +4,5 @@ DATABASE_NAME = ':memory:'
 
 
 INSTALLED_PACKAGES = (
-    'db',
+    'db_core',
 )
