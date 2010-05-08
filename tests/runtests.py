@@ -37,5 +37,8 @@ if __name__ == "__main__":
     parser = OptionParser(usage=usage)
     options, args = parser.parse_args()
 
+    # make rapido namespace avialable
+    sys.path.append(os.path.abspath(os.path.pardir))
+
     run_rapido_tests(*args)
 
