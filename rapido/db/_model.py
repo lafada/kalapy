@@ -518,8 +518,8 @@ class Model(object):
 
         [o.save() for o in self._get_related()]
         
-        self._key = database.update_table(self) if self.is_saved else \
-                    database.insert_into(self)
+        self._key = database.update_record(self) if self.is_saved else \
+                    database.insert_record(self)
         self._dirty.clear()
 
         return self.key
@@ -533,7 +533,7 @@ class Model(object):
         if not self.is_saved:
             raise DatabaseError("Can't delete, instance doesn't exists.")
         from rapido.db.engines import database
-        database.delete_from(self)
+        database.delete_record(self)
         self._key = None
         
     @classmethod

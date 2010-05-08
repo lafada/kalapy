@@ -92,7 +92,7 @@ class IDatabase(local):
         """
         raise NotImplementedError
     
-    def insert_into(self, instance):
+    def insert_record(self, instance):
         """Insert the model instance into database table.
         
         Args:
@@ -100,7 +100,7 @@ class IDatabase(local):
         """
         raise NotImplementedError
     
-    def update_table(self, instance):
+    def update_record(self, instance):
         """Update the model instance into database table.
         
         Args:
@@ -108,7 +108,7 @@ class IDatabase(local):
         """
         raise NotImplementedError
     
-    def delete_from(self, instance):
+    def delete_record(self, instance):
         """Delete the model instance from the database table.
         """
         raise NotImplementedError

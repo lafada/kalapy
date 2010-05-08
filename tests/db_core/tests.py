@@ -25,29 +25,29 @@ class Internal(TestCase):
     def test_alter_table(self):
         database.alter_table(Article)
 
-    def test_insert_into(self):
+    def test_insert_record(self):
         u = Article(title='title')
-        key = database.insert_into(u)
+        key = database.insert_record(u)
         self.assertTrue(key)
 
-    def test_update_table(self):
+    def test_update_record(self):
         u = Article(title='title')
         u.save()
 
         u.title = "something"
 
-        key = database.update_table(u)
+        key = database.update_record(u)
 
         u2 = Article.get(u.key)
 
         self.assertTrue(u.title == u2.title)
         self.assertTrue(u2.title != 'title')
 
-    def test_delete_from(self):
+    def test_delete_record(self):
         a = Article(title='sometitle')
         key = a.save()
 
-        database.delete_from(a)
+        database.delete_record(a)
         a2 = Article.get(key)
 
         self.assertTrue(a2 is None)

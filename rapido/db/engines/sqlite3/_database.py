@@ -120,10 +120,10 @@ class Database(IDatabase):
                 name, model._meta.table,))
         #TODO: alter columns if changed
 
-    def insert_into(self, model):
+    def insert_record(self, model):
         
         if model.is_saved:
-            return self.update_table(model)
+            return self.update_record(model)
         
         items = model._values_for_db().items()
         
@@ -141,7 +141,10 @@ class Database(IDatabase):
         
         return model.key
 
-    def update_table(self, model):
+    def update_record(self, model):
+
+        if not model.is_saved:
+            return self.insert_record(model)
         
         items = model._values_for_db().items()
         
@@ -158,7 +161,7 @@ class Database(IDatabase):
         
         return model.key
     
-    def delete_from(self, instance):
+    def delete_record(self, instance):
         if instance.is_saved:
             self.delete_from_keys(instance.__class__, instance.key)
             instance._key = None
