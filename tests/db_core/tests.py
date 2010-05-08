@@ -43,3 +43,13 @@ class Internal(TestCase):
         self.assertTrue(u.title == u2.title)
         self.assertTrue(u2.title != 'title')
 
+    def test_delete_from(self):
+        a = Article(title='sometitle')
+        key = a.save()
+
+        database.delete_from(a)
+        a2 = Article.get(key)
+
+        self.assertTrue(a2 is None)
+        self.assertTrue(a.key is None)
+
