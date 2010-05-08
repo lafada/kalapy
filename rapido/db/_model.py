@@ -447,9 +447,8 @@ class Model(object):
         """
         values = {}
         fields = self.fields()
-        for name, field in fields.items():
-            if name in self._dirty:
-                values[name] = field.python_to_database(self._values[name])
+        if name, value in self._dirty.items():
+            values[name] = fields[name].python_to_database(value)
         return values
     
     @classmethod
