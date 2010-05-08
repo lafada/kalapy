@@ -136,7 +136,6 @@ class Database(IDatabase):
                 ", ".join(['?'] * len(vals)))
 
         cursor = self.cursor()
-        print "XXX", sql, vals
         cursor.execute(sql, vals)
         model._key = cursor.lastrowid
         
