@@ -5,6 +5,11 @@ import os, sys, traceback
 
 from optparse import OptionParser
 
+def get_packages():
+    for d in os.listdir('.'):
+        if os.path.isdir(d) and os.path.exists(os.path.join(d, 'tests.py')):
+            yield d
+
 def run_rapido_tests(*args):
     
     try:
@@ -21,18 +26,16 @@ def run_rapido_tests(*args):
     # load all models
     db.get_models()
 
+    args = args or list(get_packages())
+
     run_tests(args, 2)
 
 
 if __name__ == "__main__":
 
-    usage = """%prog [options] <name [name [name [...]]]>"""
+    usage = """%prog [options] [name [name [name [...]]]]"""
     parser = OptionParser(usage=usage)
     options, args = parser.parse_args()
-
-    if not args:
-        parser.print_help()
-        sys.exit(1)
 
     run_rapido_tests(*args)
 
