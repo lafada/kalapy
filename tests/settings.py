@@ -5,4 +5,5 @@ DATABASE_NAME = ':memory:'
 
 INSTALLED_PACKAGES = (
     'db_core',
+    'db_model',
 )
