@@ -2,19 +2,7 @@ import os
 import sys
 from optparse import OptionParser
 
-from rapido.utils.implib import import_module
-
 from _base import *
-
-
-# import all command modules
-def _load_commands():
-    cmddir = os.path.join(__path__[0], 'commands') 
-    mods = [f[:-3] for f in os.listdir(cmddir) if f.endswith('.py') and not f.startswith('_')]
-    for m in mods:
-        import_module(m, 'rapido.admin.commands')
-_load_commands()
-
 
 class Admin(object):
 
@@ -32,9 +20,12 @@ class Admin(object):
         print "  -h, --help   show this help message and exit"
         print "\nType '%s help command' for help on a specific command.\n" % (self.prog)
         print "Available commands:"
-        commands = get_commands()
+
+        scope = 'project' if self.prog == 'rapido-admin.py' else 'package'
+        commands = get_commands(scope)
         for command, cls in commands:
             print "  %s" % (command)
+
         sys.exit(1)
 
     def run(self):
@@ -78,6 +69,8 @@ def setup_environment(settings_mod):
         sys.path.insert(0, lib_dir)
     
     from rapido.conf import settings
+    from rapido.utils.implib import import_module
+
     settings.update(settings_mod)
     
     sys.path.append(os.path.join(project_dir, os.pardir))

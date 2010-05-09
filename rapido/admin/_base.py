@@ -1,22 +1,32 @@
 import os, sys
 from optparse import OptionParser
 
-from rapido.conf import settings
+from rapido.utils.implib import import_module
 
 
 __all__ = ['CommandError', 'BaseCommand', 'get_commands', 'get_command']
 
 
 _commands = {}
+_loaded = False
 
+def load_commands():
+    """Import all command modules.
+    """
+    global _loaded
+    if not _loaded:
+        cmddir = os.path.join(os.path.dirname(__file__), 'commands')
+        mods = [f[:-3] for f in os.listdir(cmddir) if f.endswith('.py') and not f.startswith('_')]
+        for m in mods:
+            import_module(m, 'rapido.admin.commands')
+        _loaded = True
+    return _commands
 
-def get_commands():
-    commands = _commands.copy()
+def get_commands(scope):
 
-    if settings.PROJECT_NAME:
-        [commands.pop(k) for k, v in commands.items() if v.scope == 'project']
-    else:
-        [commands.pop(k) for k, v in commands.items() if v.scope == 'package']
+    commands = load_commands()
+
+    [commands.pop(k) for k, v in commands.items() if v.scope != scope]
 
     commands = commands.items()
     commands.sort(lambda a, b: cmp(a[0], b[0]))
@@ -25,7 +35,7 @@ def get_commands():
 
 def get_command(name):
     try:
-        return _commands[name]
+        return load_commands()[name]
     except KeyError:
         print "Unknown command: %s" % name
         print "Type '%s help' for usage" % sys.argv[0]
