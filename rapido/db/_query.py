@@ -81,7 +81,7 @@ class Query(object):
 
         from rapido.db.engines import database
 
-        result = map(self._model._from_db_values, database.select_from(s, params))
+        result = map(self._model._from_database_values, database.select_from(s, params))
         if self._mapper:
             return map(self._mapper, result)
         return result

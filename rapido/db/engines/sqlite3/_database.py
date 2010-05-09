@@ -125,8 +125,8 @@ class Database(IDatabase):
         if model.is_saved:
             return self.update_record(model)
         
-        items = model._values_for_db().items()
-        
+        items = model._to_database_values(True).items()
+
         keys = ['"%s"' % x[0] for x in items]
         vals = [x[1] for x in items]
 
@@ -146,7 +146,7 @@ class Database(IDatabase):
         if not model.is_saved:
             return self.insert_record(model)
         
-        items = model._values_for_db().items()
+        items = model._to_database_values(True).items()
         
         keys = [x[0] for x in items]
         vals = [x[1] for x in items]

@@ -1,13 +1,12 @@
 import threading
 from types import FunctionType
 
+from _errors import DuplicateFieldError, FieldError, DatabaseError
+from _fields import Field, AutoKey
+from _query import Query
 from rapido.conf import settings
-from rapido.utils.implib import import_module
 from rapido.utils.containers import OrderedDict
-
-from _errors import *
-from _fields import *
-from _query import *
+from rapido.utils.implib import import_module
 
 
 __all__ = ['Model', 'get_model', 'get_models']
@@ -441,20 +440,31 @@ class Model(object):
             True if dirty, else False
         """
         return not self.is_saved or self._dirty
-    
-    def _values_for_db(self):
-        """Return values to be stored in database table. For internal use only.
+
+    def _to_database_values(self, dirty=False):
+        """Return values to be stored in database table for this model instance.
+
+        If dirty is True only return field values marked as dirty else returns
+        all values.
+
+        Args:
+            dirty: if True only return values of fields marked dirty
+
+        Returns:
+            a dict, key-value maping of this model's fields.
         """
-        values = {}
         fields = self.fields()
-        for name, value in self._dirty.items():
-            values[name] = fields[name].python_to_database(value)
-        return values
-    
+        values = self._dirty if dirty else self._values
+        result = {}
+        for name, value in values.items():
+            if name in fields:
+                result[name] = fields[name].python_to_database(value)
+        return result
+
     @classmethod
-    def _from_db_values(cls, values):
+    def _from_database_values(cls, values):
         """Create an instance of this model which properties initialized with
-        the given values. For internal use only.
+        the given values fetched from database.
 
         Args:
             values: mapping of name, value to instance properties
