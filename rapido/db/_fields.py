@@ -1,11 +1,15 @@
 import decimal, datetime
 
 
-__all__ = ('FieldError', 'Field', 'String', 'Text', 'Integer', 'Float', 
-           'Decimal', 'Boolean', 'DateTime', 'Date', 'Time', 'Binary')
+__all__ = ('FieldError', 'ValidationError', 'Field', 'String', 'Text', 'Integer', 
+           'Float', 'Decimal', 'Boolean', 'DateTime', 'Date', 'Time', 'Binary')
 
 
 class FieldError(AttributeError):
+    pass
+
+
+class ValidationError(ValueError):
     pass
 
 

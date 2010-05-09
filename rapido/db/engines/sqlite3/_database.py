@@ -1,10 +1,8 @@
-import os, decimal
-import sqlite3
+import os, decimal, sqlite3
 
-from rapido.db._interface import IDatabase
 from rapido.db._reference import ManyToOne
-
 from rapido.db.engines import utils
+from rapido.db.engines.interface import IDatabase
 
 sqlite3.register_converter('bool', lambda s: s == '1')
 sqlite3.register_converter('datetime', utils.datetime_to_python)

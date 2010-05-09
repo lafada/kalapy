@@ -3,6 +3,10 @@ import os
 from rapido.conf import settings
 from rapido.utils.implib import import_module
 
+
+__all__ = ('Database', 'DatabaseError', 'IntegrityError', 'database')
+
+
 if not settings.DATABASE_ENGINE:
     settings.DATABASE_ENGINE = 'dummy'
 
