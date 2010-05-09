@@ -1,6 +1,12 @@
 import decimal, datetime
 
-from _errors import *
+
+__all__ = ('FieldError', 'Field', 'String', 'Text', 'Integer', 'Float', 
+           'Decimal', 'Boolean', 'DateTime', 'Date', 'Time', 'Binary')
+
+
+class FieldError(AttributeError):
+    pass
 
 
 class Field(object):

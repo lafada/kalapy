@@ -6,9 +6,6 @@ instead.
 
 from threading import local
 
-from _errors import DatabaseError
-
-
 class IDatabase(local):
     """The database interface. Backend engines should implement this class
     with name `Database`.
@@ -64,6 +61,7 @@ class IDatabase(local):
             res = self.data_types[field.data_type]
             return "%s(%s)" % (res, field.size) if field.size else res
         except KeyError:
+            from rapido.db.engines import DatabaseError
             raise DatabaseError("Unsupported datatype '%s'" % field.data_type)
     
     def schema_table(self, model):

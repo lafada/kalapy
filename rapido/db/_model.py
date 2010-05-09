@@ -5,8 +5,7 @@ from rapido.conf import settings
 from rapido.utils.containers import OrderedDict
 from rapido.utils.implib import import_module
 
-from _errors import DatabaseError, FieldError
-from _fields import Field, AutoKey
+from _fields import Field, AutoKey, FieldError
 from _query import Query
 
 
@@ -189,7 +188,7 @@ class ModelType(type):
             return super_new(cls, name, bases, attrs)
 
         if len(parents) > 1:
-            raise DatabaseError("Multiple inheritance is not supported.")
+            raise TypeError("Multiple inheritance is not supported.")
 
         # always use the last defined base class in the inheritance chain 
         # to maintain linear hierarchy.
@@ -390,7 +389,7 @@ class Model(object):
 
     def __new__(cls, **kw):
         if cls is Model:
-            raise DatabaseError("You can't create instance of Model class")
+            raise TypeError("You can't create instance of Model class")
         klass = cache.get_model(cls)
         return super(Model, cls).__new__(klass)
 
@@ -538,10 +537,11 @@ class Model(object):
         """Deletes the instance from the database.
         
         Raises:
+            TypeError: if instance is not saved
             DatabaseError if instance could not be deleted.
         """
         if not self.is_saved:
-            raise DatabaseError("Can't delete, instance doesn't exists.")
+            raise TypeError("Can't delete, instance doesn't exists.")
         from rapido.db.engines import database
         database.delete_record(self)
         self._key = None

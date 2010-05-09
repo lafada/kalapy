@@ -1,6 +1,6 @@
 import re
 
-from _errors import FieldError
+from _fields import FieldError
 
 
 __all__ = ('Query',)

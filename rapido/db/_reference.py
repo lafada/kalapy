@@ -2,9 +2,8 @@
 one-to-one, many-to-one and many-to-many between models.
 """
 
-from _fields import Field
+from _fields import Field, FieldError
 from _model import ModelType, Model, get_model
-from _errors import FieldError
 
 __all__ = ('ManyToOne', 'OneToOne', 'OneToMany', 'ManyToMany')
 
