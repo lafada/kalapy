@@ -1,7 +1,6 @@
 import os, decimal
 import sqlite3
 
-from rapido.db._errors import DatabaseError
 from rapido.db._interface import IDatabase
 from rapido.db._reference import ManyToOne
 
@@ -12,6 +11,13 @@ sqlite3.register_converter('datetime', utils.datetime_to_python)
 sqlite3.register_converter('decimal', utils.decimal_to_python)
 sqlite3.register_adapter(decimal.Decimal, utils.decimal_to_database)
 sqlite3.register_adapter(str, utils.str_to_database)
+
+
+__all__ = ('DatabaseError', 'IntegrityError', 'Database')
+
+
+DatabaseError = sqlite3.DatabaseError
+IntegrityError = sqlite3.IntegrityError
 
 class Database(IDatabase):
     

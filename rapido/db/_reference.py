@@ -4,7 +4,7 @@ one-to-one, many-to-one and many-to-many between models.
 
 from _fields import Field
 from _model import ModelType, Model, get_model
-from _errors import FieldError, DuplicateFieldError
+from _errors import FieldError
 
 __all__ = ('ManyToOne', 'OneToOne', 'OneToMany', 'ManyToMany')
 
@@ -78,7 +78,7 @@ class ManyToOne(IRelation):
                     return
             except:
                 pass
-            raise DuplicateFieldError('field %r already defined in referenced model %r' % (
+            raise FieldError('field %r already defined in referenced model %r' % (
                 self.reverse_name, self.reference.__name__))
 
         c = reverse_class or OneToMany
@@ -357,7 +357,7 @@ class OneToMany(IRelation):
                     return
             except:
                 pass
-            raise DuplicateFieldError('field %r already defined in referenced model %r' % (
+            raise FieldError('field %r already defined in referenced model %r' % (
                 self.reverse_name, self.reference.__name__))
 
         f = ManyToOne(model_class, self.name, name=self.reverse_name)
@@ -401,7 +401,7 @@ class ManyToMany(IRelation):
         reverse_field = getattr(self.reference, self.reverse_name, None)
         
         if reverse_field and reverse_field.reverse_name != self.name:
-            raise DuplicateFieldError('field %r already defined in referenced model %r' % (
+            raise FieldError('field %r already defined in referenced model %r' % (
                 self.reverse_name, self.reference.__name__))
 
         return reverse_field

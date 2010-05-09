@@ -3,26 +3,18 @@ import os
 from rapido.conf import settings
 from rapido.utils.implib import import_module
 
-
-__all__ = ('list_engines', 'engine', 'database')
-
-
 if not settings.DATABASE_ENGINE:
     settings.DATABASE_ENGINE = 'dummy'
 
-path = os.path.dirname(__file__)
-ENGINES = [n for n in os.listdir(path) \
-           if os.path.isfile(os.path.join(path, n, '__init__.py'))]
-del path
+_engine_dir = os.path.join(os.path.dirname(__file__), settings.DATABASE_ENGINE)
+if not os.path.exists(os.path.join(_engine_dir, '__init__.py')):
+    raise ValueError("Engine '%s' not supported." % settings.DATABASE_ENGINE)
 
-def load_engine(name):
-    if name not in ENGINES:
-        raise ValueError("Engine '%s' not supported." % name)
-    return import_module(name, 'rapido.db.engines')
-
-engine = load_engine(settings.DATABASE_ENGINE)
+engine = import_module(settings.DATABASE_ENGINE, 'rapido.db.engines')
 
 Database = engine.Database
+DatabaseError = engine.DatabaseError
+IntegrityError = engine.IntegrityError
 
 database = Database(
     name=settings.DATABASE_NAME,

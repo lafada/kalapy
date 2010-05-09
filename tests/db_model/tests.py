@@ -1,18 +1,18 @@
+from rapido.db.engines import database
 from rapido.test import TestCase
+
 from models import *
 
 
 class ModelTest(TestCase):
 
     def setUp(self):
-        from rapido.db.engines import database
-        self.database = database
-
+        super(ModelTest, self).setUp()
         for model in db.get_models():
             database.create_table(model)
 
     def tearDown(self):
-        del self.database
+        super(ModelTest, self).tearDown()
 
     def test_inherit_chain(self):
         u1 = User()

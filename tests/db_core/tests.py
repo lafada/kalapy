@@ -1,5 +1,5 @@
-from rapido.test import TestCase
 from rapido.db.engines import database
+from rapido.test import TestCase
 
 from models import Article
 

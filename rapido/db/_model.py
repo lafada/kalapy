@@ -1,12 +1,13 @@
 import threading
 from types import FunctionType
 
-from _errors import DuplicateFieldError, FieldError, DatabaseError
-from _fields import Field, AutoKey
-from _query import Query
 from rapido.conf import settings
 from rapido.utils.containers import OrderedDict
 from rapido.utils.implib import import_module
+
+from _errors import DatabaseError, FieldError
+from _fields import Field, AutoKey
+from _query import Query
 
 
 __all__ = ['Model', 'get_model', 'get_models']
@@ -274,7 +275,7 @@ class ModelType(type):
             raise ValueError('Field has no name')
 
         if hasattr(self, name):
-            raise DuplicateFieldError('Field %r already defined in model %r' % (name, self.__name__))
+            raise FieldError('Field %r already defined in model %r' % (name, self.__name__))
 
         setattr(self, name, field)
 
