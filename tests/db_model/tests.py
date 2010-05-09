@@ -4,15 +4,18 @@ from rapido.test import TestCase
 from models import *
 
 
-class ModelTest(TestCase):
+class BaseTest(TestCase):
 
     def setUp(self):
-        super(ModelTest, self).setUp()
+        super(BaseTest, self).setUp()
         for model in db.get_models():
             database.create_table(model)
 
     def tearDown(self):
-        super(ModelTest, self).tearDown()
+        super(BaseTest, self).tearDown()
+
+
+class ModelTest(BaseTest):
 
     def test_inherit_chain(self):
         u1 = User()
@@ -102,5 +105,61 @@ class ModelTest(TestCase):
         names = User.select('name').filter('name == :name', name=u1.name).fetch(-1)
         self.assertTrue(names[0] == u1.name)
 
-class FieldTest(TestCase):
-    pass
+
+class FieldTest(BaseTest):
+
+    def setUp(self):
+        super(FieldTest, self).setUp()
+        self.user = User(name="some", dob='1996-11-04')
+        self.user.save()
+
+    def tearDown(self):
+        super(FieldTest, self).tearDown()
+        self.user.delete()
+
+    def test_field_required(self):
+        try:
+            self.user.name = None
+        except db.ValidationError:
+            pass
+        else:
+            self.fail()
+
+    def test_field_unique(self):
+        
+        u = UniqueTest(a='aaab', b='b', c='c')
+        u.save()
+
+        u2 = UniqueTest(a='aaaa', b='b', c='d')
+        u3 = UniqueTest(a='bbbb', b='b', c='c')
+
+        try:
+            u2.save()
+            u3.save()
+        except db.IntegrityError:
+            pass
+        else:
+            self.fail()
+        finally:
+            u.delete()
+
+    def test_field_selection(self):
+        u = User(name="some")
+        u.lang = 'en_EN'
+        try:
+            u.lang = 'en_IN'
+        except db.ValidationError:
+            pass
+        else:
+            self.fail()
+
+    def test_field_validate(self):
+        u = UniqueTest()
+        u.a = 'aaaaa'
+        try:
+            u.a = 'aa'
+        except db.ValidationError:
+            pass
+        else:
+            self.fail()
+

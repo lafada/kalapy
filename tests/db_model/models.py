@@ -3,6 +3,9 @@ from rapido import db
 
 class User(db.Model):
     name = db.String(size=100, required=True)
+    lang = db.String(size=6, selection=[('en_EN', 'English'),
+                                        ('fr_FR', 'French'),
+                                        ('de_DE', 'German')])
 
     def do_something(self):
         return 1
@@ -33,7 +36,7 @@ class Address(db.Model):
     user = db.ManyToOne(User)
 
 class Group(db.Model):
-    name = db.String(size=50, required=True)
+    name = db.String(size=50, required=True, unique=True)
     parent = db.ManyToOne('Group', reverse_name='subgroups')
     members = db.ManyToMany(User, reverse_name='groups')
 
@@ -54,4 +57,16 @@ class Comment(db.Model):
     article = db.ManyToOne(Account)
     author = db.ManyToOne(User)
     parent = db.ManyToOne('Comment', reverse_name='children')
+
+class UniqueTest(db.Model):
+    a = db.String()
+    b = db.String()
+    c = db.String()
+
+    db.unique(a, [b, c])
+
+    @db.validate(a)
+    def chk_a(self, value):
+        if len(value) < 3:
+            raise db.ValidationError('Too short value')
 
