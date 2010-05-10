@@ -91,8 +91,7 @@ class ModelCache(object):
         if isinstance(model_name, ModelType):
             model_name = model_name._meta.name
 
-        name = model_name.lower()
-        name = self.aliases.get(name, name)
+        name = self.aliases.get(model_name, model_name)
         try:
             return self.cache[name]
         except KeyError:
@@ -145,7 +144,7 @@ class ModelCache(object):
         if name not in names:
             names.append(name)
 
-        alias = cls.__name__.lower()
+        alias = cls.__name__
         if package:
             alias = '%s.%s' % (package, alias)
 
