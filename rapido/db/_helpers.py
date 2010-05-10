@@ -15,7 +15,14 @@ def meta(name=None):
     """A decorator for Model subclasses to have alternate meta information.
 
     As model meta can't be re-initialized this decorator should only be used
-    on direct subclass of db.Model
+    on direct subclass of db.Model, for example:
+
+    >>> @db.meta(name='base.user')
+    >>> class User(db.Model):
+    >>>     name = db.String()
+
+    In this case, instead of auto-generating name, the Use model will be given 
+    name 'base.user'.
 
     Args:
         name: name for the model
@@ -24,11 +31,11 @@ def meta(name=None):
         assert isinstance(cls, ModelType), 'Must be used with Model subclass'
         return cls
 
-    frm = sys._getframe().f_back
+    frame = sys._getframe().f_back
     try:
-        frm.f_locals['_MODEL_META__'] = dict(name=name)
+        frame.f_locals['_MODEL_META__'] = dict(name=name)
     finally:
-        del frm
+        del frame
 
     return wrapper
 
