@@ -2,18 +2,17 @@
 
 DEBUG = True
 
-DATABASE_ENGINE = ""        # sqlite3, postgresql, mysql, bigtable, simpledb, zodb
-DATABASE_NAME = ""          # database name, path if sqlite3 else depends on engine
-DATABASE_USER = ""          # database admin user, depends on engine
-DATABASE_PASSWORD = ""      # database admin password, depends on engine
-DATABASE_HOST = ""          # empty string for default value, depends on engine
-DATABASE_PORT = ""          # empty string for default value, depends on engine
-
-USE_I18N = True             # enable/disable internationalization support
-
 PROJECT_NAME = ""
 PROJECT_VERSION = ""
 
+DATABASE_ENGINE = ""
+DATABASE_NAME = ""
+DATABASE_USER = ""
+DATABASE_PASSWORD = ""
+DATABASE_HOST = ""
+DATABASE_PORT = ""
+
+USE_I18N = True
+
 INSTALLED_PACKAGES = (
 )
-

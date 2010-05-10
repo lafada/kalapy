@@ -6,10 +6,14 @@ from rapido.conf import default
 class Settings(object):
     """Settings class holds package settings. 
     """
-    def __init__(self):
-        self.update(default)
 
-    def update(self, settings_module):
+    __freezed = False
+
+    def __init__(self):
+        self.__update(default)
+        self.__freezed = False
+
+    def __update(self, settings_module):
         """Update the settings with provided settings_module.
         """
         if not isinstance(settings_module, types.ModuleType):
@@ -17,6 +21,18 @@ class Settings(object):
         for setting in dir(settings_module):
             if setting == setting.upper():
                 setattr(self, setting, getattr(settings_module, setting))
+
+    def update(self, settings_module):
+        """Update the settings with provided settings_module.
+        """
+        self.__update(settings_module)
+        self.__freezed = True
+
+    def __setattr__(self, name, value):
+        if self.__freezed:
+            raise AttributeError('Can not change settings.')
+        super(Settings, self).__setattr__(name, value)
+
 
 settings = Settings()
 

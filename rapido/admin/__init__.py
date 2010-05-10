@@ -62,12 +62,6 @@ def setup_environment(settings_mod):
     project_dir = os.path.dirname(settings_mod.__file__)
     project_name = os.path.basename(project_dir)
     
-    lib_dir = os.path.join(project_dir, 'lib')
-    
-    # prepend the project_dir/lib to sys.path if exists
-    if os.path.exists(lib_dir):
-        sys.path.insert(0, lib_dir)
-    
     from rapido.conf import settings
     from rapido.utils.implib import import_module
 
