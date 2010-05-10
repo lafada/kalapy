@@ -34,3 +34,6 @@ DATABASE_PORT = ""
 # Enable/Disable internationalization support
 USE_I18N = True
 
+# List of installed packages
+INSTALLED_PACKAGES = (
+)
