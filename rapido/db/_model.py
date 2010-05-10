@@ -615,19 +615,6 @@ class Model(object):
         return Query(cls, mapper)
 
     @classmethod
-    def filter(cls, query, **params):
-        """Shortcut to `cls.all().filter`
-
-        Args:
-            query: the simple query (see `db.Query`)
-            params: param values
-
-        Returns:
-            Query object
-        """
-        return cls.all().filter(query, **params)
-
-    @classmethod
     def fields(cls):
         """Return the defined fields.
         """

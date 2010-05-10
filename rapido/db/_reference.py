@@ -144,7 +144,7 @@ class O2ORel(IRelation):
             pass
 
         if model_instance.is_saved:
-            value = self.reference.filter('%s == :key' % self.reverse_name,
+            value = self.reference.all().filter('%s == :key' % self.reverse_name,
                         key=model_instance.key).fetch(1)[0]
             model_instance._values[self.name] = value
             return value
@@ -189,7 +189,7 @@ class O2MSet(object):
         """Returns a `Query` object pre-filtered to return related objects.
         """
         self.__check()
-        return self.__ref.filter('%s == :key' % (self.__field.reverse_name),
+        return self.__ref.all().filter('%s == :key' % (self.__field.reverse_name),
                 key=self.__obj.key)
 
     def add(self, *objs):
@@ -274,7 +274,7 @@ class M2MSet(object):
         # Use nested SELECT or JOIN, but some backends might not support that
         keys = self.__m2m.select(self.__field.target).filter(self.__source_eq, key=self.__obj.key).fetch(-1)
         keys = [o.key for o in keys]
-        return self.__ref.filter('key in :keys', keys=keys)
+        return self.__ref.all().filter('key in :keys', keys=keys)
 
     def add(self, *objs):
         """Add new instances to the reference set.
@@ -286,7 +286,7 @@ class M2MSet(object):
         keys = [obj.key for obj in self.__check(*objs) if obj.key]
 
         if keys:
-            existing = self.__m2m.filter(self.__target_in, keys=keys).fetch(-1)
+            existing = self.__m2m.all().filter(self.__target_in, keys=keys).fetch(-1)
             existing = [o.key for o in existing]
             objs = [o for o in objs if o.key not in existing]
 
