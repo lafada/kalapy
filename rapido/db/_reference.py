@@ -423,7 +423,7 @@ class ManyToMany(IRelation):
             cls.add_field(ManyToOne(model_class, name=self.source))
             cls.add_field(ManyToOne(self.reference, name=self.target))
 
-            cls._meta.ref_models = [model_class, self.reference]
+            cls._meta.ref_models.extend([model_class, self.reference])
 
             self.m2m = cls
         else:

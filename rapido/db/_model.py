@@ -175,6 +175,11 @@ class Options(object):
     def model(self):
         return get_model(self.name)
 
+    def __setattr__(self, name, value):
+        if getattr(self, name, None) is not None:
+            raise AttributeError('Attribute %r is already initialized' % name)
+        super(Options, self).__setattr__(name, value)
+
 
 class ModelType(type):
 
