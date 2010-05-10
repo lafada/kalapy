@@ -21,26 +21,14 @@ class ModelCache(object):
     __shared_state = dict(
             cache = OrderedDict(),
             aliases = {},
+            packages = {},
             loaded = False,
             resolved = False,
-            handled = [],
             lock = threading.RLock(),
         )
 
     def __init__(self):
         self.__dict__ = self.__shared_state
-
-    def names(self, model_name, package_name=None):
-        """For internal use only. Will return tuple of (package_name, name) from
-        the given model_name. The name will be normalized.
-        """
-        name = model_name.lower()
-        parts = name.split('.')
-        if len(parts) > 1:
-            return parts[0], name
-        if package_name:
-            return package_name, '%s.%s' % (package_name, name)
-        return "", name
 
     def _populate(self):
         """Populate the cache with defined models in all INSTALLED_PACKAGES.
@@ -50,9 +38,9 @@ class ModelCache(object):
         self.lock.acquire()
         try:
             for package in settings.INSTALLED_PACKAGES:
-                if package in self.handled: # deal with recursive import
+                if package in self.packages: # deal with recursive import
                     continue
-                self.handled.append(package)
+                self.packages[package] = []
                 import_module('models', package)
             self.loaded = True
             self._resolve_references()
@@ -103,12 +91,16 @@ class ModelCache(object):
         if isinstance(model_name, ModelType):
             model_name = model_name._meta.name
 
-        package, name = self.names(model_name, package_name)
-        alias = self.aliases.get(name, name)
+        name = model_name.lower()
+        name = self.aliases.get(name, name)
         try:
-            return self.cache.get(package, {})[alias]
+            return self.cache[name]
         except KeyError:
-            if not package: # try to resolve package_name
+
+            if package_name:
+                return self._get_model('%s.%s' % (package_name, model_name))
+
+            if not package_name: # try to resolve package_name
                 import inspect
                 frame = inspect.currentframe().f_back.f_back
                 try:
@@ -118,6 +110,7 @@ class ModelCache(object):
                     pass
                 finally:
                     del frame
+            
             raise KeyError('No such model %r' % model_name)
 
 
@@ -132,12 +125,14 @@ class ModelCache(object):
             list of models
         """
         self._populate()
+
+        if package and package not in self.packages:
+            raise Exception('No such package %r' % package)
+
         if package:
-            return self.cache.get(package, {}).values()
-        result = []
-        for models in self.cache.values():
-            result.extend(models.values())
-        return result
+            return map(self.cache.get, self.packages[package])
+
+        return self.cache.values()
 
     def register_model(self, cls):
         """Register the provided model class to the cache.
@@ -146,12 +141,16 @@ class ModelCache(object):
             cls: the model class
         """
         package, name = cls._meta.package, cls._meta.name
-        models = self.cache.setdefault(package, OrderedDict())
+        names = self.packages.setdefault(package, [])
+        if name not in names:
+            names.append(name)
+
         alias = cls.__name__.lower()
         if package:
             alias = '%s.%s' % (package, alias)
+
         self.aliases[alias] = name
-        models[name] = cls
+        self.cache[name] = cls
 
 
 cache = ModelCache()
