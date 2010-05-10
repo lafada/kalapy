@@ -1,6 +1,5 @@
 import unittest
 
-from rapido.conf import settings
 from rapido.utils.implib import import_module
 
 
@@ -68,8 +67,6 @@ def run_tests(names, verbosity=1):
         - package.tests.TestClass.test_method
             Run the specific test method
     """
-
-    settings.DEBUG = False
 
     from rapido.db.engines import database
     database.connect()
