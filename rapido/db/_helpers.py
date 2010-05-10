@@ -2,10 +2,35 @@
 of the model class.
 """
 
+import sys
+
 from _fields import Field
+from _model import ModelType
 
 
-__all__ = ('validate', 'unique')
+__all__ = ('meta', 'validate', 'unique')
+
+
+def meta(name=None):
+    """A decorator for Model subclasses to have alternate meta information.
+
+    As model meta can't be re-initialized this decorator should only be used
+    on direct subclass of db.Model
+
+    Args:
+        name: name for the model
+    """
+    def wrapper(cls):
+        assert isinstance(cls, ModelType), 'Must be used with Model subclass'
+        return cls
+
+    frm = sys._getframe().f_back
+    try:
+        frm.f_locals['_MODEL_META__'] = dict(name=name)
+    finally:
+        del frm
+
+    return wrapper
 
 
 def validate(field):

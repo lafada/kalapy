@@ -1,4 +1,4 @@
-import threading
+import sys, threading
 from types import FunctionType
 
 from rapido.conf import settings
@@ -181,6 +181,19 @@ class Options(object):
         super(Options, self).__setattr__(name, value)
 
 
+RESERVED_NAMES = {
+    '_meta'     : '%r is reserved for internal use.',
+    '__new__'   : '%r should not be overriden.',
+    'key'       : '',
+}
+
+def check_reserved_names(attrs):
+    for name, attr in attrs.items():
+        if name in RESERVED_NAMES:
+            msg = RESERVED_NAMES[name] or '%r is reserved for internal use.'
+            raise AttributeError(msg % name)
+
+
 class ModelType(type):
 
     def __new__(cls, name, bases, attrs):
@@ -194,28 +207,24 @@ class ModelType(type):
 
         if len(parents) > 1:
             raise TypeError("Multiple inheritance is not supported.")
+        
+        check_reserved_names(attrs)
 
         # always use the last defined base class in the inheritance chain 
         # to maintain linear hierarchy.
 
-        if '_meta' in attrs:
-            raise AttributeError("'_meta' is reserved for internal use.")
-
         meta = getattr(parents[0], '_meta', None) or Options()
 
-        if meta.name is None:
-            try:
-                meta.package = attrs['__module__'].split('.')[-2]
-                meta.name = meta.package + '.' + name.lower()
-            except:
-                meta.package = ''
-                meta.name = name.lower()
-            meta.table = meta.name.replace('.', '_')
-
         try:
-            parent = cache._get_model(meta.name)
+            parent = cache._get_model(meta.name) if meta.name else None
         except KeyError:
             parent = None
+
+        if meta.package is None:
+            try:
+                meta.package = attrs['__module__'].split('.')[-2]
+            except:
+                meta.package = ''
 
         if parent:
             bases = list(bases)
@@ -227,6 +236,13 @@ class ModelType(type):
         cls = super_new(cls, name, bases, {
             '_meta': meta,
             '__module__': attrs.pop('__module__')})
+
+        # update meta, overriden with @db.meta
+        cls._update_meta(meta)
+
+        if meta.name is None:
+            meta.name = meta.package + '.' + name.lower() if meta.package else name.lower()
+            meta.table = meta.name.replace('.', '_')
 
         # create primary key field if it is root model
         if not parent:
@@ -271,27 +287,36 @@ class ModelType(type):
 
         return cls
 
-    def add_field(self, field, name=None):
+    def _update_meta(cls, meta):
+        frame = sys._getframe().f_back.f_back
+        try:
+            meta_info = frame.f_locals.pop('_MODEL_META__', {})
+            for name, value in meta_info.items():
+                setattr(meta, name, value)
+        finally:
+            del frame
+
+    def add_field(cls, field, name=None):
         
         name = name or field.name
 
         if not name:
             raise ValueError('Field has no name')
 
-        if hasattr(self, name):
-            raise FieldError('Field %r already defined in model %r' % (name, self.__name__))
+        if hasattr(cls, name):
+            raise FieldError('Field %r already defined in model %r' % (name, cls.__name__))
 
-        setattr(self, name, field)
+        setattr(cls, name, field)
 
         if getattr(field, 'is_virtual', None):
-            self._meta.virtual_fields[name] = field
+            cls._meta.virtual_fields[name] = field
         else:
-            self._meta.fields[name] = field
+            cls._meta.fields[name] = field
 
-        field.__configure__(self, name)
+        field.__configure__(cls, name)
     
-    def __repr__(self):
-        return "<Model %r: class %s>" % (self._meta.name, self.__name__)
+    def __repr__(cls):
+        return "<Model %r: class %s>" % (cls._meta.name, self.__name__)
 
 
 class Model(object):
