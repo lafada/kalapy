@@ -315,7 +315,7 @@ class ModelType(type):
         field.__configure__(cls, name)
     
     def __repr__(cls):
-        return "<Model %r: class %s>" % (cls._meta.name, self.__name__)
+        return "<Model %r: class %s>" % (cls._meta.name, cls.__name__)
 
 
 class Model(object):
