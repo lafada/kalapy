@@ -15,6 +15,7 @@ class Internal(TestCase):
     def test_drop_table(self):
         database.drop_table(Article._meta.table)
         self.assertFalse(database.exists_table(Article._meta.table))
+        database.create_table(Article)
 
     def test_alter_table(self):
         database.alter_table(Article)
