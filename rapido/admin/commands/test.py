@@ -1,7 +1,9 @@
 import os
 
-from rapido.admin import BaseCommand
+from rapido.admin import BaseCommand, get_command
 from rapido.conf import settings
+from rapido.test import run_tests
+from rapido import db
 
 class TestCommand(BaseCommand):
 
@@ -16,18 +18,22 @@ class TestCommand(BaseCommand):
 
     def execute(self, *args, **options):
         
+        dbname = settings.DATABASE_NAME
+        if settings.DATABASE_ENGINE == 'sqlite3':
+            dbname = os.path.basename(dbname)
+        if dbname and not dbname.lower().startswith('test_'):
+            self.error("Invalid database %r, test database name must start with 'test_'" % dbname)
+                    
         if not args:
             args = [d for d in os.listdir('.') if os.path.exists(os.path.join(d, 'tests.py'))]
             args = [a for a in args if a in settings.INSTALLED_PACKAGES]
             
         if not args:
             raise self.error('No package installed yet.')
-
-        from rapido import db
-        from rapido.test import run_tests
-
-        # load all models
-        db.get_models()
-
-        run_tests(args, 2)
+        
+        # sync tables
+        cmd = get_command('database')()
+        cmd.execute(sync=True)
+        
+        run_tests(args, 2 if self.verbose else 0)
 
