@@ -1,6 +1,6 @@
 
-DATABASE_ENGINE = 'sqlite3'
-DATABASE_NAME = ':memory:'
+DATABASE_ENGINE = 'postgresql'
+DATABASE_NAME = 'test_rapido'
 
 
 INSTALLED_PACKAGES = (
