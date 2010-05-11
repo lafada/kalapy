@@ -16,15 +16,19 @@ class DBCommand(BaseCommand):
             action='store_true'),
         make_option('-B', '--backup', help='Create backup of the database.',
             metavar='FILE'),
+        make_option('--reset', help='Use with care, will drop all the tables.',
+            action='store_true'),
     )
 
-    exclusive = ('-I', '-S', '-B')
+    exclusive = ('-I', '-S', '-B', '--reset')
 
     def execute(self, *args, **options):
         if options.get('info'):
             return self.info(*args)
         if options.get('sync'):
             return self.sync()
+        if options.get('reset'):
+            return self.reset()
         if options.get('backup'):
             return self.backup(options['backup'])
         self.print_help()
@@ -95,11 +99,30 @@ class DBCommand(BaseCommand):
             raise self.error("DATABASE_ENGINE is not configured.")
 
         database.connect()
-        
+                
         models, __pending = self.get_models()
         try:
             for model in models:
                 database.create_table(model)
+            database.commit()
+        finally:
+            database.close()
+            
+    def reset(self):
+        from rapido.conf import settings
+        from rapido.db.engines import database
+        
+        if settings.DATABASE_ENGINE == "dummy":
+            raise self.error("DATABASE_ENGINE is not configured.")
+
+        database.connect()
+        
+        models, __pending = self.get_models()
+        models.reverse()
+        try:
+            for model in models:
+                database.drop_table(model._meta.table)
+            database.commit()
         finally:
             database.close()
 
