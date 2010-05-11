@@ -5,6 +5,9 @@ from models import Article
 
 
 class Internal(TestCase):
+    
+    def tearDown(self):
+        database.rollback()
 
     def test_create_table(self):
         self.assertTrue(database.exists_table(Article._meta.table))
@@ -12,11 +15,9 @@ class Internal(TestCase):
     def test_drop_table(self):
         database.drop_table(Article._meta.table)
         self.assertFalse(database.exists_table(Article._meta.table))
-        database.rollback()
 
     def test_alter_table(self):
         database.alter_table(Article)
-        database.rollback()
 
     def test_insert_record(self):
         u = Article(title='title')
@@ -46,4 +47,24 @@ class Internal(TestCase):
 
         self.assertTrue(a2 is None)
         self.assertTrue(a.key is None)
+        
+    def test_select_from(self):
+        a = Article(title='some')
+        a.save()
+        
+        a = Article(title='sometitle')
+        a.save()
+        
+        res = Article.select('title').filter('title = :title', title='some%').fetch(-1)
+        self.assertTrue(len(res) == 2)
+    
+    def test_select_count(self):
+        a = Article(title='some')
+        a.save()
+        
+        a = Article(title='sometitle')
+        a.save()
+        
+        res = Article.all().count()
+        self.assertTrue(res == 2)
 
