@@ -113,25 +113,24 @@ class ModelCache(object):
             raise KeyError('No such model %r' % model_name)
 
 
-    def get_models(self, package=None):
-        """Get the list of all models from the cache. If package if provided
-        then only those models belongs to the package.
+    def get_models(self, *packages):
+        """Get the list of all models from the cache for the provided package names.
+        If package names are not provided returns list of all models.
         
         Args:
-            package: name of the package
+            *packages: package names
             
         Returns:
             list of models
         """
         self._populate()
-
-        if package and package not in self.packages:
-            raise Exception('No such package %r' % package)
-
-        if package:
-            return map(self.cache.get, self.packages[package])
-
-        return self.cache.values()
+        result = []
+        for package in packages or self.packages:
+            try:
+                result.extend(map(self.cache.get, self.packages[package]))
+            except KeyError:
+                raise Exception('No such package %r' % package)
+        return result
 
     def register_model(self, cls):
         """Register the provided model class to the cache.

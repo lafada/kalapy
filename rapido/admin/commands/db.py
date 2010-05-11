@@ -34,25 +34,20 @@ class DBCommand(BaseCommand):
         self.print_help()
 
     def get_models(self, *packages):
+        
         from rapido import db
-        if packages:
-            models = []
-            for package in packages:
-                models.extend(db.get_models(package))
-        else:
-            models = db.get_models()
-
+        
+        models = db.get_models(*packages)
+        
         result = []
         pending = []
-
+        
         def load_models(args):
-
             for model in args:
                 if model in result or model in pending:
                     continue
                 if model._meta.ref_models:
-                    load_models(model._meta.ref_models)
-
+                    load_models([m for m in model._meta.ref_models if m != model])
                 if model in models:
                     result.append(model)
                 else:
