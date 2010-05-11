@@ -20,8 +20,8 @@ class Field(object):
 
     _data_type = "char"
 
-    def __init__(self, label=None, name=None, default=None, size=None,
-            required=None, unique=False, indexed=None, selection=None):
+    def __init__(self, label=None, name=None, default=None, required=None,
+        unique=False, indexed=None, selection=None):
 
         self._serial = Field._serial = Field._serial + 1
 
@@ -29,7 +29,6 @@ class Field(object):
         self._name = name
         self._default = default
 
-        self._size = size
         self._required = required
         self._unique = unique
         self._indexed = indexed
@@ -121,10 +120,6 @@ class Field(object):
         return self._label
 
     @property
-    def size(self):
-        return self._size
-
-    @property
     def default(self):
         return self.default_value()
 
@@ -167,6 +162,14 @@ class AutoKey(Field):
 class String(Field):
     
     _data_type = "char"
+    
+    def __init__(self, label=None, size=None, **kw):
+        super(String, self).__init__(label=label, **kw)
+        self._size = size or 250
+    
+    @property
+    def size(self):
+        return self._size
 
     def validate(self, value):
         if not isinstance(value, basestring):

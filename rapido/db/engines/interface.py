@@ -55,11 +55,12 @@ class IDatabase(local):
         raise NotImplementedError
     
     def get_data_type(self, field):
-        """Get the internal datatype for the given field supported by the database.
+        """Get the internal datatype for the given field supported by the 
+        database.
         """
         try:
-            res = self.data_types[field.data_type]
-            return "%s(%s)" % (res, field.size) if field.size else res
+            return self.data_types[field.data_type] % dict(
+                [(k, getattr(field, k)) for k in dir(field)])
         except KeyError:
             from rapido.db.engines import DatabaseError
             raise DatabaseError("Unsupported datatype '%s'" % field.data_type)

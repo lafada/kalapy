@@ -20,13 +20,13 @@ class Database(RelationalDatabase):
     
     data_types = {
         "key"       :   "SERIAL PRIMARY KEY",
-        "char"      :   "CHAR",
-        "text"      :   "VARCHAR",
+        "char"      :   "VARCHAR(%(size)s)",
+        "text"      :   "TEXT",
         "integer"   :   "INTEGER",
         "float"     :   "FLOAT",
         "decimal"   :   "DECIMAL",
         "boolean"   :   "BOOL",
-        "datetime"  :   "DATETIME",
+        "datetime"  :   "TIMESTAMP",
         "binary"    :   "BLOB",
     }
 
