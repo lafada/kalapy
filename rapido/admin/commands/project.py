@@ -6,12 +6,13 @@ from rapido.utils.implib import import_module
 
 def copy_helper(arg, path, files):
     
-    base, name = arg
+    base, name, verbose = arg
     
     dest = os.path.relpath(path, base)
     dest = os.path.join(name, dest) if dest != '.' else name
     
-    sys.stdout.write('Creating dir %s\n' % dest)
+    if verbose:
+        sys.stdout.write('Creating dir %s\n' % dest)
     try:
         os.mkdir(dest)
     except OSError, e:
@@ -25,7 +26,8 @@ def copy_helper(arg, path, files):
         n = os.path.join(dest, f)
         f = os.path.join(path, f)
         
-        sys.stdout.write('Creating file %s\n' % n)
+        if verbose:
+            sys.stdout.write('Creating file %s\n' % n)
         
         f_old = open(f, 'r')
         f_new = open(n, 'w')
@@ -43,7 +45,7 @@ def copy_helper(arg, path, files):
             pass
         
  
-def copy_template(template, name):
+def copy_template(template, name, verbose=False):
     
     pat = re.compile('^[_a-zA-Z]\w*$')
     
@@ -59,7 +61,7 @@ def copy_template(template, name):
     basedir = os.path.dirname(os.path.dirname(__file__))
     basedir = os.path.join(basedir, template)
     
-    os.path.walk(basedir, copy_helper, [basedir, name])
+    os.path.walk(basedir, copy_helper, [basedir, name, verbose])
 
 
 class StartProject(BaseCommand):
@@ -75,7 +77,7 @@ class StartProject(BaseCommand):
         except:
             self.print_help()
         
-        copy_template('project_template', name=name)
+        copy_template('project_template', name=name, verbose=self.verbose)
         
 
 class StartApp(BaseCommand):
@@ -91,4 +93,4 @@ class StartApp(BaseCommand):
         except:
             self.print_help()
             
-        copy_template('package_template', name=name)
+        copy_template('package_template', name=name, verbose=self.verbose)
