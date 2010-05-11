@@ -410,15 +410,15 @@ class ManyToMany(IRelation):
         reverse_field = self.get_reverse_field()
 
         if not reverse_field: #create intermediary model
-            
-            name = '%s_%s' % (model_class.__name__.lower(), self.name)
+
+            self.source = '%s' % model_class._meta.name.split('.')[-1]
+            self.target = '%s' % self.reference._meta.name.split('.')[-1]
+
+            name = '%s_%s' % (self.source, self.name)
 
             cls = ModelType(name, (Model,), {
                 '__module__': model_class.__module__
             })
-
-            self.source = '%s' % model_class.__name__.lower()
-            self.target = '%s' % self.reference.__name__.lower()
 
             cls.add_field(ManyToOne(model_class, name=self.source))
             cls.add_field(ManyToOne(self.reference, name=self.target))
