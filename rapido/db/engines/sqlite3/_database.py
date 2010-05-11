@@ -48,7 +48,27 @@ class Database(RelationalDatabase):
         cursor = self.cursor()
         cursor.execute("""
             SELECT "name" FROM sqlite_master 
-                WHERE type = "table" AND name = ?;
+                WHERE type = "table" AND name = %s;
             """, (name,))
         return bool(cursor.fetchone())
+    
+    
+    def cursor(self):
+        if not self.connection:
+            self.connect()
+        return self.connection.cursor(factory=SQLiteCursor)
+
+
+class SQLiteCursor(dbapi.Cursor):
+    
+    def execute(self, query, params=()):
+        query = self.convert_query(query, len(params))
+        return super(SQLiteCursor, self).execute(query, params)
+    
+    def executemany(self, query, params_list):
+        query = self.convert_query(query, len(params_list[0]))
+        return super(SQLiteCursor, self).executemany(query, params_list)
+    
+    def convert_query(self, query, num_params):
+        return query % tuple("?" * num_params)
 

@@ -146,3 +146,4 @@ class RelationalDatabase(IDatabase):
             return cursor.fetchone()[0]
         except:
             return 0
+
