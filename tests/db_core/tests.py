@@ -6,24 +6,17 @@ from models import Article
 
 class Internal(TestCase):
 
-    def setUp(self):
-        super(Internal, self).setUp()
-        self.test_create_table()
-
-    def tearDown(self):
-        super(Internal, self).tearDown()
-        self.test_drop_table()
-
     def test_create_table(self):
-        database.create_table(Article)
         self.assertTrue(database.exists_table(Article._meta.table))
 
     def test_drop_table(self):
         database.drop_table(Article._meta.table)
         self.assertFalse(database.exists_table(Article._meta.table))
+        database.rollback()
 
     def test_alter_table(self):
         database.alter_table(Article)
+        database.rollback()
 
     def test_insert_record(self):
         u = Article(title='title')
@@ -48,6 +41,7 @@ class Internal(TestCase):
         key = a.save()
 
         database.delete_record(a)
+
         a2 = Article.get(key)
 
         self.assertTrue(a2 is None)

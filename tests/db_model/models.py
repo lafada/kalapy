@@ -43,7 +43,7 @@ class Group(db.Model):
 class Account(db.Model):
     create_date = db.DateTime(default_now=True)
     expire_date = db.DateTime()
-
+    
 class Article(db.Model):
     title = db.String(size=100, required=True)
     pub_date = db.DateTime(default_now=True)
@@ -54,7 +54,7 @@ class Comment(db.Model):
     title = db.String(size=100, required=True)
     pub_date = db.DateTime(default_now=True)
     text = db.Text()
-    article = db.ManyToOne(Account)
+    article = db.ManyToOne(Article)
     author = db.ManyToOne(User)
     parent = db.ManyToOne('Comment', reverse_name='children')
 

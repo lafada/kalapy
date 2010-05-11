@@ -4,19 +4,11 @@ from rapido.test import TestCase
 from models import *
 
 
-class BaseTest(TestCase):
-
-    def setUp(self):
-        super(BaseTest, self).setUp()
-        for model in db.get_models():
-            database.create_table(model)
-
+class ModelTest(TestCase):
+    
     def tearDown(self):
-        super(BaseTest, self).tearDown()
-
-
-class ModelTest(BaseTest):
-
+        database.rollback()
+    
     def test_inherit_chain(self):
         u1 = User()
         u2 = UserDOB()
@@ -44,7 +36,7 @@ class ModelTest(BaseTest):
 
     def test_model_save_related(self):
         
-        u1 = User(name="some")
+        u1 = User(name="some1")
         ac1 = Account()
         ad1 = Address(street1="s1")
         ad2 = Address(street1="s2")
@@ -65,17 +57,21 @@ class ModelTest(BaseTest):
 
 
     def test_model_delete(self):
-        u1 = User(name="some")
-        key = u1.save()
+        u1 = User(name="some2")
+        k1 = u1.save()
+        
+        u2 = User(name="some1")
+        k2 = u2.save()
+        
         u1.delete()
 
-        u2 = User.get(key)
+        u3 = User.get(k1)
 
-        self.assertTrue(u2 is None)
+        self.assertTrue(u3 is None)
 
     def test_model_get(self):
-        u1 = User(name="some1")
-        u2 = User(name="some2")
+        u1 = User(name="some3")
+        u2 = User(name="some4")
         k1 = u1.save()
         k2 = u2.save()
 
@@ -92,34 +88,29 @@ class ModelTest(BaseTest):
         self.assertTrue(res is None)
 
     def test_model_all(self):
-        u1 = User(name="some1")
+        u1 = User(name="some5")
         u1.save() # ensure at least one record exists
         
         res = User.all().filter('name == :name', name=u1.name).fetch(-1)
         self.assertTrue(len(res) > 0)
 
     def test_model_select(self):
-        u1 = User(name="some1")
+        u1 = User(name="some6")
         u1.save() # ensure at least one record exists
         
         names = User.select('name').filter('name == :name', name=u1.name).fetch(-1)
         self.assertTrue(names[0] == u1.name)
 
 
-class FieldTest(BaseTest):
-
-    def setUp(self):
-        super(FieldTest, self).setUp()
-        self.user = User(name="some", dob='1996-11-04')
-        self.user.save()
-
+class FieldTest(TestCase):
+    
     def tearDown(self):
-        super(FieldTest, self).tearDown()
-        self.user.delete()
+        database.rollback()
 
     def test_field_required(self):
+        u = User(name="some", dob='1996-11-04')
         try:
-            self.user.name = None
+            u.name = None
         except db.ValidationError:
             pass
         else:
@@ -127,11 +118,11 @@ class FieldTest(BaseTest):
 
     def test_field_unique(self):
         
-        u = UniqueTest(a='aaab', b='b', c='c')
+        u = UniqueTest(a='aaa', b='bb', c='cc')
         u.save()
 
-        u2 = UniqueTest(a='aaaa', b='b', c='d')
-        u3 = UniqueTest(a='bbbb', b='b', c='c')
+        u2 = UniqueTest(a='aaaa', b='bb', c='dd')
+        u3 = UniqueTest(a='aaaaa', b='bb', c='cc')
 
         try:
             u2.save()
@@ -140,8 +131,6 @@ class FieldTest(BaseTest):
             pass
         else:
             self.fail()
-        finally:
-            u.delete()
 
     def test_field_selection(self):
         u = User(name="some")
@@ -155,7 +144,7 @@ class FieldTest(BaseTest):
 
     def test_field_validate(self):
         u = UniqueTest()
-        u.a = 'aaaaa'
+        u.a = 'aaaaaaa'
         try:
             u.a = 'aa'
         except db.ValidationError:
