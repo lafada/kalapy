@@ -1,5 +1,5 @@
 import os, sys
-from optparse import OptionParser
+from optparse import OptionParser, make_option
 
 from rapido.utils.implib import import_module
 
@@ -94,10 +94,14 @@ class BaseCommand(object):
     args = ""
     scope = ""
 
-    options = ()
+    options = (
+        make_option('-v', '--verbose', help='Verbose output.', 
+            action='store_true', default=False),
+    )
     exclusive = ()
 
     def __init__(self):
+        self.verbose = False
         self.parser = OptionParserEx(prog=os.path.basename(sys.argv[0]),
                 usage=self.usage,
                 #add_help_option=False,
@@ -122,6 +126,7 @@ class BaseCommand(object):
 
     def run(self, argv):
         options, args = self.parser.parse_args(argv[2:])
+        self.verbose = options.verbose
         try:
             self.execute(*args, **options.__dict__)
         except CommandError, e:

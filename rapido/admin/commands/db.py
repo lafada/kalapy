@@ -22,7 +22,7 @@ class DBCommand(BaseCommand):
             action='store_true'),
         make_option('-B', '--backup', help='Create backup of the database.',
             metavar='FILE'),
-        make_option('--reset', help='Use with care, will drop all the tables.',
+        make_option('--reset', help='Reset the model tables. Use with care, will drop all the tables.',
             action='store_true'),
     )
 
@@ -94,6 +94,8 @@ class DBCommand(BaseCommand):
         models, __pending = self.get_models()
         try:
             for model in models:
+                if self.verbose:
+                    print "Sync table %r" % (model._meta.table)
                 database.create_table(model)
         except:
             database.rollback()
@@ -115,12 +117,16 @@ Are you sure about this action? (y/N): """ % settings.DATABASE_NAME)
         models.reverse()
         try:
             for model in models:
+                if self.verbose:
+                    print "Drop table %r" % model._meta.table
                 database.drop_table(model._meta.table)
         except:
             database.rollback()
             raise
         else:
             database.commit()
+            
+        self.sync()
 
     def backup(self, dest):
-        pass
+        print "Not implemented yet!"
