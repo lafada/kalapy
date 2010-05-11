@@ -199,32 +199,32 @@ class Parser(object):
         return self.validate_in(field, value)
 
     def handle_in(self, name, value):
-        return '"%s" IN (%s)' % (name, ', '.join(['?'] * len(value)))
+        return '"%s" IN (%s)' % (name, ', '.join(['%s'] * len(value)))
 
     def handle_not_in(self, name, value):
         assert isinstance(value, (list, tuple))
-        return '"%s" NOT IN (%s)' % (name, ', '.join(['?'] * len(value)))
+        return '"%s" NOT IN (%s)' % (name, ', '.join(['%s'] * len(value)))
 
     def handle_like(self, name, value):
-        return '"%s" LIKE ?' % (name)
+        return '"%s" LIKE %%s' % (name)
 
     def handle_eq(self, name, value):
-        return '"%s" = ?' % (name)
+        return '"%s" = %%s' % (name)
 
     def handle_neq(self, name, value):
-        return '"%s" != ?' % (name)
+        return '"%s" != %%s' % (name)
 
     def handle_gt(self, name, value):
-        return '"%s" > ?' % (name)
+        return '"%s" > %%s' % (name)
 
     def handle_lt(self, name, value):
-        return '"%s" < ?' % (name)
+        return '"%s" < %%s' % (name)
 
     def handle_gte(self, name, value):
-        return '"%s" >= ?' % (name)
+        return '"%s" >= %%s' % (name)
 
     def handle_lte(self, name, value):
-        return '"%s" <= ?' % (name)
+        return '"%s" <= %%s' % (name)
 
     def parse(self, query, **params):
 

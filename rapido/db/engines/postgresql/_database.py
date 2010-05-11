@@ -59,4 +59,10 @@ class Database(RelationalDatabase):
                 WHERE relkind = 'r' AND relname = %s;
             """, (name,))
         return bool(cursor.fetchone())
+    
+    def insert_record(self, instance):
+        super(Database, self).insert_record(instance)
+        cursor = self.cursor()
+        cursor.execute('SELECT last_value FROM "%s_key_seq"' % instance._meta.table)
+        return cursor.fetchone()[0]
 
