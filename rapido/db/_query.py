@@ -1,4 +1,5 @@
 import re
+from copy import deepcopy
 
 from _fields import FieldError
 
@@ -40,13 +41,28 @@ class Query(object):
         self._order = None
         self._mapper = mapper
 
+    def __deepcopy__(self, meta):
+        obj = self.__class__(self._model, self._mapper)
+        obj._all = deepcopy(self._all, meta)
+        obj._order = self._order
+        return obj
+
     def filter(self, query, **kw):
-        """Filter with the given query."
+        """Return a new Query instance with the given query ANDed with current 
+        instance query set.
         
         >>> Query(User).filter("name = :name and age >= :age", name="some", age=20)
+
+        Args:
+            query: the query string
+            **kw: mapping to the keywords bound the given query
+
+        Returns:
+            a new instance of Query
         """
-        self._all.append(self._parser.parse(query, **kw))
-        return self
+        obj = deepcopy(self)
+        obj._all.append(obj._parser.parse(query, **kw))
+        return obj
 
     def order(self, spec):
         """Order the query result with given spec.
