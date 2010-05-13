@@ -4,7 +4,7 @@ from rapido.test import TestCase
 from models import Article
 
 
-class Internal(TestCase):
+class DBTest(TestCase):
     
     def tearDown(self):
         database.rollback()
