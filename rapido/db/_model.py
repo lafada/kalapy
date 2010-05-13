@@ -441,7 +441,7 @@ class Model(object):
         """
         self._key = None
         self._values = {}
-        self._dirty = []
+        self._dirty = {}
 
         for field in self.fields().values():
             if field.name in kw:
@@ -474,7 +474,7 @@ class Model(object):
         Args:
             dirty: if True set dirty else set clean
         """
-        self._dirty = [] if not dirty else self.fields().keys()
+        self._dirty = {} if not dirty else dict([(n, True) for n in self.fields()])
 
     def _to_database_values(self, dirty=False):
         """Return values to be stored in database table for this model instance.
@@ -517,7 +517,7 @@ class Model(object):
             values[k] = fields[k].database_to_python(v)
 
         obj._values.update(values)
-        obj.set_dirty(False)
+        obj._dirty = {}
         return obj
 
     def _get_related(self):

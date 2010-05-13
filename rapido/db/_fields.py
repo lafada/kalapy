@@ -59,8 +59,7 @@ class Field(object):
     def __set__(self, model_instance, value):
         value = self._validate(model_instance, value)
         model_instance._values[self.name] = value
-        if self.name not in model_instance._dirty:
-            model_instance._dirty.append(self.name)
+        model_instance._dirty[self.name] = True
 
     def python_to_database(self, value):
         """Database representation of this field value.
