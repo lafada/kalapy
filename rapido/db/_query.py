@@ -113,6 +113,38 @@ class Query(object):
         from rapido.db.engines import database
         return database.select_count(s, params)
 
+    def delete(self):
+        """Delete all records matched by this query.
+
+        For example:
+
+        >>> Query(User).filter('name = :name', name='some').delete()
+
+        will delete all the User records matching the name like 'some'
+        """
+        for obj in self.fetch(-1):
+            obj.delete()
+
+    def update(self, **kw):
+        """Update all the matched records with the given keywords mapping to
+        the field properties of the model of this query.
+
+        For example:
+
+        >>> Query(User).filter('name = :name', name='some').update(lang='en_EN')
+
+        will update all the User records matching name like 'some' by updating
+        `lang` to `en_EN`.
+
+        Args:
+            **kw: keyword args mapping to the field properties
+        """
+        for obj in self.fetch(-1):
+            for k, v in kw.items():
+                if k in obj._meta.fields:
+                    setattr(obj, k, v)
+            obj.save()
+
     def _select(self, what, limit=None, offset=None):
         """Build the select statement. For internal use only.
         """
