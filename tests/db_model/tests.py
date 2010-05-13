@@ -152,3 +152,63 @@ class FieldTest(TestCase):
         else:
             self.fail()
 
+
+class QueryTest(TestCase):
+
+    def tearDown(self):
+        database.rollback()
+
+    def test_filter(self):
+        for n in list('abcdefghijklmnopqrstuvwxyz'):
+            u = User(name=n)
+            u.save()
+
+        q = User.all()
+        
+        q1 = q.filter('name in :names', names=['a', 'b', 'c'])
+        q2 = q.filter('name in :names', names=['d', 'e', 'f'])
+        
+        self.assertTrue(q != q1 != q2)
+
+        self.assertTrue(q.count() == 26)
+        self.assertEqual([o.name for o in q1.fetch(-1)], ['a', 'b', 'c'])
+        self.assertEqual([o.name for o in q2.fetch(-1)], ['d', 'e', 'f'])
+
+    def test_delete(self):
+
+        for n in list('abcdefghijklmnopqrstuvwxyz'):
+            u = User(name=n)
+            u.save()
+
+        n1 = User.all().count()
+        q = User.all().filter('name in :names', names=['a', 'b', 'c'])
+        q.delete()
+        n2 = User.all().count()
+
+        self.assertTrue(n2 == n1 - 3)
+
+        User.all().delete()
+        n2 = User.all().count()
+
+        self.assertTrue(n2 == 0)
+
+    def test_update(self):
+
+        for n in list('abcdefghijklmnopqrstuvwxyz'):
+            u = User(name=n)
+            u.save()
+
+        q = User.all()
+
+        q1 = q.filter('name in :names', names=['a', 'b', 'c'])
+        q2 = q.filter('name in :names', names=['d', 'e', 'f'])
+
+        q1.update(lang='en_EN')
+        q2.update(lang='fr_FR')
+
+        n1 = q.filter('lang == :lang', lang='en_EN').count()
+        n2 = q.filter('lang == :lang', lang='fr_FR').count()
+
+        self.assertTrue(n1 == 3)
+        self.assertTrue(n2 == 3)
+

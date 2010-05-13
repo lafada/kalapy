@@ -90,13 +90,9 @@ class Query(object):
             limit: number of records to be fetch, if -1 fetch all
             offset: offset from where to fetch records should be >= 0
         """
-        s = self._select('*', limit, offset)
-        params = []
-        for q, b in self._all:
-            params.extend(b)
-
         from rapido.db.engines import database
 
+        s, params = self._build_select('*', limit, offset)
         result = map(self._model._from_database_values, database.select_from(s, params))
         if self._mapper:
             return map(self._mapper, result)
@@ -105,12 +101,9 @@ class Query(object):
     def count(self):
         """Return the number of records in the query object.
         """
-        s = self._select('count("key")')
-        params = []
-        for q, b in self._all:
-            params.extend(b)
-            
         from rapido.db.engines import database
+
+        s, params = self._build_select('count("key")')
         return database.select_count(s, params)
 
     def delete(self):
@@ -145,19 +138,24 @@ class Query(object):
                     setattr(obj, k, v)
             obj.save()
 
-    def _select(self, what, limit=None, offset=None):
-        """Build the select statement. For internal use only.
+    def _build_select(self, what, limit=None, offset=None):
+        """Build the select query. For internal use only.
         """
-        result = "SELECT %s FROM \"%s\"" % (what, self._model._meta.table)
+        query = "SELECT %s FROM \"%s\"" % (what, self._model._meta.table)
         if self._all:
-            result = "%s WHERE %s" % (result, " AND ".join(['(%s)' % s for s, b in self._all]))
+            query = "%s WHERE %s" % (query, " AND ".join(['(%s)' % s for s, b in self._all]))
         if self._order:
-            result = "%s %s" % (result, self._order)
+            query = "%s %s" % (query, self._order)
         if limit > -1:
-            result = "%s LIMIT %d" % (result, limit)
+            query = "%s LIMIT %d" % (query, limit)
             if offset > -1:
-                result = "%s OFFSET %d" % (result, offset)
-        return result
+                query = "%s OFFSET %d" % (query, offset)
+
+        params = []
+        for q, b in self._all:
+            params.extend(b)
+
+        return query, params
 
     def __getitem__(self, arg):
         if isinstance(arg, (int, long)):
