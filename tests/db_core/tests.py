@@ -20,34 +20,38 @@ class Internal(TestCase):
     def test_alter_table(self):
         database.alter_table(Article)
 
-    def test_insert_record(self):
-        u = Article(title='title')
-        key = database.insert_record(u)
-        self.assertTrue(key)
+    def test_update_records(self):
+        a1 = Article(title='title')
+        a1.save()
 
-    def test_update_record(self):
-        u = Article(title='title')
-        u.save()
+        a1.title = 'something'
 
-        u.title = "something"
+        a2 = Article(title='title2')
+        a3 = Article(title='title3')
 
-        key = database.update_record(u)
+        keys = database.update_records(a1, a2, a3)
+        self.assertEqual(keys, [a1.key, a2.key, a3.key])
 
-        u2 = Article.get(u.key)
+        a = Article.get(a1.key)
+        self.assertTrue(a.title != 'title')
 
-        self.assertTrue(u.title == u2.title)
-        self.assertTrue(u2.title != 'title')
+    def test_delete_records(self):
+        a1 = Article(title='sometitle')
+        k1 = a1.save()
 
-    def test_delete_record(self):
-        a = Article(title='sometitle')
-        key = a.save()
+        a2 = Article(title='sometitle2')
+        k2 = a2.save()
 
-        database.delete_record(a)
+        keys = database.delete_records(a1, a2)
 
-        a2 = Article.get(key)
+        self.assertEqual(keys, [k1, k2])
 
-        self.assertTrue(a2 is None)
-        self.assertTrue(a.key is None)
+        a = Article.get(k1)
+
+        self.assertTrue(a is None)
+        self.assertTrue(a1.key is None)
+        self.assertTrue(a2.key is None)
+        self.assertTrue(a1.is_dirty and a2.is_dirty)
         
     def test_select_from(self):
         a = Article(title='some')

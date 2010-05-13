@@ -1,3 +1,4 @@
+from rapido.db._model import Model
 from rapido.db._reference import ManyToOne
 from rapido.db.engines.interface import IDatabase
 
@@ -78,59 +79,66 @@ class RelationalDatabase(IDatabase):
                 name, model._meta.table,))
         #TODO: alter columns if changed
 
-    def insert_record(self, model):
-        
-        if model.is_saved:
-            return self.update_record(model)
-        
-        items = model._to_database_values(True).items()
+    def lastrowid(self, cursor, model):
+        return cursor.lastrowid
 
-        keys = ['"%s"' % x[0] for x in items]
-        vals = [x[1] for x in items]
+    def update_records(self, instance, *args):
 
-        sql = 'INSERT INTO "%s" (%s) VALUES (%s)' % (
-                model._meta.table,
-                ", ".join(keys),
-                ", ".join(['%s'] * len(vals)))
-                
-        cursor = self.cursor()
-        cursor.execute(sql, vals)
-        model._key = cursor.lastrowid
-        
-        return model.key
-
-    def update_record(self, model):
-
-        if not model.is_saved:
-            return self.insert_record(model)
-        
-        items = model._to_database_values(True).items()
-        
-        keys = [x[0] for x in items]
-        vals = [x[1] for x in items]
-
-        keys = ", ".join(['"%s" = %%s' % k for k in keys])
-        sql = 'UPDATE "%s" SET %s WHERE "key" = %%s' % (model._meta.table, keys)
-
-        vals.append(model.key)
+        result = []
+        instances = [instance] + list(args)
 
         cursor = self.cursor()
-        cursor.execute(sql, vals)
-        
-        return model.key
+
+        for obj in instances:
+
+            assert isinstance(obj, Model), 'update_records expects Model instances'
+
+            items = obj._to_database_values(True).items()
+
+            keys = [x[0] for x in items]
+            vals = [x[1] for x in items]
+
+            if not obj.is_saved:
+                keys = ['"%s"' % k for k in keys]
+                sql = 'INSERT INTO "%s" (%s) VALUES (%s)' % (
+                        obj._meta.table,
+                        ", ".join(keys),
+                        ", ".join(['%s'] * len(vals)))
+                cursor.execute(sql, vals)
+                obj._key = self.lastrowid(cursor, obj.__class__)
+                result.append(obj.key)
+            else:
+                keys = ", ".join(['"%s" = %%s' % k for k in keys])
+                sql = 'UPDATE "%s" SET %s WHERE "key" = %%s' % (obj._meta.table, keys)
+
+                vals.append(obj.key)
+                cursor.execute(sql, vals)
+                result.append(obj.key)
+
+            obj.set_dirty(False)
+
+        return result
     
-    def delete_record(self, instance):
-        if instance.is_saved:
-            self.delete_from_keys(instance.__class__, instance.key)
-            instance._key = None
-            
-    def delete_from_keys(self, model, keys):
-        if not isinstance(keys, (list, tuple)):
-            keys = [keys]
+    def delete_records(self, instance, *args):
+
+        assert isinstance(instance, Model), 'delete_records expectes Model instances'
+
+        instances = [instance]
+        instances.extend(args)
+
+        keys = [o.key for o in instances]
+
         sql = 'DELETE FROM "%s" WHERE "key" IN (%s)' % (
-                            model._meta.table, ", ".join(['%s'] * len(keys)))
+                            instance._meta.table, ", ".join(['%s'] * len(keys)))
+
         cursor = self.cursor()
         cursor.execute(sql, keys)
+
+        for obj in instances:
+            obj._key = None
+            obj.set_dirty(True)
+
+        return keys
 
     def select_from(self, query, params):
         cursor = self.cursor()

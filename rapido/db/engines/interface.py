@@ -90,30 +90,38 @@ class IDatabase(local):
         """Drop the table
         """
         raise NotImplementedError
-    
-    def insert_record(self, instance):
-        """Insert the model instance into database table.
-        
+
+    def update_records(self, instance, *args):
+        """Update database records for the given model instances.
+
+        The implementation should take care of:
+
+            - Inserting records if records doesn't exist.
+            - Updating `key` value of the given model instances.
+
         Args:
-            instance: an instance of Model
+            instance: a Model instance
+            *args: more Model instances
+
+        Returns:
+            list of key values
         """
         raise NotImplementedError
-    
-    def update_record(self, instance):
-        """Update the model instance into database table.
-        
+
+    def delete_records(self, instance, *args):
+        """Delete database records for the given model instances. This method
+        also accepts keys.
+
+        The implementation should take care of:
+
+            - Updating `key` value of the given model instances to None.
+
         Args:
-            instance: and instance of Model
-        """
-        raise NotImplementedError
-    
-    def delete_record(self, instance):
-        """Delete the model instance from the database table.
-        """
-        raise NotImplementedError
-    
-    def delete_by_keys(self, model, keys):
-        """Delete all the records from model table referenced by the given keys.
+            instance: a Model instance or a record key
+            *args: more Model instances or record keys
+
+        Returns:
+            list of key values which have been deleted.
         """
         raise NotImplementedError
     

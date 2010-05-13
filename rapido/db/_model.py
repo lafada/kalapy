@@ -441,7 +441,7 @@ class Model(object):
         """
         self._key = None
         self._values = {}
-        self._dirty = {}
+        self._dirty = []
 
         for field in self.fields().values():
             if field.name in kw:
@@ -468,6 +468,14 @@ class Model(object):
         """
         return not self.is_saved or self._dirty
 
+    def set_dirty(self, dirty=True):
+        """Set the instance as dirty or clean.
+
+        Args:
+            dirty: if True set dirty else set clean
+        """
+        self._dirty = [] if not dirty else self.fields().keys()
+
     def _to_database_values(self, dirty=False):
         """Return values to be stored in database table for this model instance.
 
@@ -480,12 +488,12 @@ class Model(object):
         Returns:
             a dict, key-value maping of this model's fields.
         """
-        fields = self.fields()
-        values = self._dirty if dirty else self._values
-        result = {}
-        for name, value in values.items():
-            if name in fields:
-                result[name] = fields[name].python_to_database(value)
+        fields = self.fields().values()
+        if dirty:
+            fields = [f for f in fields if f.name in self._dirty]
+
+        result = dict([(f.name, f.python_to_database(self._values[f.name])) \
+                       for f in fields if f.name != 'key'])
         return result
 
     @classmethod
@@ -509,7 +517,7 @@ class Model(object):
             values[k] = fields[k].database_to_python(v)
 
         obj._values.update(values)
-        obj._dirty.clear()
+        obj.set_dirty(False)
         return obj
 
     def _get_related(self):
@@ -552,11 +560,8 @@ class Model(object):
 
         from rapido.db.engines import database
 
-        [o.save() for o in self._get_related()]
-        
-        self._key = database.update_record(self) if self.is_saved else \
-                    database.insert_record(self)
-        self._dirty.clear()
+        objects = self._get_related() + [self] # first save all related records
+        database.update_records(*objects)
 
         return self.key
 
@@ -570,7 +575,7 @@ class Model(object):
         if not self.is_saved:
             raise TypeError("Can't delete, instance doesn't exists.")
         from rapido.db.engines import database
-        database.delete_record(self)
+        database.delete_records(self)
         self._key = None
         
     @classmethod

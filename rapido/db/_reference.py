@@ -213,10 +213,10 @@ class O2MSet(object):
             raise FieldError("objects can't be removed from %r, delete the objects instead." % (
                 self.__field.name))
         
-        from rapido.db.engines import database
+        self.__check(*objs)
 
-        keys = [obj.key for obj in self.__check(*objs) if obj.key]
-        database.delete_from_keys(self.__ref, keys)
+        from rapido.db.engines import database
+        database.delete_records(*objs)
 
     def clear(self):
         """Removes all referenced instances from the reference set.
@@ -240,7 +240,7 @@ class O2MSet(object):
         q = self.all()
         result = q.fetch(l)
         while result:
-            database.delete_from_keys(self.__ref, [o.key for o in result])
+            database.delete_records(*result)
             result = q.fetch(l)
 
 
@@ -304,10 +304,10 @@ class M2MSet(object):
         Raises:
             TypeError: if any given object is not an instance of referenced model
         """
-        keys = [obj.key for obj in self.__check(*objs) if obj.key]
+        self.__check(*objs)
 
         from rapido.db.engines import database
-        database.delete_from_keys(self.__m2m, keys)
+        database.delete_records(*objs)
 
     def clear(self):
         """Removes all referenced instances from the reference set.
@@ -322,7 +322,7 @@ class M2MSet(object):
         q = self.all()
         result = q.fetch(l)
         while result:
-            database.delete_from_keys(self.__m2m, [o.key for o in result])
+            database.delete_records(*result)
             result = q.fetch(l)
 
 
