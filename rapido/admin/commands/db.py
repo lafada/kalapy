@@ -1,3 +1,4 @@
+import sys
 from optparse import make_option
 
 from rapido.conf import settings
@@ -6,6 +7,26 @@ from rapido.admin import BaseCommand
 from rapido import db
 from rapido.db import transaction
 from rapido.db.engines import database
+
+
+try:
+    from pygments import highlight
+    from pygments.lexers import SqlLexer
+    from pygments.formatters import TerminalFormatter
+
+    lexer = SqlLexer()
+    formatter = TerminalFormatter()
+
+    def print_colorized(text):
+        if sys.stdout.isatty():
+            text = highlight(text, lexer, formatter).strip()
+        sys.stdout.write(text)
+        sys.stdout.write('\n')
+
+except ImportError:
+    def print_colorized(text):
+        sys.stdout.write(text)
+        sys.stdout.write('\n')
 
 
 class DBCommand(BaseCommand):
@@ -83,11 +104,11 @@ class DBCommand(BaseCommand):
     def info(self, *packages):
         models, pending = self.get_models(*packages)
         for model in models:
-            print database.schema_table(model)
+            print_colorized(database.schema_table(model))
         if pending:
-            print '\n-- the following tables should also be added (from other packages)\n'
+            print_colorized('\n-- the following tables should also be added (from other packages)\n')
             for model in pending:
-                print '  --', model._meta.table
+                print_colorized('  -- %s' % model._meta.table)
             print
 
     def sync(self):

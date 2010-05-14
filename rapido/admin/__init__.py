@@ -2,6 +2,7 @@ import os
 import sys
 from optparse import OptionParser
 
+from rapido import get_version
 from _base import *
 
 class Admin(object):
@@ -9,9 +10,6 @@ class Admin(object):
     def __init__(self):
         self.argv = sys.argv[:]
         self.prog = os.path.basename(self.argv[0])
-
-    def get_version(self):
-        return "1.0"
 
     def print_help(self):
         print "Usage: %s command [options] [args]\n" % self.prog
@@ -36,7 +34,7 @@ class Admin(object):
             self.print_help()
 
         if command == "--version":
-            print self.get_version()
+            print get_version()
             sys.exit(1)
 
         if command in ("-h", "--help"):
