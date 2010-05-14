@@ -3,6 +3,7 @@ import os, sys, re, shutil, string
 from rapido.admin import BaseCommand, CommandError
 from rapido.utils.implib import import_module
 
+JUNK_FILE = re.compile('^(.*?)(\.swp|\.pyc|\.pyo|\~)$')
 
 def copy_helper(arg, path, files):
     
@@ -20,9 +21,9 @@ def copy_helper(arg, path, files):
         
     for f in files:
         
-        if not f.endswith('.py'):
+        if JUNK_FILE.match(f):
             continue
-         
+
         n = os.path.join(dest, f)
         f = os.path.join(path, f)
         

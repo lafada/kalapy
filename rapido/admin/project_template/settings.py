@@ -31,9 +31,14 @@ DATABASE_HOST = ""
 # Keep empty for sqlite3 and bigtable
 DATABASE_PORT = ""
 
+# Database specific options
+DATABASE_OPTIONS = {
+}
+
 # Enable/Disable internationalization support
 USE_I18N = True
 
 # List of installed packages
 INSTALLED_PACKAGES = (
 )
+
