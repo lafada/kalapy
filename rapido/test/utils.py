@@ -14,15 +14,15 @@ def build_suite(name):
     package name or a fully qualified name of the test class or
     a specific test method. For example:
 
-    - hello
-        Build a test suite of all the tests found in hello package
-    - hello.HelloTest
-        Build a test suite for the specific test class
-    - hello.HelloTest.test_hello
-        Build a test suite for the specific test method
+        - hello
+            Build a test suite of all the tests found in hello package
+        - hello.HelloTest
+            Build a test suite for the specific test class
+        - hello.HelloTest.test_hello
+            Build a test suite for the specific test method
 
-    Returns:
-        an instance of TestSuite
+    :returns:
+        an instance of `TestSuite`
     """
     names = name.split('.')
 
@@ -66,6 +66,9 @@ def run_tests(names, verbosity=1):
             Run all the tests found in the given test class
         - package.tests.TestClass.test_method
             Run the specific test method
+            
+    :param names: a sequence of names
+    :param verbosity: verbose level
     """
 
     from rapido.db.engines import database

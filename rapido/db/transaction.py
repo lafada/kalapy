@@ -10,6 +10,8 @@ __all__ = ('commit', 'rollback', 'run_in_transaction')
 
 
 class TransactionError(DatabaseError):
+    """The exception class for any transaction related errors.
+    """
     pass
 
 
@@ -47,13 +49,11 @@ def run_in_transaction(func, *args, **kw):
     >>> u.lang = 'en_EN'
     >>> run_in_transaction(u.save)
 
-    Args:
-        func: the callable that should be run in transaction
-        *args: positional arguments to be passed to the func
-        **kw: keyword arguments to be passed to the func
+    :param func: the callable that should be run in transaction
+    :param args: positional arguments to be passed to the func
+    :param kw: keyword arguments to be passed to the func
 
-    Returns:
-        The result of the function being called.
+    :returns: The result of the function being called.
     """
     enter_transaction()
     try:

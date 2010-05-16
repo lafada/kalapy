@@ -31,7 +31,7 @@ class ModelCache(object):
         self.__dict__ = self.__shared_state
 
     def _populate(self):
-        """Populate the cache with defined models in all INSTALLED_PACKAGES.
+        """Populate the cache with defined models in all `INSTALLED_PACKAGES`.
         """
         if self.loaded:
             return
@@ -78,9 +78,12 @@ class ModelCache(object):
         >>> db.get_model('base.user')
         >>> db.get_model('User', 'base')
 
-        Args:
-            model_name: name of the model
-            package_name: package name
+        :param model_name: name of the model
+        :param package_name: package name
+        
+        :returns: model class or None
+        :rtype: :class:`ModelType` or None
+        
         """
         return self._get_model(model_name, package_name=package_name, seed=True)
 
@@ -117,11 +120,9 @@ class ModelCache(object):
         """Get the list of all models from the cache for the provided package names.
         If package names are not provided returns list of all models.
         
-        Args:
-            *packages: package names
-            
-        Returns:
-            list of models
+        :arg packages: package names
+        
+        :returns: list of models
         """
         self._populate()
         result = []
@@ -135,8 +136,7 @@ class ModelCache(object):
     def register_model(self, cls):
         """Register the provided model class to the cache.
         
-        Args:
-            cls: the model class
+        :param cls: the model class
         """
         package, name = cls._meta.package, cls._meta.name
         names = self.packages.setdefault(package, [])
@@ -320,44 +320,43 @@ class Model(object):
     """Model is the super class of all the objects of data entities in
     the database.
 
-    Database tables declared as subclasses of `Model` defines table properties
-    as class members of type `Field`. So if you want to publish a story with 
-    title, body and date, you would do it like:
+    Database tables declared as subclasses of :class:`Model` defines table
+    properties as class members of type :class:`Field`. So if you want to 
+    publish a story with title, body and date, you would do it like::
 
-    >>> class Story(Model):
-    >>>     title = String(size=100, required=True)
-    >>>     body = Text()
-    >>>     date = DateTime()
+        class Story(Model):
+            title = String(size=100, required=True)
+            body = Text()
+            date = DateTime()
 
     You can extend a model by creating subclasses of that model but you
-    can't inherit from more then one models.
+    can't inherit from more then one models. For example::
 
-    >>> class A(Model):
-    >>>     a = String()
-    >>> 
-    >>> class B(Model):
-    >>>     b = String()
+        class A(Model):
+            a = String()
+    
+        class B(Model):
+            b = String()
 
-    you can extend A like this:
+    You can extend `A` like this::
 
-    >>> class C(A):
-    >>>     c = String()
+        class C(A):
+            c = String()
 
-    but not like this:
+    but not like this::
 
-    >>> class C(A, B):
-    >>>     c = String()
-
+        class C(A, B):
+            c = String()
 
     Another interesting behavior is that no matter which class it inherits
     from, it always inherits from the last class defined of that base model 
-    class. Let's see what it means:
+    class. Let's see what it means::
 
-    >>> class D(C):
-    >>>     d = String()
-    >>>
-    >>> class E(C):
-    >>>     e = String()
+        class D(C):
+            d = String()
+
+        class E(C):
+            e = String()
 
     Here even though `E` is extending `C` it is actually extending `D`, the
     last defined class of `A`. So E will have access to all the methods/members
@@ -374,23 +373,21 @@ class Model(object):
     This way you can easily change the behavior of existing data models
     by simply creating subclasses without modifying existing code.
 
-    Let's see an use case:
-
-    >>> class User(Model):
-    >>>     name = String(size=100, required=True)
-    >>>     lang = String(size=6, selection=[('en_EN', 'English'), ('fr_FR', 'French')])]
-    >>>
-    >>>     def do_something(self):
-    >>>         ...
-    >>>         ...
+    Let's see an use case::
+        
+        class User(Model):
+            name = String(size=100, required=True)
+            lang = String(size=6, selection=[('en_EN', 'English'), ('fr_FR', 'French')])
+            
+            def do_something(self):
+                ...
+                ...
 
     Your package is using this class like this:
 
-    >>>
     >>> user = User(**kwargs)
     >>> user.do_something()
     >>> user.put()
-    >>> 
 
     Where `kwargs` are `dict` of form variables coming from an http post request.
 
@@ -398,18 +395,29 @@ class Model(object):
     don't want to change your running system by modifying the source code,
     you simply create a subclass of `User` and all the methods/members defined
     in that subclass will be available to the package.
+    
+    For example::
+        
+        class UserEx(User):
+            age = Integer(size=3)
 
-    >>> class UserEx(User):
-    >>>     age = Integer(size=3)
-    >>> 
-    >>>     def do_something(self):
-    >>>         super(UserEx, self).do_something()
-    >>>         ...
-    >>>         ...
+            def do_something(self):
+                super(UserEx, self).do_something()
+                ...
+                ...
 
-    so now if the html form has `age` field, the above code will work without any change
-    and still saving `age` value. You can also change the behavior of the base class
-    by overriding methods.
+    So now if the html form has `age` field, the above code will work without any
+    change and still saving `age` value. You can also change the behavior of the
+    base class by overriding methods.
+
+    Properties can also be initialized by providing keyword arguments to the 
+    constructor as keyword arguments.
+
+    >>> u = User(name="some")
+    >>> u.save()
+    
+    :keyword kw: keyword arguments mapping to instance properties.
+    
     """
 
     __metaclass__ = ModelType
@@ -422,22 +430,6 @@ class Model(object):
 
     def __init__(self, **kw):
         """Create a new instance of this model.
-
-        Instanciate a model, initialize it's properties and call save() to save
-        the instance in database.
-
-        >>> u = User()
-        >>> u.name = "Some"
-        >>> u.save()
-
-        Properties can also be initialized by providing keyword arguments to the
-        model constructor.
-
-        >>> u = User(name="some")
-        >>> u.save()
-        
-        Args:
-            **kw: keyword arguments mapping to instance properties.
         """
         self._key = None
         self._values = {}
@@ -463,16 +455,14 @@ class Model(object):
         """Check if the instance is dirty. An instance is dirty if it's 
         properties are changed since it is saved last time.
 
-        Returns:
-            True if dirty, else False
+        :returns: True if dirty, else False
         """
         return not self.is_saved or self._dirty
 
     def set_dirty(self, dirty=True):
         """Set the instance as dirty or clean.
 
-        Args:
-            dirty: if True set dirty else set clean
+        :param dirty: if True set dirty else set clean
         """
         self._dirty = {} if not dirty else dict([(n, True) for n in self.fields()])
 
@@ -482,11 +472,9 @@ class Model(object):
         If dirty is True only return field values marked as dirty else returns
         all values.
 
-        Args:
-            dirty: if True only return values of fields marked dirty
-
-        Returns:
-            a dict, key-value maping of this model's fields.
+        :param dirty: if True only return values of fields marked dirty
+        
+        :returns: a dict, key-value maping of this model's fields.
         """
         fields = self.fields().values()
         if dirty:
@@ -501,11 +489,9 @@ class Model(object):
         """Create an instance of this model which properties initialized with
         the given values fetched from database.
 
-        Args:
-            values: mapping of name, value to instance properties
+        :param values: mapping of name, value to instance properties
 
-        Returns:
-            an instance of this Model
+        :returns: an instance of this model
         """
         values = dict(values)
 
@@ -525,10 +511,11 @@ class Model(object):
         model instance. Used to get all dirty instances of related model
         instances referenced by ManyToOne and OneToOne properties.
         
-        For internal use only.
+        .. notes::
+            
+            For internal use only.
 
-        Returns:
-            list of related model instances
+        :returns: list of related model instances
         """
         from _reference import IRelation
 
@@ -547,13 +534,10 @@ class Model(object):
         else if it is loaded from database, the record will be updated.
 
         It also saves all dirty instances of related model instances referenced
-        by many-to-one and one-to-many properties.
+        by :class:`ManyToOne` properties.
 
-        Returns:
-            The unique key id
-
-        Raises:
-            DatabaseError if instance could not be commited.
+        :returns: an unique key id
+        :raises: :class:`DatabaseError` if instance could not be commited.
         """
         if self.is_saved and not self.is_dirty:
             return self.key
@@ -568,9 +552,9 @@ class Model(object):
     def delete(self):
         """Deletes the instance from the database.
         
-        Raises:
-            TypeError: if instance is not saved
-            DatabaseError if instance could not be deleted.
+        :raises:
+            - :class:`TypeError`: if instance is not saved
+            - :class:`DatabaseError`: if instance could not be deleted.
         """
         if not self.is_saved:
             raise TypeError("Can't delete, instance doesn't exists.")
@@ -580,27 +564,25 @@ class Model(object):
         
     @classmethod
     def get(cls, keys):
-        """Fetch the instance(s) from the database using the provided id(s).
+        """Fetch the instance(s) from the database using the provided keys.
 
         If `keys` is a single value it will return an instance else if `keys`
         is a list of `key` then returns list of instances.
 
         >>> user = User.get(123)
         >>> isinstance(user, User)
-        ... True
+        True
         >>> users = User.get([123, 456, 789])
         >>> isinstance(users, list):
-        ... True
+        True
 
-        Args:
-            keys: an key or list of keys
+        :param keys: an key or list of keys
 
-        Returns:
-            if `keys` is single value it will return and instance of the Model else
-            returns list of instances.
+        :returns:
+            If `keys` is single value it will return and instance of the model 
+            else returns list of instances.
 
-        Raises:
-            DatabaseError if instances can't be retrieved from the given keys.
+        :raises: :class:`DatabaseError` if instances can't be retrieved.
         """
         single = False
         if not isinstance(keys, (list, tuple)):
@@ -614,28 +596,31 @@ class Model(object):
 
     @classmethod
     def all(cls):
-        """Returns a query object over all instances of this model 
-        from the database.
-
-        Returns:
-            Query instance that will retrieve all instances of this model.
+        """Returns a :class:`Query` object over all instances of this model from
+        the database.
+        
+        :returns: :class:`Query` instance
         """
         return Query(cls)
 
     @classmethod
     def select(cls, *fields):
-        """Mimics SELECT column query. If fields are not given it is
-        equivalent to `all()`.
+        """Mimics `SELECT` column query. If fields are not given it is equivalent
+        to :meth:`all()`.
 
         >>> names = User.select('name').fetch(-1)
         >>> print names
-        ... ['a', 'b', 'c', ...]
+        ['a', 'b', 'c', ...]
         >>> name_dob = User.select('name', 'dob').fetch(-1)
         >>> print name_dob
-        ... [('a', '01-11-2001'), ...]
+        [('a', '01-11-2001'), ...]
         >>> users = User.select().fetch(-1)
         >>> print users
-        ... [<Object ...> ...]
+        [<Object ...> ...]
+        
+        :arg fields: sequence of fields
+        
+        :returns: :class:`Query` instance
         """
         def mapper(obj):
             if not fields:

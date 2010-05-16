@@ -108,11 +108,10 @@ class Route(object):
         """Match the given path with this rule. The environ if provided will be
         used to determine request method.
         
-        Args:
-            path: the path string
-            environ: wsgi environment
+        :param path: the path string
+        :param environ: wsgi environment
             
-        Returns:
+        :returns:
             None if not matched else returns a dict with handler, keywords and
             varargs information.
         """
@@ -166,11 +165,10 @@ class Mapper(object):
         method takes care of best matching route giving `varargs` rule least
         preference.
         
-        Args:
-            path: the path string
-            environ: wsgi environment
+        :param path: the path string
+        :param environ: wsgi environment
             
-        Returns:
+        :returns:
             None if path doesn't match to any of the registered route else 
             returns a dict of matching info returned by the matched route.
         """
@@ -187,14 +185,13 @@ class Mapper(object):
     def connect(self, pattern, handler, *methods, **validators):
         """Connect a route for the given pattern and handler function.
         
-        Args:
-            patter: the rule pattern
-            handler: the handler function
-            *methods: sequence of http methods
-            **validators: validators/convertors to keyword placeholders
-            
-        Returns:
-            an instance of Route
+        :param patter: the rule pattern
+        :param handler: the handler function
+        :param methods: sequence of http methods
+        :param validators: validators/convertors to keyword placeholders
+        
+        :returns:
+            an instance of :class:`Route`
         """
         route = Route(pattern, handler, *methods, **validators)
         self.routes.append(route)
@@ -213,10 +210,9 @@ def route(pattern, *methods, **validators):
     >>> def find(limit, offset):
     >>>     ...
     
-    Args:
-        pattern: the rule pattern
-        *methods: sequence of http methods allowed
-        **validators: validators/convertors for the keyword placeholders
+    :param pattern: the rule pattern
+    :param methods: sequence of http methods allowed
+    :param validators: validators/convertors for the keyword placeholders
     """
     def wrapper(func):
         func.route = ROUTES.connect(pattern, func, *methods, **validators)

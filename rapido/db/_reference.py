@@ -21,6 +21,8 @@ class IRelation(Field):
     def prepare(self, model_class):
         """The relation field should implement this method to implement
         support code as at this point all the models will be resolved.
+        
+        :param model_class: a subclass of :class:`Model`
         """
         pass
 
@@ -32,35 +34,50 @@ class IRelation(Field):
 
     @property
     def is_virtual(self):
+        """Whether this field virtual, a virtual field value is not stored in
+        database but is a result of some relationship.
+        
+        For example, :class:`OneToMany` is a virtual field linked with a
+        corresponding :class:`ManyToOne` in other model class.
+        """
         return self._data_type is None
 
 
 class ManyToOne(IRelation):
-    """ManyToOne field represents many-to-one relationship with other model.
+    """ManyToOne field represents many-to-one relationship with other :class:`Model`.
 
-    For example, a ManyToOne field defined in model A that refers to model B forms
-    a many-to-one relationship from A to B. Every instance of B refers to a single
-    instance of A and every instance of A can have many instances of B that refer
-    it.
+    For example, a `ManyToOne` field defined in model `A` that refers to model `B` 
+    forms a many-to-one relationship from `A` to `B`. Every instance of `B` refers
+    to a single instance of `A` and every instance of `A` can have many instances 
+    of `B` that refer it.
 
     A reverse lookup field will be automatically created in the reference model.
-    In this case, a field `a_set` of type `OneToMany` will be automatically created
-    on class B referencing class A.
+    In this case, a field `a_set` of type :class:`OneToMany` will be automatically
+    created on class `B` referencing class `A`.
+    
+    For example::
+        
+        class User(db.Model):
+            name = db.String(size=100)
+            
+        class Address(db.Model):
+            name = db.String(size=100)
+            ...
+            user = db.ManyToOne(User)
+            
+    A reverse lookup field of type :class:`OneToMany` named `address_set` will be
+    automatically created in class `User`.
+    
+    :param reference: reference model class
+    :param reverse_name: name of the reverse lookup field in the referenced model
+    :param cascade: None = set null, False = restrict and True = cascade
+    :param kw: other field params
     """
 
     _data_type = 'integer'
 
     def __init__(self, reference, reverse_name=None, cascade=False, **kw):
         """Create a new ManyToOne field referencing the given `reference` model.
-
-        A reverse lookup field of type OneToMany will be created on the referenced
-        model if it doesn't exist.
-
-        Args:
-            reference: reference model class
-            reverse_name: name of the reverse lookup field in the referenced model
-            cascade: None = set null, False = restrict and True = cascade
-            **kw: other field params
         """
         super(ManyToOne, self).__init__(reference, **kw)
         self.reverse_name = reverse_name
@@ -123,8 +140,7 @@ class OneToOne(ManyToOne):
                 reverse_class=O2ORel)
 
 class O2ORel(IRelation):
-    """OneToOne reverse lookup field to prevent recursive
-    dependencies.
+    """OneToOne reverse lookup field to prevent recursive dependencies.
     """
 
     _data_type = None
@@ -186,7 +202,7 @@ class O2MSet(object):
         return objs
 
     def all(self):
-        """Returns a `Query` object pre-filtered to return related objects.
+        """Returns a :class:`Query` object pre-filtered to return related objects.
         """
         self.__check()
         return self.__ref.all().filter('%s == :key' % (self.__field.reverse_name),
@@ -195,7 +211,7 @@ class O2MSet(object):
     def add(self, *objs):
         """Add new instances to the reference set.
 
-        Raises:
+        :raises:
             TypeError: if any given object is not an instance of referenced model
         """
         for obj in self.__check(*objs):
@@ -205,9 +221,9 @@ class O2MSet(object):
     def remove(self, *objs):
         """Removes the provided instances from the reference set.
         
-        Raises:
-            FieldError: if referenced instance field is required field.
-            TypeError: if any given object is not an instance of referenced model
+        :raises:
+            - `FieldError`: if referenced instance field is required field.
+            - `TypeError`: if any given object is not an instance of referenced model
         """
         if self.__ref_field.is_required:
             raise FieldError("objects can't be removed from %r, delete the objects instead." % (
@@ -221,9 +237,9 @@ class O2MSet(object):
     def clear(self):
         """Removes all referenced instances from the reference set.
 
-        Raises:
-            FieldError: if referenced instance field is required field.
-            TypeError: if any given object is not an instance of referenced model
+        :raises:
+            - `FieldError`: if referenced instance field is required field.
+            - `TypeError`: if any given object is not an instance of referenced model
         """
         if not self.__obj.is_saved:
             return
@@ -267,7 +283,7 @@ class M2MSet(object):
         return objs
 
     def all(self):
-        """Returns a `Query` object pre-filtered to return related objects.
+        """Returns a :class:`Query` object pre-filtered to return related objects.
         """
         self.__check()
         #XXX: think about a better solution
@@ -279,9 +295,9 @@ class M2MSet(object):
     def add(self, *objs):
         """Add new instances to the reference set.
 
-        Raises:
-            TypeError: if any given object is not an instance of referenced model
-            ValueError: if any of the given object is not saved
+        :raises:
+            - `TypeError`: if any given object is not an instance of referenced model
+            - `ValueError`: if any of the given object is not saved
         """
         keys = [obj.key for obj in self.__check(*objs) if obj.key]
 
@@ -301,8 +317,8 @@ class M2MSet(object):
     def remove(self, *objs):
         """Removes the provided instances from the reference set.
         
-        Raises:
-            TypeError: if any given object is not an instance of referenced model
+        :raises:
+            - `TypeError`: if any given object is not an instance of referenced model
         """
         self.__check(*objs)
 
@@ -329,14 +345,32 @@ class M2MSet(object):
 class OneToMany(IRelation):
     """OneToMany field represents one-to-many relationship with other model.
 
-    For example, a OneToMany field defined in model A that refers to model B forms
-    a one-to-many relationship from A to B. Every instance of B refers to a single
-    instance of A and every instance of A can have many instances of B that refer
-    it.
+    For example, a `OneToMany` field defined in model `A` that refers to model `B`
+    forms a one-to-many relationship from `A` to `B`. Every instance of `B` refers 
+    to a single instance of `A` and every instance of `A` can have many instances 
+    of `B` that refer it.
 
     A reverse lookup field will be automatically created in the reference model.
     In this case, a field `a` of type `ManyToOne` will be automatically created
-    on class B referencing class A.
+    on class B referencing class `A`.
+    
+    For example::
+        
+        class User(db.Model):
+            name = db.String(size=100)
+            ...
+            contacts = db.OneToMany('Address')
+            
+        class Address(db.Model):
+            name = db.String(size=100)
+            ...
+            
+    A reverse lookup field of type :class:`ManyToOne` named `user` will be
+    automatically created in class `Address`.
+    
+    :param reference: reference model class
+    :param reverse_name: name of the reverse lookup field in the referenced model
+    :param kw: other field params
     """
 
     _data_type = None
@@ -374,13 +408,32 @@ class OneToMany(IRelation):
 class ManyToMany(IRelation):
     """ManyToMany field represents many-to-many relationship with other model.
 
-    For example, a ManyToMany field defined in model A that refers to model B
-    forms a many-to-many relationship from A to B. Every instance of A can have
-    many instances of B referenced by an intermediary model that also refers
-    model A.
+    For example, a `ManyToMany` field defined in model `A` that refers to model
+    `B` forms a many-to-many relationship from `A` to `B`. Every instance of `A`
+    can have many instances of `B` referenced by an intermediary model that also
+    refers model `A`.
 
-    Removing an instance of B from M2MSet will delete instances of the 
+    Removing an instance of `B` from `M2MSet` will delete instances of the 
     intermediary model and thus breaking the many-to-many relationship.
+    
+    For example::
+        
+        class User(db.Model):
+            name = db.String(size=100)
+            ...
+            groups = db.ManyToMany('Group')
+            
+        class Group(db.Model):
+            name = db.String(size=100)
+            ...
+    
+    A reverse lookup field of type :class:`ManyToMany` named `users` will be
+    automatically created in class `Group`.
+    
+    :param reference: reference model class
+    :param reverse_name: name of the reverse lookup field in the referenced model
+    :param kw: other field params
+
     """
 
     _data_type = None

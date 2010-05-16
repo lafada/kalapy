@@ -54,16 +54,15 @@ class HandlerType(type):
 class Handler(object):
     """The base request handler class provides some useful methods to deal with
     request, response as well as errors and redirection.
+    
+    :param request: an instance of :class:`Request`
+    :param response: an instance of :class:`Response`
     """
     
     __metaclass__ = HandlerType
     
     def __init__(self, request, response):
         """Create a new instance of the Handler
-        
-        Args:
-            request: an instance of `Request`
-            response: an instance of `Response`
         """
         self.request = request
         self.response = response
@@ -92,12 +91,11 @@ class Application(object):
     def handle(self, request, response):
         """Handle the request resolving against the registered routes.
         
-        Args:
-            request: An instance of Request
-            response: An instance of Response
+        :param request: An instance of Request
+        :param response: An instance of Response
             
-        Raises:
-            HTTPException or exception raised by the handler function
+        :raises:
+            `HTTPException` or exception raised by the handler function
         """
         path = request.path_info
         method = request.method

@@ -1,5 +1,4 @@
-"""
-This module defines the database interface to be implemented by backend engines.
+"""This module defines the database interface to be implemented by backend engines.
 The implementation is meant for internal use only. Users should use Model API
 instead.
 """
@@ -9,19 +8,18 @@ from threading import local
 class IDatabase(local):
     """The database interface. Backend engines should implement this class
     with name `Database`.
+    
+    :param name: the name of the database
+    :param host: the hostname where the database server is running
+    :param port: the port on which the database server is listening
+    :param user: the user name to connect to the database
+    :param password: the database password
     """
     
     data_types = {}
     
     def __init__(self, name, host=None, port=None, user=None, password=None):
         """Initialize the database.
-
-        Args:
-            name: the name of the database
-            host: the hostname where the database server is running
-            port: the port on which the database server is listening
-            user: the user name to connect to the database
-            password: the database password
         """
         self.name = name
         self.host = host
@@ -50,13 +48,15 @@ class IDatabase(local):
         raise NotImplementedError
     
     def cursor(self):
-        """Return a dbapi2 complaint cursor instance.
+        """Return a `dbapi2` complaint cursor instance.
         """
         raise NotImplementedError
     
     def get_data_type(self, field):
         """Get the internal datatype for the given field supported by the 
         database.
+        
+        :param field: an instance of :class:`Field`
         """
         try:
             return self.data_types[field.data_type] % dict(
@@ -67,27 +67,42 @@ class IDatabase(local):
     
     def schema_table(self, model):
         """Returns the schema information of the table for the given model.
+        
+        :param model: a subclass of :class:`Model`
+        
+        :returns: textual representaion of the model in the database
         """
         raise NotImplementedError
     
     def exists_table(self, name):
         """Check whether the table exists or not.
+        
+        :param name: name of the table
+        
+        :returns: True if table exists else False
         """
         raise NotImplementedError
     
     def create_table(self, model):
         """Create a table for the given model if it doesn't exist.
+        
+        :param model: a subclass of :class:`Model`
         """
         raise NotImplementedError
     
     def alter_table(self, model, name=None):
         """Alter the table associated for the given model. If name is given look
         for the table by that name (if model class name has been changed).
+        
+        :param model: a subclass of :class:`Model`
+        :param name: if given, should be the name of table
         """
         raise NotImplementedError
     
     def drop_table(self, name):
         """Drop the table
+        
+        :param name: name of the table
         """
         raise NotImplementedError
 
@@ -99,12 +114,13 @@ class IDatabase(local):
             - Inserting records if records doesn't exist.
             - Updating `key` value of the given model instances.
 
-        Args:
-            instance: a Model instance
-            *args: more Model instances
+        :param instance: an instance of :class:`Model` subclass
+        :param args: more instances
 
-        Returns:
-            list of key values
+        :returns: list of key values
+        :raises:
+            - :class:`DatabaseError`
+            - :class:`IntegrityError`
         """
         raise NotImplementedError
 
@@ -116,36 +132,37 @@ class IDatabase(local):
 
             - Updating `key` value of the given model instances to None.
 
-        Args:
-            instance: a Model instance or a record key
-            *args: more Model instances or record keys
+        :param instance: a Model instance or a record key
+        :param args: more Model instances or record keys
 
-        Returns:
-            list of key values which have been deleted.
+        :returns: list of key values which have been deleted.
+        :raises:
+            - :class:`DatabaseError`
+            - :class:`IntegrityError`
         """
         raise NotImplementedError
     
     def select_from(self, query, params):
         """Execute the select query bound with the given params.
         
-        Args:
-            query: the select query
-            params: list of values bound to the query
+        :param query: the select query
+        :param params: list of values bound to the query
             
-        Returns:
-            dict of name, value of the resultset
+        :returns: dict of name, value of the resultset
+        :raises:
+            - :class:`DatabaseError`
         """
         raise NotImplementedError
     
     def select_count(self, query, params):
         """Execute select count query bound with the given params.
         
-        Args:
-            query: the select query
-            params: list of values bound to the query
+        :param query: the select query
+        :param params: list of values bound to the query
             
-        Returns:
-            integer, total number of records
+        :returns: integer, total number of records
+        :raises:
+            - :class:`DatabaseError`
         """
         raise NotImplementedError
-    
+

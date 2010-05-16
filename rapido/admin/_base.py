@@ -72,32 +72,29 @@ class BaseCommand(object):
     """Base class for implementing commands. The commands will be available
     to the project or package admin scripts depending on the defined scope of
     the command.
-
-    Attributes:
-        name: name of the command
-        help: help string for the command
-        args: can be used in `usages` string
-        scope: one of `package` or `project` else available in both the scopes
-        options: command options
-        exclusive: list of options which are mutually exclusive
-
-    methods:
-        print_help: print help for the command and exit
-        error: raise command error
-        execute: this method will be called when command is executed
     """
 
     __metaclass__ = CommandType
 
+    # name of the command
     name = ""
+    
+    # help string for the command
     help = ""
+    
+    # can be used in `usage` string
     args = ""
+    
+    # one of `package` or `project` else available in both the scopes
     scope = ""
 
+    # command options
     options = (
         make_option('-v', '--verbose', help='Verbose output.', 
             action='store_true', default=False),
     )
+    
+    # list of options which are mutually exclusive
     exclusive = ()
 
     def __init__(self):
@@ -118,10 +115,14 @@ class BaseCommand(object):
         return usage
 
     def print_help(self):
+        """Print help for the command and exit
+        """
         self.parser.print_help()
         sys.exit(1)
 
     def error(self, message):
+        """Raise command error
+        """
         self.parser.error(message)
 
     def run(self, argv):
@@ -134,6 +135,8 @@ class BaseCommand(object):
             sys.exit(1)
 
     def execute(self, *args, **options):
+        """This method will be called when command is executed
+        """
         raise NotImplementedError
 
 

@@ -69,17 +69,14 @@ class DBCommand(BaseCommand):
         self.print_help()
 
     def get_models(self, *packages):
-        """Similar to db.get_models but returns a tuple, (list of models, 
+        """Similar to `db.get_models` but returns a tuple, (list of models, 
         list of models referenced from other packages)
         
         Where list of models will be sorted according to relationships to ensure
         a model comes next to models it referencing.
         
-        Args:
-            *packages: package names
-            
-        Returns:
-            tuple
+        :param packages: sequence of package names
+        :returns: a tuple
         """
         models = db.get_models(*packages)
         

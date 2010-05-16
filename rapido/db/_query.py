@@ -8,8 +8,8 @@ __all__ = ('Query',)
 
 
 class Query(object):
-    """The query object. It provides methods to filter and fetch records
-    from the database with simple pythonic conditions.
+    """The `Query` class provides methods to filter and fetch records from the 
+    database with simple pythonic conditions.
 
     >>> users = Query(User).filter("name = :name and age > :age", name="some", age=18)
     >>> users.order("-age")
@@ -17,20 +17,27 @@ class Query(object):
     >>> for user in first_ten:
     >>>     print "Name:", user.name
 
-    The query string should not contain literal values but named parameters should be
-    used to pass values.
+    The query string should not contain literal values but named parameters should
+    be used to pass values.
 
-    Also, `=` has special meaning, it stands for case-insensitive match (ilike in some dbms).
-    You should use `==` for exact match.
+    Also, `=` has special meaning, it stands for case-insensitive match (ilike in 
+    some dbms). You should use `==` for exact match.
+    
+    An instance of :class:`Query` can be constructed by passing :class:`Model`
+    subclass as first argument. The contructor also accept a callable as a second
+    argument to apply map on the result set.
+    
+    >>> names = Query(User, lambda obj: obj.name).filter('name = :name', name='some').fetch(-1)
+    >>> print names
+    ['some', 'someone', 'some1']
+    
+    :param model: a model, subclass of :class:`Model`
+    :param mapper: a `callback` function to map query result
     """
 
     def __init__(self, model, mapper=None):
-        """Create a new Query for the given model. The result set will be mapped
-        with the given mapper.
-
-        Args:
-            model: the model
-            mapper: a callback function to map query result
+        """Create a new instance of :class:`Query` for the given `model`. The result 
+        set will be mapped with the given mapper.
         """
         if mapper and not callable(mapper):
             raise TypeError('mapper should be callable')
@@ -48,17 +55,18 @@ class Query(object):
         return obj
 
     def filter(self, query, **kw):
-        """Return a new Query instance with the given query ANDed with current 
-        instance query set.
+        """Return a new :class:`Query` instance with the given query ANDed with 
+        current query set.
         
-        >>> Query(User).filter("name = :name and age >= :age", name="some", age=20)
+        >>> q = Query(User).filter('name = :name and age >= :age', name='some', age=20)
+        >>> q1 = q.filter('dob >= :dob', dob='2001-01-01')
+        >>> q2 = q.filter('dob < :dob', dob='2001-01-01')
+        
+        :param query: The query string
+        :keyword kw: Mapping to the keywords bound the given query
 
-        Args:
-            query: the query string
-            **kw: mapping to the keywords bound the given query
-
-        Returns:
-            a new instance of Query
+        :raises: :class:`DatabaseError`, :class:`FieldError`
+        :returns: A new instance of :class:`Query`
         """
         obj = deepcopy(self)
         obj._all.append(obj._parser.parse(query, **kw))
@@ -69,6 +77,8 @@ class Query(object):
         
         >>> q = Query(User).filter("name = :name and age >= :age", name="some", age=20)
         >>> q.order("-age")
+        
+        :param spec: field name, if prefixed with `-` order by DESC else ASC
         """
         self._order = "ORDER BY"
         if spec.startswith('-'):
@@ -86,9 +96,13 @@ class Query(object):
         >>> for obj in q.fetch(20):
         >>>     print obj.name
 
-        Args:
-            limit: number of records to be fetch, if -1 fetch all
-            offset: offset from where to fetch records should be >= 0
+        :param limit: number of records to be fetch, if -1 fetch all
+        :param offset: offset from where to fetch records should be >= 0
+        :type limit: integer
+        :type offset: integer or None
+        
+        :returns: list of model instances or content if mapper is applied
+        :rtype: list
         """
         from rapido.db.engines import database
 
@@ -129,8 +143,7 @@ class Query(object):
         will update all the User records matching name like 'some' by updating
         `lang` to `en_EN`.
 
-        Args:
-            **kw: keyword args mapping to the field properties
+        :keyword kw: keyword args mapping to the field properties
         """
         for obj in self.fetch(-1):
             for k, v in kw.items():
@@ -139,7 +152,11 @@ class Query(object):
             obj.save()
 
     def _build_select(self, what, limit=None, offset=None):
-        """Build the select query. For internal use only.
+        """Build the select query.
+        
+        .. warning::
+            
+            For internal use only.
         """
         query = "SELECT %s FROM \"%s\"" % (what, self._model._meta.table)
         if self._all:
@@ -206,13 +223,13 @@ class Parser(object):
     def statement(self, query, params):
         """Process the simple query statement.
 
-        Args:
-            query: query substring, splited by `split`
-            params: substitution values
-
-        Returns:
-            a tuple (str, list) where str is the statement and list of values
-            to be bounded to the statement.
+        :param query: query substring, splited by `split`
+        :param params: substitution values
+        
+        :returns:
+            A tuple `(str, list)` where `str` is the statement and list of
+            values to be bounded to the statement.
+        :rtype: tuple
         """
         try:
             name, op, __var, var = self.pat_stmt.match(query).groups()

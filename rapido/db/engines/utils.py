@@ -14,12 +14,11 @@ def datetime_to_python(value):
     current timezone.
 
     >>> datetime_to_python('2010-05-07 11:34:00.530134-05')
-    ... datetime.datetime(2010, 5, 7, 11, 34, 00, 530134)
+    datetime.datetime(2010, 5, 7, 11, 34, 00, 530134)
     >>> datetime_to_python('2009-07-11 09:57:00-05')
-    ... datetime.datetime(2009, 7, 11, 9, 57, 0)
+    datetime.datetime(2009, 7, 11, 9, 57, 0)
 
-    Returns:
-        datetime.datetime instance
+    :returns: datetime.datetime instance
     """
     if not value: return None
     times = list(re_datetime.match(value).groups())
