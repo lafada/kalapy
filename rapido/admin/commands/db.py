@@ -1,13 +1,14 @@
 import sys
 from optparse import make_option
 
-from rapido.conf import settings
+
 from rapido.admin import BaseCommand
+from rapido.conf import settings
+from rapido.conf.loader import loader
 
 from rapido import db
 from rapido.db import transaction
 from rapido.db.engines import database
-
 
 try:
     from pygments import highlight
@@ -56,6 +57,8 @@ class DBCommand(BaseCommand):
         
         database.connect()
         try:
+            # load packages
+            loader.load()
             if options.get('info'):
                 return self.info(*args)
             if options.get('sync'):

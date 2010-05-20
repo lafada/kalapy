@@ -3,7 +3,6 @@ import os
 from rapido.admin import BaseCommand, get_command
 from rapido.conf import settings
 from rapido.test import run_tests
-from rapido import db
 
 class TestCommand(BaseCommand):
 

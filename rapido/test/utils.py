@@ -72,8 +72,11 @@ def run_tests(names, verbosity=1):
     """
 
     from rapido.db.engines import database
+    from rapido.conf.loader import loader
+
     database.connect()
     try:
+        loader.load() # load all packages
         suite = unittest.TestSuite()
         for name in names:
             suite.addTest(build_suite(name))

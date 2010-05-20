@@ -1,6 +1,5 @@
 import os
 
-from rapido import db
 from rapido.admin import BaseCommand
 
 
@@ -20,8 +19,9 @@ class ScriptCommand(BaseCommand):
         if not os.path.exists(script):
             self.error("%r doesn't exist." % script)
 
-        # this will populate the model cache
-        db.get_models()
+        # load the packages
+        from rapido.conf.loader import loader
+        loader.load()
 
         execfile(script, {'__name__': '__main__'})
 
@@ -33,8 +33,9 @@ class ShellCommand(BaseCommand):
 
     def execute(self, *args, **options):
 
-        # this will populate the model cache
-        db.get_models()
+        # load the packages
+        from rapido.conf.loader import loader
+        loader.load()
 
         imported_objects = {}
         try: # Try activating rlcompleter, because it's handy.
@@ -47,3 +48,4 @@ class ShellCommand(BaseCommand):
 
         import code
         code.interact(local=imported_objects)
+

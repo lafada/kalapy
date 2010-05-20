@@ -16,38 +16,19 @@ class ModelCache(object):
     """A class to manage cache of all models.
     """
 
-    # Use the Borg pattern to share state between all instances. Details at
-    # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/66531.
+    # Borg pattern
     __shared_state = dict(
-            cache = OrderedDict(),
-            aliases = {},
-            packages = {},
-            loaded = False,
-            resolved = False,
-            lock = threading.RLock(),
-        )
+        cache = {},
+        aliases = {},
+        packages = {},
+        resolved = False,
+    )
 
     def __init__(self):
         self.__dict__ = self.__shared_state
 
-    def _populate(self):
-        """Populate the cache with defined models in all `INSTALLED_PACKAGES`.
-        """
-        if self.loaded:
-            return
-        self.lock.acquire()
-        try:
-            for package in settings.INSTALLED_PACKAGES:
-                if package in self.packages: # deal with recursive import
-                    continue
-                self.packages[package] = []
-                import_module('models', package)
-            self.loaded = True
-            self._resolve_references()
-        finally:
-            self.lock.release()
 
-    def _resolve_references(self):
+    def resolve_references(self):
         """Prepare all reference fields for the registered models.
         """
 
@@ -85,12 +66,6 @@ class ModelCache(object):
         :rtype: :class:`ModelType` or None
         
         """
-        return self._get_model(model_name, package_name=package_name, seed=True)
-
-    def _get_model(self, model_name, package_name=None, seed=False):
-        if seed:
-            self._populate()
-
         if isinstance(model_name, ModelType):
             model_name = model_name._meta.name
 
@@ -100,18 +75,15 @@ class ModelCache(object):
         except KeyError:
 
             if package_name:
-                return self._get_model('%s.%s' % (package_name, model_name))
+                return self.get_model('%s.%s' % (package_name, model_name))
 
             if not package_name: # try to resolve package_name
-                import inspect
-                frame = inspect.currentframe().f_back.f_back
                 try:
-                    package_name = frame.f_globals.get('__package__').split('.')[0]
-                    return self._get_model(model_name, package_name)
+                    namespace = sys._getframe().f_back.f_back.f_globals
+                    package_name = namespace.get('__package__').split('.')[0]
+                    return self.get_model(model_name, package_name)
                 except:
                     pass
-                finally:
-                    del frame
             
             raise KeyError('No such model %r' % model_name)
 
@@ -124,7 +96,6 @@ class ModelCache(object):
         
         :returns: list of models
         """
-        self._populate()
         result = []
         for package in packages or self.packages:
             try:
@@ -138,6 +109,8 @@ class ModelCache(object):
         
         :param cls: the model class
         """
+        assert not self.resolved, 'Cache is resolved, can\'t register new models'
+
         package, name = cls._meta.package, cls._meta.name
         names = self.packages.setdefault(package, [])
         if name not in names:
@@ -213,7 +186,7 @@ class ModelType(type):
         meta = getattr(parents[0], '_meta', None) or Options()
 
         try:
-            parent = cache._get_model(meta.name) if meta.name else None
+            parent = cache.get_model(meta.name) if meta.name else None
         except KeyError:
             parent = None
 
