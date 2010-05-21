@@ -1,4 +1,4 @@
-import types
+import os, types
 
 from rapido.conf import default
 
@@ -26,6 +26,7 @@ class Settings(object):
         """Update the settings with provided settings_module.
         """
         self.__update(settings_module)
+        self.PROJECT_DIR = os.path.dirname(settings_module.__file__)
         self.__freezed = True
 
     def __setattr__(self, name, value):
