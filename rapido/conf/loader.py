@@ -82,43 +82,6 @@ class Loader(object):
         self.load()
         return self.packages.keys()
 
-    def get_static_dirs(self):
-        result = {}
-        for package, registry in self.packages.items():
-            if 'static' in registry:
-                result['/static/%s' % package.lower()] = registry['static']
-        return result
-
-    def get_dirs(self, name, prefix='', absolute=False, toplevel=False):
-        """Return all the dirs found by the given name withing the installed
-        packages.
-
-        For example::
-
-            >>> get_dirs('static', prefix='/static')
-            >>> get_dirs('tamplates')
-
-        :param name: directory name
-        :param prefix: package_name prefix
-        :param absolute: if True return the absolute paths
-        :param toplevel: if True also include top level dir
-
-        :returns: 
-            a dict with package_name as key prefixed with the given prefix and full
-            path to the dir.
-        """
-        dirs = {}
-        abspath = os.path.abspath if absolute else lambda a: a
-        if toplevel and os.path.exists(name):
-            key = prefix if prefix else '.'
-            dirs[key] = abspath(name)
-        for package in self.packages:
-            path = os.path.join(package, name)
-            if os.path.exists(path):
-                key = '%s/%s' % (prefix, package) if prefix else name
-                dirs[key] = abspath(path)
-        return dirs
-
 
 loader = Loader()
 get_package = loader.get_package
