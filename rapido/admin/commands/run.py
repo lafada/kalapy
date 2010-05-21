@@ -1,11 +1,8 @@
 import os
 from optparse import make_option
-from wsgiref import simple_server
 
-from rapido import db
 from rapido.admin import BaseCommand
-
-from rapido.web import Application
+from rapido.web import simple_server
 
 
 class RunServer(BaseCommand):
@@ -25,9 +22,8 @@ class RunServer(BaseCommand):
     )
 
     def execute(self, *args, **options):
-        host = options.get('host', 'localhost')
+        host = options.get('host', '127.0.0.1')
         port = int(options.get('port', 8080))
-        package = Application()
-        server = simple_server.make_server(host, port, package)
-        print 'Serving on http://%s:%s' % (host, port)
-        server.serve_forever()
+        use_reloader = not options.get('no_reload', True)
+        simple_server(host, port, use_reloader)
+

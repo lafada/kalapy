@@ -1,132 +1,105 @@
-"""
-This module implements wsgi complient package and request, response classes.
-"""
+import types
 
-import sys, types, cgi, traceback
-
-import webob
-from webob.exc import *
-
-from _routes import Route, resolve
+try:
+    import json
+except ImportError:
+    import simplejson as json
 
 
-__all__ = ('Request', 'Response', 'Handler', 'Application', 'HTTPException')
+from werkzeug import (
+    Request as BaseRequest,
+    Response as BaseResponse
+)
+
+from werkzeug import Local, LocalManager, ClosingIterator
+from werkzeug.routing import Rule, Map
+from werkzeug.exceptions import HTTPException
 
 
-class Request(webob.Request):
-    """The request class derived from `webob.Request` to ensure charset is set
-    to utf-8.
-    """
-    def __init__(self, environ):
-        super(Request, self).__init__(environ, charset='utf-8')
+uri_map = Map()
 
-        
-class Response(webob.Response):
-    """The response class derived from `webob.Response` to ensure charset is set
-    to utf-8.
-    """
-    
+
+def route(rule, **options):
+    def wrapper(func):
+        options.setdefault('methods', ('GET',))
+        options['endpoint'] = func
+        uri_map.add(Rule(rule, **options))
+        return func
+    return wrapper
+
+
+def render_template(template, **context):
+    pass
+
+
+def jsonify(obj):
+    return Response(json.dumps(obj), mimetype='package/json')
+
+
+class Request(BaseRequest):
+    pass
+
+
+class Response(BaseResponse):
+    pass
+
+
+class WSGIApplication(object):
+
     def __init__(self):
-        super(Response, self).__init__(charset='utf-8')
-        
-    def write(self, content):
-        """Write the content to the response.
-        """
-        #TODO: make sure that the content is converted to string
-        self.body_file.write(content)
-
-
-class HandlerType(type):
-    """The meta class for the Handler to ensure all the methods which are routed
-    should be referenced as unbound method to the route instance.
-    """
-    def __new__(cls, name, bases, attrs):
-        cls = super(HandlerType, cls).__new__(cls, name, bases, attrs)
-        
-        for name, item in attrs.items():
-            if isinstance(item, types.FunctionType) and \
-                    isinstance(getattr(item, 'route', None), Route):
-                item.route.handler = getattr(cls, name)
-                
-        return cls
-        
-
-class Handler(object):
-    """The base request handler class provides some useful methods to deal with
-    request, response as well as errors and redirection.
-    
-    :param request: an instance of :class:`Request`
-    :param response: an instance of :class:`Response`
-    """
-    
-    __metaclass__ = HandlerType
-    
-    def __init__(self, request, response):
-        """Create a new instance of the Handler
-        """
-        self.request = request
-        self.response = response
-        
-    def write(self, content):
-        """Write the content to the response body.
-        """
-        self.response.body_file.write(content)
-        
-    def redirect(self, uri):
-        """Redirect to the given uri
-        """
-        raise NotImplementedError('Not implemented yet')
-
-
-class Application(object):
-    """A WSGI compatible package class handles request against the 
-    registered routes.
-    """
-    
-    def __init__(self):
-        """Create a new instance of the `Application`.
-        """
         pass
 
-    def handle(self, request, response):
-        """Handle the request resolving against the registered routes.
-        
-        :param request: An instance of Request
-        :param response: An instance of Response
-            
-        :raises:
-            `HTTPException` or exception raised by the handler function
-        """
-        path = request.path_info
-        method = request.method
-        
-        route = resolve(path, {'REQUEST_METHOD': method})
+    def make_response(self, rv):
+        if rv is None:
+            raise ValueError('Handler function must return a response')
+        if isinstance(rv, Response):
+            return rv
+        if isinstance(rv, basestring):
+            return Response(rv)
+        if isinstance(rv, tuple):
+            return Response(*tuple)
+        if isinstance(rv, dict):
+            return jsonify(rv)
+        if isinstance(rv, types.GeneratorType):
+            return Response(rv)
+        raise ValueError('Handler has returned unsupported type %r' % type(rv).__name__)
 
-        if not route:
-            raise Exception('not found: %s' % path)
-
-        func = route['handler']
-        varargs = route.get('varargs', ())
-        keywords = route.get('keywords', {})
-
-        if hasattr(func, 'im_class'):
-            controller = func.im_class(request, response)
-            varargs = (controller,) + varargs
-
-        func(*varargs, **keywords)
-    
-    def __call__(self, environ, start_response):
-        
-        request = Request(environ)
-        response = Response()
-        
+    def dispatch(self, environ, start_response):
+        local.package = self
+        local.request = request = Request(environ)
+        local.uri_adapter = adapter = uri_map.bind_to_environ(environ)
         try:
-            self.handle(request, response)
+            endpoint, view_args = adapter.match()
+            response = self.make_response(endpoint(**view_args))
         except HTTPException, e:
             response = e
-        except Exception, e:
-            lines = ''.join(traceback.format_exception(*sys.exc_info()))
-            response.body = '<pre>%s</pre>' % cgi.escape(lines, quote=True)
-            
-        return response(environ, start_response)
+
+        return ClosingIterator(response(environ, start_response),
+                [local_manager.cleanup])
+
+    def __call__(self, environ, start_response):
+        return self.dispatch(environ, start_response)
+
+
+def simple_server(host, port, use_reloader=False):
+    """Run a simple server for development purpose.
+    """
+    from werkzeug import run_simple
+    from rapido.conf import settings
+    from rapido.conf.loader import loader
+
+    # load packages
+    loader.load()
+    
+    # create a wsgi package
+    package = WSGIApplication()
+    debug = settings.DEBUG
+
+    run_simple(host, port, package, use_reloader=use_reloader, use_debugger=debug)
+
+
+local = Local()
+local_manager = LocalManager([local])
+
+request = local('request')
 
