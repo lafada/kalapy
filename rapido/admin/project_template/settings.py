@@ -42,3 +42,17 @@ USE_I18N = True
 INSTALLED_PACKAGES = (
 )
 
+# Application options (subdomain, submount etc). For example::
+# 
+# PACKAGE_OPTIONS = {
+#     'wiki': dict(subdomain='wiki'),
+#     'blog': dict(subdomain='blog'),
+#     'foo': dict(submount='/foo'),
+# }
+#
+PACKAGE_OPTIONS = {
+}
+
+# Deployment server name (e.g. example.com)
+SERVERNAME = 'localhost'
+

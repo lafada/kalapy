@@ -16,3 +16,9 @@ USE_I18N = True
 
 INSTALLED_PACKAGES = (
 )
+
+PACKAGE_OPTIONS = {
+}
+
+SERVERNAME = ''
+

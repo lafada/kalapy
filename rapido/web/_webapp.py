@@ -12,7 +12,7 @@ from werkzeug import (
 )
 
 from werkzeug import Local, LocalManager, ClosingIterator
-from werkzeug.routing import Rule, Map
+from werkzeug.routing import Rule, Map, Subdomain, Submount
 from werkzeug.exceptions import HTTPException
 from werkzeug import Href, redirect as _redirect
 
@@ -28,6 +28,28 @@ uri_map = Map()
 view_funcs = {}
 
 
+def build_rule(rule, func, **options):
+    options.setdefault('methods', ('GET',))
+    endpoint = options.setdefault(
+        'endpoint', '%s.%s' % (func.__module__, func.__name__))
+        
+    package_name = func.__module__.split('.', 1)[0]
+    appopt = settings.PACKAGE_OPTIONS.get(package_name, {})
+    subdomain = appopt.get('subdomain')
+    submount = appopt.get('submount')
+    
+    if subdomain:
+        options.setdefault('subdomain', subdomain)
+
+    rule = Rule(rule, **options)
+    view_funcs[endpoint] = func
+        
+    if submount:
+        return Submount(submount, [rule])
+    
+    return rule
+
+
 def route(rule, **options):
     """A decorator to define a routing rule for request handler functions.
     
@@ -35,11 +57,7 @@ def route(rule, **options):
     :param options: rule options, like methods, defaults etc.
     """
     def wrapper(func):
-        options.setdefault('methods', ('GET',))
-        endpoint = options.setdefault(
-            'endpoint', '%s.%s' % (func.__module__, func.__name__))
-        view_funcs[endpoint] = func
-        uri_map.add(Rule(rule, **options))
+        uri_map.add(build_rule(rule, func, **options))
         return func
     return wrapper
 
@@ -160,7 +178,8 @@ class WSGIApplication(object):
 
     def dispatch(self, environ, start_response):
         local.request = request = Request(environ)
-        local.uri_adapter = adapter = uri_map.bind_to_environ(environ)
+        local.uri_adapter = adapter = uri_map.bind_to_environ(
+                                environ, server_name=settings.SERVERNAME)
         try:
             endpoint, args = adapter.match()
             request.endpoint = endpoint
