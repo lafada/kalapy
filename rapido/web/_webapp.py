@@ -36,8 +36,8 @@ def route(rule, **options):
     """
     def wrapper(func):
         options.setdefault('methods', ('GET',))
-        endpoint = '%s.%s' % (func.__module__, func.__name__)
-        options['endpoint'] = endpoint
+        endpoint = options.setdefault(
+            'endpoint', '%s.%s' % (func.__module__, func.__name__))
         view_funcs[endpoint] = func
         uri_map.add(Rule(rule, **options))
         return func
@@ -61,7 +61,7 @@ def uri(path, **names):
     :param path: path or endpoint
     :param names: names to be used to generate uri
     """
-    if path == 'static' or '.' in path:
+    if path == 'static' or path in view_funcs:
         return local.uri_adapter.build(path, names)
     return Href(path)(**names)
 
