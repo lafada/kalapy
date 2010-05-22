@@ -14,6 +14,7 @@ from werkzeug import (
 from werkzeug import Local, LocalManager, ClosingIterator
 from werkzeug.routing import Rule, Map
 from werkzeug.exceptions import HTTPException
+from werkzeug import Href, redirect as _redirect
 
 from jinja2 import Environment, FileSystemLoader, Markup, escape
 
@@ -22,6 +23,9 @@ from rapido.conf import settings
 
 #: uri routing map
 uri_map = Map()
+
+#: cache for endpoint and views
+view_funcs = {}
 
 
 def route(rule, **options):
@@ -32,19 +36,34 @@ def route(rule, **options):
     """
     def wrapper(func):
         options.setdefault('methods', ('GET',))
-        options['endpoint'] = func
+        endpoint = '%s.%s' % (func.__module__, func.__name__)
+        options['endpoint'] = endpoint
+        view_funcs[endpoint] = func
         uri_map.add(Rule(rule, **options))
         return func
     return wrapper
 
 
 def uri(path, **names):
-    """Generate uri for the given path and names.
+    """Generate uri for the given path or endpoint and names.
     
-    :param path: uri path
+    >>> uri('some/thing', name='some')
+    'some/thing?name=some'
+    >>> uri('/some/thing' name='some')
+    '/some/thing?name=some'
+    >>> uri('hello.web.find', key='somekey', name='name')
+    '/find/somekey?name=name'
+    >>> uri('static', filename='css/some.css')
+    '/static/css/some.css'
+    >>> uri('hello.static', filename='css/some.css')
+    '/hello/static/css/some.css'
+    
+    :param path: path or endpoint
     :param names: names to be used to generate uri
     """
-    pass
+    if path == 'static' or '.' in path:
+        return local.uri_adapter.build(path, names)
+    return Href(path)(**names)
 
 
 def redirect(path, **names):
@@ -53,7 +72,7 @@ def redirect(path, **names):
     :param path: uri path
     :param names: names to be used to generate uri
     """
-    pass
+    return _redirect(uri(path, **names))
 
 
 jinja_env = Environment(
@@ -83,7 +102,8 @@ def render_template(template, **context):
     
     :returns: rendered string
     """
-    base = os.path.dirname(sys.modules[request.endpoint.__module__].__file__)
+    view_func = view_funcs[request.endpoint]
+    base = os.path.dirname(sys.modules[view_func.__module__].__file__)
     template_path = os.path.abspath(os.path.join(base, template))
     template_path = os.path.relpath(template_path, settings.PROJECT_DIR)
     
@@ -136,7 +156,7 @@ class WSGIApplication(object):
             return jsonify(rv)
         if isinstance(rv, types.GeneratorType):
             return Response(rv)
-        raise ValueError('Handler has returned unsupported type %r' % type(rv).__name__)
+        return Response.force_type(rv, request.environ)
 
     def dispatch(self, environ, start_response):
         local.request = request = Request(environ)
@@ -145,7 +165,8 @@ class WSGIApplication(object):
             endpoint, args = adapter.match()
             request.endpoint = endpoint
             request.endpoint_args = args
-            response = self.make_response(endpoint(**args))
+            view_func = view_funcs[endpoint]
+            response = self.make_response(view_func(**args))
         except HTTPException, e:
             response = e
 
