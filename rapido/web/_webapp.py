@@ -11,7 +11,7 @@ from werkzeug import (
     Response as BaseResponse
 )
 
-from werkzeug import Local, LocalManager, ClosingIterator
+from werkzeug import Local, LocalManager, ClosingIterator, SharedDataMiddleware
 from werkzeug.routing import Rule, Map, Subdomain, Submount
 from werkzeug.exceptions import HTTPException
 from werkzeug import Href, redirect as _redirect
@@ -28,12 +28,20 @@ uri_map = Map()
 view_funcs = {}
 
 
-def build_rule(rule, func, **options):
+def add_rule(rule, func=None, package_name=None, **options):
+
     options.setdefault('methods', ('GET',))
-    endpoint = options.setdefault(
-        'endpoint', '%s.%s' % (func.__module__, func.__name__))
-        
-    package_name = func.__module__.split('.', 1)[0]
+
+    if func is not None:
+        package_name = func.__module__.split('.', 1)[0]
+        endpoint = options.setdefault('endpoint', '%s.%s' % (
+            func.__module__, func.__name__))
+    else:
+        endpoint = options.get('endpoint')
+
+    if not endpoint:
+        raise ValueError('No enough options provided.')
+
     appopt = settings.PACKAGE_OPTIONS.get(package_name, {})
     subdomain = appopt.get('subdomain')
     submount = appopt.get('submount')
@@ -42,12 +50,11 @@ def build_rule(rule, func, **options):
         options.setdefault('subdomain', subdomain)
 
     rule = Rule(rule, **options)
-    view_funcs[endpoint] = func
-        
     if submount:
-        return Submount(submount, [rule])
-    
-    return rule
+        rule = Submount(submount, [rule])
+
+    view_funcs[endpoint] = func
+    uri_map.add(rule)
 
 
 def route(rule, **options):
@@ -57,7 +64,7 @@ def route(rule, **options):
     :param options: rule options, like methods, defaults etc.
     """
     def wrapper(func):
-        uri_map.add(build_rule(rule, func, **options))
+        add_rule(rule, func, **options)
         return func
     return wrapper
 
@@ -79,7 +86,7 @@ def uri(path, **names):
     :param path: path or endpoint
     :param names: names to be used to generate uri
     """
-    if path == 'static' or path in view_funcs:
+    if path in view_funcs:
         return local.uri_adapter.build(path, names)
     return Href(path)(**names)
 
@@ -141,7 +148,22 @@ class Response(BaseResponse):
     """
     default_mimetype = 'text/html'
 
-    
+
+class StaticMiddleware(SharedDataMiddleware):
+
+    def __init__(self, package):
+        static_dirs = {'/static': os.path.join(settings.PROJECT_DIR, 'static')}
+        add_rule('/static/<filename>', endpoint='static', build_only=True)
+
+        for package in settings.INSTALLED_PACKAGES:
+            package_dir = os.path.join(settings.PROJECT_DIR, package)
+            if os.path.exists(package_dir):
+                static_dirs['/%s/static' % package] = os.path.join(package_dir, 'static')
+                add_rule('/%s/static/<filename>' % package, 
+                        endpoint='%s.static' % package, package_name=package, build_only=True)
+        super(StaticMiddleware, self).__init__(package, static_dirs)
+
+
 class WSGIApplication(object):
     """WSGIApplication is responsible to dispatch requests and return proper
     response and ensures that all the request specific cleanup is done when
@@ -149,10 +171,10 @@ class WSGIApplication(object):
     """
 
     def __init__(self):
-
-        #TODO: register static data middleware
-        #TODO: register settings.MIDDLEWARE
-
+        
+        #TODO: register settings.MIDDLEWARES
+        
+        self.dispatch = StaticMiddleware(self.dispatch)
         local.package = self
 
         self.jinja_env = Environment(
