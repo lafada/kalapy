@@ -93,14 +93,6 @@ def redirect(path, **names):
     return _redirect(uri(path, **names))
 
 
-jinja_env = Environment(
-        loader=FileSystemLoader(settings.PROJECT_DIR),
-        autoescape=True,
-        extensions=['jinja2.ext.autoescape', 'jinja2.ext.with_'])
-
-#TODO: update jinja_env.globals
-#TODO: update jimja_env.filters
-
 def render_template(template, **context):
     """Render the template with the given context.
     
@@ -125,7 +117,7 @@ def render_template(template, **context):
     template_path = os.path.abspath(os.path.join(base, template))
     template_path = os.path.relpath(template_path, settings.PROJECT_DIR)
     
-    return jinja_env.get_template(template_path).render(context)
+    return local.package.jinja_env.get_template(template_path).render(context)
 
 
 def jsonify(obj):
@@ -157,9 +149,16 @@ class WSGIApplication(object):
     """
 
     def __init__(self):
+
         #TODO: register static data middleware
         #TODO: register settings.MIDDLEWARE
-        pass
+
+        local.package = self
+
+        self.jinja_env = Environment(
+            loader=FileSystemLoader(settings.PROJECT_DIR),
+            autoescape=True,
+            extensions=['jinja2.ext.autoescape', 'jinja2.ext.with_'])
 
     def make_response(self, rv):
         if rv is None:
@@ -177,6 +176,7 @@ class WSGIApplication(object):
         return Response.force_type(rv, request.environ)
 
     def dispatch(self, environ, start_response):
+        local.package = self
         local.request = request = Request(environ)
         local.uri_adapter = adapter = uri_map.bind_to_environ(
                                 environ, server_name=settings.SERVERNAME)
