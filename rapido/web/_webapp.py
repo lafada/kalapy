@@ -5,20 +5,27 @@ try:
 except ImportError:
     import simplejson as json
 
-
 from werkzeug import (
     Request as BaseRequest,
-    Response as BaseResponse
+    Response as BaseResponse,
+    ClosingIterator, 
+    SharedDataMiddleware,
+    Href, 
+    redirect as _redirect
 )
 
-from werkzeug import Local, LocalManager, ClosingIterator, SharedDataMiddleware
-from werkzeug.routing import Rule, Map, Subdomain, Submount
-from werkzeug.exceptions import HTTPException
-from werkzeug import Href, redirect as _redirect
+from werkzeug.routing import Rule, Map, Submount
+from werkzeug.exceptions import HTTPException, NotFound
 
 from jinja2 import Environment, FileSystemLoader, Markup, escape
 
 from rapido.conf import settings
+from rapido.utils.local import local, local_manager
+
+
+__all__ = ('route', 'uri', 'redirect', 'render_template', 'jsonify', 'request', 
+           'simple_server', 'Request', 'Response', 'WSGIApplication',
+           'HTTPException', 'NotFound', 'Markup', 'escape')
 
 
 #: uri routing map
@@ -29,7 +36,6 @@ view_funcs = {}
 
 
 def add_rule(rule, func=None, package_name=None, **options):
-
     options.setdefault('methods', ('GET',))
 
     if func is not None:
@@ -164,14 +170,30 @@ class StaticMiddleware(SharedDataMiddleware):
         super(StaticMiddleware, self).__init__(package, static_dirs)
 
 
+class WSGIApplicationType(type):
+    """Meta class to ensure singleton WSGIApplication
+    """
+    INSTANCE = None
+    def __call__(cls):
+        if cls.INSTANCE is None:
+            # load settings.INSTALLED_PACKAGES
+            from rapido.conf.loader import loader
+            loader.load()
+            # initialize WSGIApplication
+            cls.INSTANCE = super(WSGIApplicationType, cls).__call__()
+        return cls.INSTANCE
+
+
 class WSGIApplication(object):
     """WSGIApplication is responsible to dispatch requests and return proper
     response and ensures that all the request specific cleanup is done when
     the response is properly servered.
     """
 
+    __metaclass__ = WSGIApplicationType
+
     def __init__(self):
-        
+    
         #TODO: register settings.MIDDLEWARES
         
         self.dispatch = StaticMiddleware(self.dispatch)
@@ -218,6 +240,10 @@ class WSGIApplication(object):
         return self.dispatch(environ, start_response)
 
 
+#: context local :class:`Request` instance
+request = local('request')
+
+
 def simple_server(host='127.0.0.1', port=8080, use_reloader=False):
     """Run a simple server for development purpose.
     
@@ -228,20 +254,10 @@ def simple_server(host='127.0.0.1', port=8080, use_reloader=False):
     """
     from werkzeug import run_simple
     from rapido.conf import settings
-    from rapido.conf.loader import loader
-
-    # load packages
-    loader.load()
     
     # create a wsgi package
     package = WSGIApplication()
     debug = settings.DEBUG
 
     run_simple(host, port, package, use_reloader=use_reloader, use_debugger=debug)
-
-
-local = Local()
-local_manager = LocalManager([local])
-
-request = local('request')
 
