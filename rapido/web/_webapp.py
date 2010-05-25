@@ -10,8 +10,7 @@ from werkzeug import (
     Response as BaseResponse,
     ClosingIterator, 
     SharedDataMiddleware,
-    Href, 
-    redirect as _redirect
+    Href, redirect,
 )
 
 from werkzeug.routing import Rule, Map, Submount
@@ -23,13 +22,13 @@ from rapido.conf import settings
 from rapido.utils.local import local, local_manager
 
 
-__all__ = ('route', 'uri', 'redirect', 'render_template', 'jsonify', 'request', 
-           'simple_server', 'Request', 'Response', 'WSGIApplication',
+__all__ = ('route', 'url_for', 'redirect', 'render_template', 'jsonify', 
+           'request', 'simple_server', 'Request', 'Response', 'WSGIApplication',
            'HTTPException', 'NotFound', 'Markup', 'escape')
 
 
-#: uri routing map
-uri_map = Map()
+#: url routing map
+url_map = Map()
 
 #: cache for endpoint and views
 view_funcs = {}
@@ -60,7 +59,7 @@ def add_rule(rule, func=None, package_name=None, **options):
         rule = Submount(submount, [rule])
 
     view_funcs[endpoint] = func
-    uri_map.add(rule)
+    url_map.add(rule)
 
 
 def route(rule, **options):
@@ -75,35 +74,15 @@ def route(rule, **options):
     return wrapper
 
 
-def uri(path, **names):
-    """Generate uri for the given path or endpoint and names.
+def url_for(endpoint, **values):
+    """Generate url for the given endpoint and values.
     
-    >>> uri('some/thing', name='some')
-    'some/thing?name=some'
-    >>> uri('/some/thing' name='some')
-    '/some/thing?name=some'
-    >>> uri('hello.web.find', key='somekey', name='name')
-    '/find/somekey?name=name'
-    >>> uri('static', filename='css/some.css')
-    '/static/css/some.css'
-    >>> uri('hello.static', filename='css/some.css')
-    '/hello/static/css/some.css'
-    
-    :param path: path or endpoint
-    :param names: names to be used to generate uri
+    :param endpoint: the endpoint of the URL
+    :param values: the variable arguments for the URL
+    :param _external: if `True`, abosolute URL will be generated
     """
-    if path in view_funcs:
-        return local.uri_adapter.build(path, names)
-    return Href(path)(**names)
-
-
-def redirect(path, **names):
-    """Redirect to the uri generated with the given path and names.
-    
-    :param path: uri path
-    :param names: names to be used to generate uri
-    """
-    return _redirect(uri(path, **names))
+    external = values.pop('_extername', False)
+    return local.uri_adapter.build(endpoint, values, force_external=external)
 
 
 def render_template(template, **context):
@@ -153,7 +132,7 @@ class Response(BaseResponse):
     """The Response class
     """
     default_mimetype = 'text/html'
-
+    
 
 class StaticMiddleware(SharedDataMiddleware):
 
@@ -203,6 +182,8 @@ class WSGIApplication(object):
             loader=FileSystemLoader(settings.PROJECT_DIR),
             autoescape=True,
             extensions=['jinja2.ext.autoescape', 'jinja2.ext.with_'])
+        #TODO: provide more jinja_env.globals
+        self.jinja_env.globals['url_for'] = url_for
 
     def make_response(self, rv):
         if rv is None:
@@ -222,7 +203,7 @@ class WSGIApplication(object):
     def dispatch(self, environ, start_response):
         local.package = self
         local.request = request = Request(environ)
-        local.uri_adapter = adapter = uri_map.bind_to_environ(
+        local.uri_adapter = adapter = url_map.bind_to_environ(
                                 environ, server_name=settings.SERVERNAME)
         try:
             endpoint, args = adapter.match()
