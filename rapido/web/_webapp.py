@@ -38,14 +38,19 @@ def add_rule(rule, func=None, package_name=None, **options):
     options.setdefault('methods', ('GET',))
 
     if func is not None:
-        package_name = func.__module__.split('.', 1)[0]
-        endpoint = options.setdefault('endpoint', '%s.%s' % (
-            func.__module__, func.__name__))
+        options['endpoint'] = endpoint = '%s.%s' % (
+                func.__module__.replace('views.', '', 1), func.__name__)
     else:
         endpoint = options.get('endpoint')
 
     if not endpoint:
         raise ValueError('No enough options provided.')
+
+    package_name = None
+    try:
+        package_name = endpoint.split('.')[0]
+    except:
+        pass
 
     appopt = settings.PACKAGE_OPTIONS.get(package_name, {})
     subdomain = appopt.get('subdomain')
@@ -64,6 +69,26 @@ def add_rule(rule, func=None, package_name=None, **options):
 
 def route(rule, **options):
     """A decorator to define a routing rule for request handler functions.
+
+    It automatically calculates endpoint for the view function. If the view
+    function is defined in `package/views.py` then the endpoint would be
+    `package.func_name` else if defined in `package/views/module.py` then
+    the endpoint would be `package.module.func_name`.
+
+    For example (hello/views.py)::
+        
+        @web.route('/')
+        def index():
+            ...
+
+    The endpoint for `index` would be `hello.index` and in the case of
+    submodules (hello/views/some.py)::
+
+        @web.route('/')
+        def index():
+            ...
+
+    The endpoint would be `hello.some.index`.
     
     :param rule: rule pattern
     :param options: rule options, like methods, defaults etc.
@@ -81,6 +106,11 @@ def url_for(endpoint, **values):
     :param values: the variable arguments for the URL
     :param _external: if `True`, abosolute URL will be generated
     """
+    if endpoint.startswith('.'):
+        endpoint = '%s%s' % (request.module, endpoint)
+    elif endpoint.count('.') < 2:
+        endpoint = '%s.%s' % (request.package, endpoint)
+    
     external = values.pop('_extername', False)
     return local.uri_adapter.build(endpoint, values, force_external=external)
 
@@ -125,7 +155,18 @@ def jsonify(obj):
 class Request(BaseRequest):
     """The Request class
     """
-    pass
+
+    endpoint = view_func = view_args = None
+
+    @property
+    def package(self):
+        if self.endpoint and '.' in self.endpoint:
+            return self.endpoint.split('.')[0]
+
+    @property
+    def module(self):
+        if self.endpoint and '.' in self.endpoint:
+            return self.endpoint.rsplit('.', 1)[0]
 
 
 class Response(BaseResponse):
@@ -208,7 +249,7 @@ class WSGIApplication(object):
         try:
             endpoint, args = adapter.match()
             request.endpoint = endpoint
-            request.endpoint_args = args
+            request.view_args = args
             view_func = view_funcs[endpoint]
             response = self.make_response(view_func(**args))
         except HTTPException, e:
