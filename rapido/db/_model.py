@@ -409,7 +409,7 @@ class Model(object):
         self._dirty = {}
 
         for field in self.fields().values():
-            if field.name in kw:
+            if field.name in kw and not field.empty(kw[field.name]):
                 value = kw[field.name]
             elif field.default is not None:
                 value = field.default
