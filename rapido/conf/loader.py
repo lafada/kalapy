@@ -42,7 +42,7 @@ class Loader(object):
 
         try:
             submodules = tuple(find_modules(fullname))
-        except ValueError:
+        except (ValueError, AttributeError):
             return result
 
         for module in submodules:
