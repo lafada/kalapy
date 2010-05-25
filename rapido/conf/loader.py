@@ -5,7 +5,7 @@ packages given in settings.INSTALLED_PACKAGES.
 import os
 
 from rapido.conf import settings
-from rapido.utils.implib import import_module
+from werkzeug import find_modules, import_string
 
 try:
     import threading as _threading
@@ -28,6 +28,29 @@ class Loader(object):
     def __init__(self):
         self.__dict__ = self.__shared_state
 
+
+    def load_modules(self, package, name):
+
+        modules = tuple(find_modules(package, include_packages=True))
+        fullname = '%s.%s' % (package, name)
+
+        result = []
+
+        if fullname in modules:
+            mod = import_string(fullname)
+            result.append(mod)
+
+        try:
+            submodules = tuple(find_modules(fullname))
+        except ValueError:
+            return result
+
+        for module in submodules:
+            mod = import_string(module)
+            result.append(mod)
+
+        return result
+
     def load(self, tests=False):
         """Load the installed packages.
 
@@ -43,21 +66,11 @@ class Loader(object):
                     continue
                 self.packages[package] = registry = {}
 
-                try: # load models module
-                    registry['models'] = import_module('models', package)
-                except ImportError:
-                    pass
-
-                try: # load web module
-                    registry['web'] = import_module('web', package)
-                except ImportError:
-                    pass
+                registry['models'] = self.load_modules(package, 'models')
+                registry['views'] = self.load_modules(package, 'views')
 
                 if tests:
-                    try: # load tests module
-                        registry['tests'] = import_module('tests', package)
-                    except ImportError:
-                        pass
+                    registry['tests'] = self.load_modules(package, 'tests')
 
             self.loaded = True
 

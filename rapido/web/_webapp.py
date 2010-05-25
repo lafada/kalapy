@@ -109,17 +109,17 @@ def render_template(template, **context):
     template_path = os.path.abspath(os.path.join(base, template))
     template_path = os.path.relpath(template_path, settings.PROJECT_DIR)
     
-    return local.package.jinja_env.get_template(template_path).render(context)
+    return local.application.jinja_env.get_template(template_path).render(context)
 
 
 def jsonify(obj):
     """Convert the given object into json string as the body of an instance of
-    :class:`Response` with mimetype set to `package/json`.
+    :class:`Response` with mimetype set to `application/json`.
     
     :param obj: an object that should be converted to json string
     :returns: an instance of :class:`Response`
     """
-    return Response(json.dumps(obj), mimetype='package/json')
+    return Response(json.dumps(obj), mimetype='application/json')
 
 
 class Request(BaseRequest):
@@ -136,7 +136,7 @@ class Response(BaseResponse):
 
 class StaticMiddleware(SharedDataMiddleware):
 
-    def __init__(self, package):
+    def __init__(self, application):
         static_dirs = {'/static': os.path.join(settings.PROJECT_DIR, 'static')}
         add_rule('/static/<filename>', endpoint='static', build_only=True)
 
@@ -146,7 +146,7 @@ class StaticMiddleware(SharedDataMiddleware):
                 static_dirs['/%s/static' % package] = os.path.join(package_dir, 'static')
                 add_rule('/%s/static/<filename>' % package, 
                         endpoint='%s.static' % package, package_name=package, build_only=True)
-        super(StaticMiddleware, self).__init__(package, static_dirs)
+        super(StaticMiddleware, self).__init__(application, static_dirs)
 
 
 class WSGIApplicationType(type):
@@ -176,7 +176,7 @@ class WSGIApplication(object):
         #TODO: register settings.MIDDLEWARES
         
         self.dispatch = StaticMiddleware(self.dispatch)
-        local.package = self
+        local.application = self
 
         self.jinja_env = Environment(
             loader=FileSystemLoader(settings.PROJECT_DIR),
@@ -201,7 +201,7 @@ class WSGIApplication(object):
         return Response.force_type(rv, request.environ)
 
     def dispatch(self, environ, start_response):
-        local.package = self
+        local.application = self
         local.request = request = Request(environ)
         local.uri_adapter = adapter = url_map.bind_to_environ(
                                 environ, server_name=settings.SERVERNAME)
@@ -236,9 +236,9 @@ def simple_server(host='127.0.0.1', port=8080, use_reloader=False):
     from werkzeug import run_simple
     from rapido.conf import settings
     
-    # create a wsgi package
-    package = WSGIApplication()
+    # create a wsgi application
+    application = WSGIApplication()
     debug = settings.DEBUG
 
-    run_simple(host, port, package, use_reloader=use_reloader, use_debugger=debug)
+    run_simple(host, port, application, use_reloader=use_reloader, use_debugger=debug)
 

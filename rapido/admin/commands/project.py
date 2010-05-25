@@ -95,3 +95,7 @@ class StartApp(BaseCommand):
             self.print_help()
             
         copy_template('package_template', name=name, verbose=self.verbose)
+
+        for d in ('static', 'templates',):
+            os.mkdir('%s/%s' % (name, d))
+
