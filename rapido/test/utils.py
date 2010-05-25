@@ -1,7 +1,5 @@
 import unittest
 
-from rapido.utils.implib import import_module
-
 
 __all__ = ('build_suite', 'run_tests')
 

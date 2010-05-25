@@ -1,7 +1,6 @@
 import os, sys, re, shutil, string
 
 from rapido.admin import BaseCommand, CommandError
-from rapido.utils.implib import import_module
 
 JUNK_FILE = re.compile('^(.*?)(\.swp|\.pyc|\.pyo|\~)$')
 
@@ -54,7 +53,7 @@ def copy_template(template, name, verbose=False):
         raise CommandError("Invalid name '%s'" % name)
     
     try:
-        import_module(name)
+        __import__(name)
         raise CommandError('name conflicts with existing python module.')
     except ImportError:
         pass

@@ -3,7 +3,6 @@ from types import FunctionType
 
 from rapido.conf import settings
 from rapido.utils.containers import OrderedDict
-from rapido.utils.implib import import_module
 
 from _fields import Field, AutoKey, FieldError
 from _query import Query

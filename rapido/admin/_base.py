@@ -1,7 +1,7 @@
 import os, sys
 from optparse import OptionParser, make_option
 
-from rapido.utils.implib import import_module
+from werkzeug import find_modules, import_string
 
 
 __all__ = ['CommandError', 'BaseCommand', 'get_commands', 'get_command']
@@ -15,10 +15,8 @@ def load_commands():
     """
     global _loaded
     if not _loaded:
-        cmddir = os.path.join(os.path.dirname(__file__), 'commands')
-        mods = [f[:-3] for f in os.listdir(cmddir) if f.endswith('.py') and not f.startswith('_')]
-        for m in mods:
-            import_module(m, 'rapido.admin.commands')
+        for m in find_modules('rapido.admin.commands'):
+            import_string(m)
         _loaded = True
     return _commands
 
