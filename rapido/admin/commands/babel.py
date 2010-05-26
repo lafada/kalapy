@@ -1,31 +1,35 @@
-from optparse import make_option
-from rapido.admin import BaseCommand
+from rapido.admin import ActionCommand
 
-#TODO: not implemented yet
 
-class BabelCommand(BaseCommand):
+class BabelCommand(ActionCommand):
+    """Perform i18n message catalog actions.
+    """
 
     name = 'babel'
-    help = 'Perform i18n message catalogs tasks.'
-    scope = 'package'
-
+    usage = '%name <action> [options]'
+    
     options = (
-        make_option('-i', '--init', help='Create catalogs',
-            dest='PACKAGES'),
-        make_option('-x', '--extract', help='Extract messages',
-            dest='PACKAGES'),
-        make_option('-u', '--update', help='Update message catalogs',
-            dest='PACKAGES'),
-        make_option('-c', '--compile', help='Compile message catalogs',
-            dest='PACKAGES'),
-        make_option("-l", "--locale", help="locale (e.g. en_US, fr_FR)",
-            dest="locale"),
-        make_option("-D", "--domain", help="message catalog domain",
-            dest="domain", default="messages"),
+        ('l', 'locale', '', 'locale (e.g. en_US, fr_FR)'),
+        ('d', 'domain', 'messages', 'message catalog domain'),
     )
 
-    exclusive = ('-i', '-x', '-u', '-c')
-
-    def execute(self, *args, **options):
+    def action_init(self, options, args):
+        """Create catalogs
+        """
+        pass
+    
+    def action_extract(self, options, args):
+        """Extract messages
+        """
+        pass
+    
+    def action_update(self, options, args):
+        """Update message catalogs
+        """
+        pass
+    
+    def action_compile(self, options, args):
+        """Compile message catalogs
+        """
         pass
 

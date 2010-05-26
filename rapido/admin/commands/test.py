@@ -1,21 +1,22 @@
 import os
 
-from rapido.admin import BaseCommand, get_command
+from rapido.admin import Command, execute_command
 from rapido.conf import settings
 from rapido.test import run_tests
 
-class TestCommand(BaseCommand):
-
+class TestCommand(Command):
+    """Run the specified tests names. A test name can be,
+    
+        package_name of an installed package or
+        package_name.TestClass or
+        package_name.TestClass.test_something
+    
+    If test names are not given run all the tests of the installed packages.
+    """
     name = 'test'
-    args = '[name [name [name [...]]]]'
-    help = ('Run the specified tests names. A test name can be,\n'
-            '  package_name of an installed package or\n'
-            '  package_name.TestClass or\n'
-            '  package_name.TestClass.test_something\n\n'
-            'If test names are not given run all the tests of the installed packages.')
-    scope = 'package'
+    usage = '%name [name [name [name [...]]]]'
 
-    def execute(self, *args, **options):
+    def execute(self, options, args):
         
         dbname = settings.DATABASE_NAME
         if settings.DATABASE_ENGINE == 'sqlite3':
@@ -30,9 +31,8 @@ class TestCommand(BaseCommand):
         if not args:
             raise self.error('No package installed yet.')
         
-        # sync tables
-        cmd = get_command('database')()
-        cmd.execute(sync=True)
+        # sync database tables
+        execute_command(['database', 'sync'])
         
-        run_tests(args, 2 if self.verbose else 0)
+        run_tests(args, 2 if options.verbose else 0)
 

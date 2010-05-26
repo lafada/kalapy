@@ -1,6 +1,6 @@
 import os, sys, re, shutil, string
 
-from rapido.admin import BaseCommand, CommandError
+from rapido.admin import Command
 
 JUNK_FILE = re.compile('^(.*?)(\.swp|\.pyc|\.pyo|\~)$')
 
@@ -64,36 +64,34 @@ def copy_template(template, name, verbose=False):
     os.path.walk(basedir, copy_helper, [basedir, name, verbose])
 
 
-class StartProject(BaseCommand):
-
+class StartProject(Command):
+    """start a new project
+    """
     name = "startproject"
-    help = "start a new project"
-    args = "<name>"
-    scope = "project"
+    usage = "%name <name>"
     
-    def execute(self, *args, **options):
-        try:
-            name = args[0]
-        except:
-            self.print_help()
-        
-        copy_template('project_template', name=name, verbose=self.verbose)
-        
-
-class StartApp(BaseCommand):
-    
-    name = "startpackage"
-    help = "start a new package"
-    args = "<name>"
-    scope = "package"
-    
-    def execute(self, *args, **options):
+    def execute(self, options, args):
         try:
             name = args[0]
         except:
             self.print_help()
             
-        copy_template('package_template', name=name, verbose=self.verbose)
+        copy_template('project_template', name=name, verbose=options.verbose)
+        
+
+class StartApp(Command):
+    """start a new package
+    """
+    name = "startpackage"
+    usage = "%name <name>"
+    
+    def execute(self, options, args):
+        try:
+            name = args[0]
+        except:
+            self.print_help()
+            
+        copy_template('package_template', name=name, verbose=options.verbose)
 
         for d in ('static', 'templates',):
             os.mkdir('%s/%s' % (name, d))

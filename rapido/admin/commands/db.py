@@ -1,8 +1,6 @@
 import sys
-from optparse import make_option
+from rapido.admin import ActionCommand
 
-
-from rapido.admin import BaseCommand
 from rapido.conf import settings
 from rapido.conf.loader import loader
 
@@ -30,27 +28,13 @@ except ImportError:
         sys.stdout.write('\n')
 
 
-class DBCommand(BaseCommand):
-
+class DBCommand(ActionCommand):
+    """Perform database related tasks.
+    """
     name = 'database'
-    args = '<package package ...>'
-    help = 'Perform database related tasks.'
-    scope = 'package'
+    usage = '%name <action> [options]'
 
-    options = (
-        make_option('-I', '--info', help='Show the table schema for the given packages', 
-            action='store_true'),
-        make_option('-S', '--sync', help="Create the database tables for all the INSTALLED_PACKAGES whose tables haven't been created yet.", 
-            action='store_true'),
-        make_option('-B', '--backup', help='Create backup of the database.',
-            metavar='FILE'),
-        make_option('--reset', help='Reset the model tables. Use with care, will drop all the tables.',
-            action='store_true'),
-    )
-
-    exclusive = ('-I', '-S', '-B', '--reset')
-
-    def execute(self, *args, **options):
+    def execute(self, options, args):
         
         if settings.DATABASE_ENGINE == "dummy":
             raise self.error("DATABASE_ENGINE is not configured.")
@@ -59,17 +43,9 @@ class DBCommand(BaseCommand):
         try:
             # load packages
             loader.load()
-            if options.get('info'):
-                return self.info(*args)
-            if options.get('sync'):
-                return self.sync()
-            if options.get('reset'):
-                return self.reset()
-            if options.get('backup'):
-                return self.backup(options['backup'])
+            super(DBCommand, self).execute(options, args)
         finally:
             database.close()
-        self.print_help()
 
     def get_models(self, *packages):
         """Similar to `db.get_models` but returns a tuple, (list of models, 
@@ -101,7 +77,9 @@ class DBCommand(BaseCommand):
 
         return result, pending
 
-    def info(self, *packages):
+    def action_info(self, options, packages):
+        """Show the table schema for the given packages
+        """
         models, pending = self.get_models(*packages)
         for model in models:
             print_colorized(database.schema_table(model))
@@ -111,11 +89,14 @@ class DBCommand(BaseCommand):
                 print_colorized('  -- %s' % model._meta.table)
             print
 
-    def sync(self):
+    def action_sync(self, options, args):
+        """Create the database tables for all the INSTALLED_PACKAGES whose 
+        tables haven't been created yet.
+        """
         models, __pending = self.get_models()
         try:
             for model in models:
-                if self.verbose:
+                if options.verbose:
                     print "Sync table %r" % (model._meta.table)
                 database.create_table(model)
         except:
@@ -124,7 +105,9 @@ class DBCommand(BaseCommand):
         else:
             database.commit()
             
-    def reset(self):
+    def action_reset(self, options, args):
+        """Reset the model tables. Use with care, will drop all the tables.
+        """
         
         ans = raw_input("""
 Be careful, all the tables of database %r will be dropped.
@@ -138,7 +121,7 @@ Are you sure about this action? (y/N): """ % settings.DATABASE_NAME)
         models.reverse()
         try:
             for model in models:
-                if self.verbose:
+                if options.verbose:
                     print "Drop table %r" % model._meta.table
                 database.drop_table(model._meta.table)
         except:
@@ -147,7 +130,5 @@ Are you sure about this action? (y/N): """ % settings.DATABASE_NAME)
         else:
             database.commit()
             
-        self.sync()
+        self.action_sync(options, args)
 
-    def backup(self, dest):
-        print "Not implemented yet!"

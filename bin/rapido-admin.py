@@ -2,5 +2,5 @@
 from rapido import admin
 
 if __name__ == "__main__":
-    admin.execute()
+    admin.execute_command()
 

@@ -1,16 +1,15 @@
 import os
 
-from rapido.admin import BaseCommand
+from rapido.admin import Command
 
 
-class ScriptCommand(BaseCommand):
-
+class ScriptCommand(Command):
+    """Run arbitrary script in the context of current project
+    """
     name = 'script'
-    args = 'FILE'
-    help = 'Run arbitrary script in the context of current project.'
-    scope = 'package'
-
-    def execute(self, *args, **options):
+    usage = '%name <FILE>'
+    
+    def execute(self, options, args):
         try:
             script = args[0]
         except:
@@ -25,13 +24,12 @@ class ScriptCommand(BaseCommand):
 
         execfile(script, {'__name__': '__main__'})
 
-class ShellCommand(BaseCommand):
-
+class ShellCommand(Command):
+    """Runs a Python interactive interpreter
+    """
     name = 'shell'
-    help = 'Runs a Python interactive interpreter.'
-    scope = 'package'
-
-    def execute(self, *args, **options):
+    
+    def execute(self, options, args):
 
         # load the packages
         from rapido.conf.loader import loader
