@@ -3,6 +3,7 @@ This module implemented api to write management scripts.
 """
 import re, os, sys, types, getopt
 
+from werkzeug import find_modules, import_string
 from rapido import get_version
 
 
@@ -144,9 +145,18 @@ class CommandType(type):
                 if opt not in options:
                     options.append(opt)
         cls.options = tuple(options)
-        if cls.name:
+        
+        if cls.name and cls.scope == cls.current_scope:
             REGISTRY[cls.name] = cls
 
+    @property
+    def current_scope(cls):
+        """
+        """
+        from rapido.conf import settings
+        if settings.PROJECT_NAME:
+            return 'project'
+        return None
 
 class Command(object):
     """Base command class. Every subclass of the command class should
@@ -178,6 +188,9 @@ class Command(object):
 
     #: usage string (single line only)
     usage = "%name [options] [args]"
+    
+    #: command execution scope, project or None, if None then execute anywhere
+    scope = "project"
 
     #: options list (short, long, default, help)
     options = (
@@ -187,7 +200,7 @@ class Command(object):
 
     def __init__(self):
         self.parser = Parser(self.options)
-
+        
     @property
     def doc(self):
         """Additional help for the command.
@@ -313,7 +326,11 @@ class Main(object):
 
     def __init__(self):
         self.prog = os.path.basename(sys.argv[0])
-
+        
+        # load all the available commands
+        for m in find_modules('rapido.admin.commands'):
+            import_string(m)
+            
     def print_help(self):
         print "Usage: %s <command> [options] [args]" % self.prog
         print

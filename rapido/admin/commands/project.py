@@ -70,6 +70,8 @@ class StartProject(Command):
     name = "startproject"
     usage = "%name <name>"
     
+    scope = None
+    
     def execute(self, options, args):
         try:
             name = args[0]

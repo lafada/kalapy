@@ -1,13 +1,6 @@
 import os, sys
 
-from werkzeug import find_modules, import_string
-
 from _base import *
-
-
-def load_commands():
-    for m in find_modules('rapido.admin.commands'):
-        import_string(m)
 
 
 def setup_environment(settings_mod):
@@ -34,6 +27,5 @@ def execute_command(args=None, settings_mod=None):
     """
     if settings_mod:
         setup_environment(settings_mod)
-    load_commands()
     Main().run(args)
 
