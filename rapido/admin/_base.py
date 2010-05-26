@@ -42,7 +42,6 @@ class Options(object):
             self.__values.setdefault(k, v)
 
         for k, (t, d) in self.__types.items():
-            k = k.replace('-', '_')
             self.__values.setdefault(k, d)
 
     def __repr__(self):

@@ -17,7 +17,7 @@ class RunServer(Command):
     )
 
     def execute(self, options, args):
-        host = options.host
+        host = options.address
         port = options.port
         use_reloader = not options.no_reload
         simple_server(host, port, use_reloader)
