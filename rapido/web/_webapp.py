@@ -75,9 +75,10 @@ class PackageType(type):
     #: cache of all the Package instances
     ALL = {}
 
-    def __call__(cls, name):
+    def __call__(cls, *args):
+        name = args[0] if args else None
         if name not in cls.ALL:
-            cls.ALL[name] = super(PackageType, cls).__call__(name)
+            cls.ALL[name] = super(PackageType, cls).__call__(*args)
         return cls.ALL[name]
 
     def from_view(cls, view_func):
@@ -100,11 +101,36 @@ class Package(object):
     """
     __metaclass__ = PackageType
 
+    #: :class:`werkzeug.routing.Map` instance, shared among all the Packages
+    urls = Map()
+
+    #: view functions, shared among all the packages
+    views = {}
+
     def __init__(self, name):
         self.name = name
         self.path = os.path.abspath(os.path.dirname(sys.modules[name].__file__))
-        self.rules = [(Rule('/%s/static/<filename>' % name, 
-            endpoint='%s.static' % name, build_only=True), None)]
+        
+        opts = settings.PACKAGE_OPTIONS.get(name, {})
+        self.subdomain = opts.get('subdomain')
+        self.submount = opts.get('submount')
+
+        # static dir info
+        self.static = os.path.join(self.path, 'static')
+        if not os.path.isdir(self.static):
+            self.static = None
+
+        # add rule for static urls
+        if self.static:
+            prefix = '/static' if self.is_main else '/%s/static' % name
+            self.add_rule('%s/<filename>' % prefix, 'static', build_only=True)
+            self.static = (prefix, self.static)
+
+    @property
+    def is_main(self):
+        """Whether this is the main package (the project package)
+        """
+        return self.name == settings.PROJECT_NAME
 
     def get_resource_path(self, name):
         """Get the absolute path the the given resource.
@@ -120,16 +146,43 @@ class Package(object):
         """
         return open(self.get_resource_path(name), 'rb')
 
+    def add_rule(self, rule, endpoint, func=None, **options):
+        """Add URL rule with the specified rule string, endpoint, view 
+        function and options.
+
+        Function must be provided if endpoint is None. In that case endpoint
+        will be automatically generated from the function name. Also, the 
+        endpoint will be prefixed with current package name.
+
+        Other options are similar to :class:`werkzeug.routing.Rule` contructor.
+        """
+        if endpoint is None:
+            assert func is not None, 'expected view function if endpoint' \
+                    ' is not provided'
+
+        if endpoint is None:
+            endpoint = '%s.%s' % (func.__module__, func.__name__)
+            endpoint = endpoint[-endpoint.rfind('views.')+1:]
+        
+        if not self.is_main:
+            endpoint = '%s.%s' % (self.name, endpoint)
+
+        options.setdefault('methods', ('GET',))
+        options['endpoint'] = endpoint
+
+        if self.subdomain:
+            options['subdomain'] = self.subdomain
+        if self.submount:
+            rule = '%s%s' % (self.submount, rule)
+
+        self.urls.add(Rule(rule, **options))
+        self.views[endpoint] = func
+
     def route(self, rule, **options):
         """Same as :func:`route`
         """
         def wrapper(func):
-            endpoint = '%s.%s' % (func.__module__, func.__name__)
-            endpoint = endpoint[-endpoint.rfind('views.')+1:]
-            endpoint = '%s.%s' % (self.name, endpoint)
-            options.setdefault('methods', ('GET',))
-            options['endpoint'] = endpoint
-            self.rules.append((Rule(rule, **options), func))
+            self.add_rule(rule, None, func, **options)
             return func
         return wrapper
 
@@ -177,68 +230,33 @@ class Middleware(object):
         pass
 
 
-class StaticMiddleware(SharedDataMiddleware):
-
-    def __init__(self, application):
-        static_dirs = {'/static': os.path.join(settings.PROJECT_DIR, 'static')}
-        for name, package in Package.ALL.items():
-            package_dir = package.get_resource_path('static')
-            static_dirs['/%s/static' % name] = package_dir
-        super(StaticMiddleware, self).__init__(application, static_dirs)
-
-
-class ApplicationType(type):
-    """A meta class to ensure only one instance of Application exists.
-    """
-    INSTANCE = None
-    def __call__(cls):
-        if cls.INSTANCE is None:
-            # load all the settings.INSTALLED_PACKAGES
-            from rapido.conf.loader import loader
-            loader.load()
-            cls.INSTANCE = super(ApplicationType, cls).__call__()
-        return cls.INSTANCE
-
-
-class Application(object):
+class Application(Package):
     """The Application class implements a WSGI application. This class is
     responsible to request dispatching, middleware processing, generating
     proper response from the view function return values etc.
     """
-    __metaclass__ = ApplicationType
 
     def __init__(self):
         
+        # load all the settings.INSTALLED_PACKAGES
+        from rapido.conf.loader import loader
+        loader.load()
+
+        super(Application, self).__init__(settings.PROJECT_NAME)
+        self.debug = settings.DEBUG
+        _local.current_app = self
+
         #: list of all the registered middlewares
         self.middlewares = []
-
-        #: url map
-        self.url_map = Map()
-
-        #: all the registered view functions
-        self.view_funcs = {}
-
-        for pkg in Package.ALL.values():
-            self.register_package(pkg)
 
         # register all the settings.MIDDLEWARE_CLASSES
         for mc in settings.MIDDLEWARE_CLASSES:
             self.middlewares.append(mc())
 
-        # add build only rules for static content
-        self.url_map.add(
-                Rule('/static/<filename>', endpoint='static', build_only=True))
-        self.dispatch = StaticMiddleware(self.dispatch)
-
-    def register_package(self, package):
-        """Register a package so that the resources provided by the package
-        can be made avilable to the clients.
-
-        :param package: a package instance to be registered.
-        """
-        for rule, func in package.rules:
-            self.url_map.add(rule)
-            self.view_funcs[rule.endpoint] = func
+        # static data middleware
+        static_dirs = [p.static for p in Package.ALL.values() if p.static]
+        static_dirs.append(self.static)
+        self.dispatch = SharedDataMiddleware(self.dispatch, dict(static_dirs))
 
     def process_request(self, request):
         """This method will be called before actual request dispatching and
@@ -297,15 +315,16 @@ class Application(object):
         so that wsgi middlewares can be applied without losing a reference to 
         the class.
         """
+        _local.current_app = self
         _local.request = request = Request(environ)
-        request.url_adapter = adapter = self.url_map.bind_to_environ(
+        request.url_adapter = adapter = self.urls.bind_to_environ(
                                 environ, server_name=settings.SERVERNAME)
         try:
             endpoint, args = adapter.match()
             
             request.endpoint = endpoint
             request.view_args = args
-            request.view_func = func = self.view_funcs[endpoint]
+            request.view_func = func = self.views[endpoint]
 
             response = self.process_request(request)
             if response is None:
@@ -313,7 +332,8 @@ class Application(object):
         except HTTPException, e:
             response = e
         except Exception, e:
-            raise
+            if self.debug:
+                raise
             response = self.process_exception(request, e)
 
         response = self.process_response(request, response)
