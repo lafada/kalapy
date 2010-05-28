@@ -1,7 +1,10 @@
 import os
 
 from werkzeug import import_string
+from werkzeug.local import LocalStack
+
 from rapido.conf import settings
+from rapido.utils import signal, local
 
 
 __all__ = ('Database', 'DatabaseError', 'IntegrityError', 'database')
@@ -20,10 +23,55 @@ Database = engine.Database
 DatabaseError = engine.DatabaseError
 IntegrityError = engine.IntegrityError
 
-database = Database(
-    name=settings.DATABASE_NAME,
-    host=settings.DATABASE_HOST,
-    port=settings.DATABASE_PORT,
-    user=settings.DATABASE_USER,
-    password=settings.DATABASE_PASSWORD)
+
+class Connection(object):
+
+    __ctx = LocalStack()
+
+    def __getattr__(self, name):
+        if self.__ctx.top is None:
+            self.connect()
+        return getattr(self.__ctx.top, name)
+
+    def connect(self):
+        if self.__ctx.top is None:
+            db = Database(
+                    name=settings.DATABASE_NAME,
+                    host=settings.DATABASE_HOST,
+                    port=settings.DATABASE_PORT,
+                    user=settings.DATABASE_USER,
+                    password=settings.DATABASE_PASSWORD)
+            self.__ctx.push(db)
+        self.__ctx.top.connect()
+
+    def close(self):
+        if self.__ctx.top is not None:
+            self.__ctx.top.close()
+            self.__ctx.pop()
+
+
+#: context local database connection
+database = Connection()
+
+
+@signal.connect('request-started')
+def open_connection():
+    """Open database connection when request started.
+    """
+    database.connect()
+
+
+@signal.connect('request-finished')
+def close_connection():
+    """Close database connection when request ends.
+    """
+    database.close()
+
+
+@signal.connect('request-exception')
+def rollback_connection(error):
+    """Rollback database connection, if there is any unhandled exception
+    during request processing.
+    """
+    database.rollback()
 

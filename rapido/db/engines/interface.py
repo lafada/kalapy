@@ -3,9 +3,7 @@ The implementation is meant for internal use only. Users should use Model API
 instead.
 """
 
-from threading import local
-
-class IDatabase(local):
+class IDatabase(object):
     """The database interface. Backend engines should implement this class
     with name `Database`.
     

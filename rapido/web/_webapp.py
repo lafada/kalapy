@@ -32,6 +32,7 @@ from werkzeug.local import Local, LocalManager
 from jinja2 import Environment, FunctionLoader, Markup, escape
 
 from rapido.conf import settings
+from rapido.utils import signal
 
 
 # context local support
@@ -319,24 +320,31 @@ class Application(Package):
         _local.request = request = Request(environ)
         request.url_adapter = adapter = self.urls.bind_to_environ(
                                 environ, server_name=settings.SERVERNAME)
+
+        signal.send('request-started')
         try:
-            endpoint, args = adapter.match()
-            
-            request.endpoint = endpoint
-            request.view_args = args
-            request.view_func = func = self.views[endpoint]
+            try:
+                endpoint, args = adapter.match()
+                
+                request.endpoint = endpoint
+                request.view_args = args
+                request.view_func = func = self.views[endpoint]
 
-            response = self.process_request(request)
-            if response is None:
-                response = self.make_response(func(**args))
-        except HTTPException, e:
-            response = e
+                response = self.process_request(request)
+                if response is None:
+                    response = self.make_response(func(**args))
+            except HTTPException, e:
+                response = e
+            except Exception, e:
+                if self.debug:
+                    raise
+                response = self.process_exception(request, e)
+            response = self.process_response(request, response)
         except Exception, e:
-            if self.debug:
-                raise
-            response = self.process_exception(request, e)
-
-        response = self.process_response(request, response)
+            signal.send('request-exception', error=e)
+            raise
+        finally:
+            signal.send('request-finished')
 
         return ClosingIterator(response(environ, start_response),
                 [_local_manager.cleanup])
