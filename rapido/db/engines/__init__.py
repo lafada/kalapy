@@ -4,7 +4,7 @@ from werkzeug import import_string
 from werkzeug.local import LocalStack
 
 from rapido.conf import settings
-from rapido.utils import signal, local
+from rapido.utils import signal
 
 
 __all__ = ('Database', 'DatabaseError', 'IntegrityError', 'database')

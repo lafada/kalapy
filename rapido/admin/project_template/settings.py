@@ -38,11 +38,17 @@ DATABASE_OPTIONS = {
 # Enable/Disable internationalization support
 USE_I18N = True
 
+# List of Middleware classes
+MIDDLEWARE_CLASSES = (
+)
+
 # List of installed packages
 INSTALLED_PACKAGES = (
 )
 
-# Application options (subdomain, submount etc). For example::
+# Application options (subdomain, submount etc). 
+# 
+# For example::
 # 
 # PACKAGE_OPTIONS = {
 #     'wiki': dict(subdomain='wiki'),
@@ -54,5 +60,5 @@ PACKAGE_OPTIONS = {
 }
 
 # Deployment server name (e.g. example.com)
-SERVERNAME = 'localhost'
+SERVERNAME = 'localhost:8080'
 
