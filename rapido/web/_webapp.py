@@ -41,7 +41,6 @@ _local_manager = LocalManager([_local])
 
 # context local variable
 request = _local('request')
-session = _local('session')
 
 
 class Request(BaseRequest):
@@ -60,12 +59,6 @@ class Response(BaseResponse):
     set to `'text/html'`.
     """
     default_mimetype = 'text/html'
-
-
-class Session(SecureCookie):
-    """Implemented session object with :class:`SecureCookie`.
-    """
-    pass
 
 
 class PackageType(type):
@@ -497,8 +490,7 @@ jinja_env = Environment(
 
 jinja_env.globals.update(
         url_for=url_for,
-        request=request,
-        session=session)
+        request=request)
 
 
 def render_template(template, **context):
