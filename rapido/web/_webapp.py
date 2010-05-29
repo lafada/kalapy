@@ -9,7 +9,7 @@
     :copyright: (c) 2010 Amit Mendapara.
     :license: BSD, see LICENSE for more details.
 """
-import re, os, sys, types
+import os, sys
 
 try:
     import json
@@ -29,7 +29,7 @@ from werkzeug.exceptions import HTTPException, NotFound, InternalServerError
 from werkzeug.contrib.securecookie import SecureCookie
 from werkzeug.local import Local, LocalManager
 
-from jinja2 import Environment, FunctionLoader, Markup, escape
+from jinja2 import Environment, FunctionLoader
 
 from rapido.conf import settings
 from rapido.utils import signal
@@ -84,7 +84,7 @@ class PackageType(type):
 
 
 class Package(object):
-    """Container object that reprensents an installed package.
+    """Container object that represents an installed package.
     
     A package can be enabled/disabled from `settings.INSTALLED_PACKAGES`. This
     class is intended for internal use only.
@@ -148,7 +148,7 @@ class Package(object):
         will be automatically generated from the function name. Also, the 
         endpoint will be prefixed with current package name.
 
-        Other options are similar to :class:`werkzeug.routing.Rule` contructor.
+        Other options are similar to :class:`werkzeug.routing.Rule` constructor.
         """
         if endpoint is None:
             assert func is not None, 'expected view function if endpoint' \
@@ -201,7 +201,7 @@ class Middleware(object):
 
     `process_exception`
 
-        this method will be called when any exception occured during request/
+        this method will be called when any exception occurred during request/
         response cycle.
 
     For more information on middleware, see...
@@ -265,7 +265,7 @@ class Application(Package):
                 return rv
 
     def process_response(self, request, response):
-        """This method will be called after response is successfull created and
+        """This method will be called after response is successfully created and
         will call all the registered middleware's respective `process_response`
         methods.
         """
@@ -305,7 +305,7 @@ class Application(Package):
         return Response.force_type(value, request.environ)
 
     def dispatch(self, environ, start_response):
-        """The acctual wsgi application. This is not implemented in `__call__`
+        """The actual wsgi application. This is not implemented in `__call__`
         so that wsgi middlewares can be applied without losing a reference to 
         the class.
         """
@@ -380,9 +380,9 @@ def route(rule, **options):
 
 def url_for(endpoint, **values):
     """Generate a URL for the given endpoint with the method provided. The
-    endpoint is relative to current package. If you wish to refere an endpoint
+    endpoint is relative to current package. If you wish to refers an endpoint
     from another package prefix it like `package:endpoint` and `module.endpoint`
-    to refer from another module in the same package and `.endpoint` to refere 
+    to refer from another module in the same package and `.endpoint` to refer 
     to the function in the same module.
 
     Here are few examples:
@@ -406,7 +406,7 @@ def url_for(endpoint, **values):
     to the generated URL as query arguments.
 
     This function can also be used to generate URL for static contents in
-    templates. In that case, if you want to refere global static dir then
+    templates. In that case, if you want to refer global static dir then
     just prefix the endpoint with ':' like `:static`.
 
     Here are few examples:
@@ -497,7 +497,7 @@ def render_template(template, **context):
     """Render the template from the `templates` folder of the current package
     with the given context.
 
-    If you want to refere to a template from another package, prefix the name
+    If you want to refer to a template from another package, prefix the name
     with that package name like `package:template`. Also, if you wish to refer
     to a template from the global template dir just prefix it with `:`.
 
