@@ -134,7 +134,8 @@ REGISTRY = {}
 
 
 class CommandType(type):
-    """Meta class for :class:`Command`
+    """Meta class for :class:`Command`, merges `options` from all the base
+    classes and registers the command to the command registry.
     """
     def __init__(cls, name, bases, attrs):
         super(CommandType, cls).__init__(name, bases, attrs)
@@ -150,7 +151,8 @@ class CommandType(type):
 
     @property
     def current_scope(cls):
-        """
+        """Comman script scope, tells if the script being invoked from the 
+        project directory or not.
         """
         from rapido.conf import settings
         if settings.PROJECT_NAME:
@@ -316,7 +318,6 @@ class ActionCommand(Command):
 
         action = args.pop(0)
         getattr(self, 'action_%s' % action)(options, args)
-
 
 
 class Main(object):
