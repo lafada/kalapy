@@ -21,7 +21,7 @@ from werkzeug import (
     Response as BaseResponse,
     ClosingIterator,
     SharedDataMiddleware,
-    Href, redirect,
+    Href, redirect, import_string
 )
 
 from werkzeug.routing import Rule, Map, Submount
@@ -245,11 +245,13 @@ class Application(Package):
 
         # register all the settings.MIDDLEWARE_CLASSES
         for mc in settings.MIDDLEWARE_CLASSES:
+            mc = import_string(mc)
             self.middlewares.append(mc())
 
         # static data middleware
         static_dirs = [p.static for p in Package.ALL.values() if p.static]
-        static_dirs.append(self.static)
+        if self.static:
+            static_dirs.append(self.static)
         self.dispatch = SharedDataMiddleware(self.dispatch, dict(static_dirs))
 
     def process_request(self, request):
@@ -284,7 +286,6 @@ class Application(Package):
             rv = mw.process_exception(request, exception)
             if rv is not None:
                 return rv
-        raise exception
 
     def make_response(self, value):
         """Converts the given value into a real response object that is an
@@ -303,6 +304,26 @@ class Application(Package):
         if isinstance(value, dict):
             return jsonify(value)
         return Response.force_type(value, request.environ)
+    
+    def get_response(self, request):
+        """Returns an :class:`Response` instance for the given `request` object.
+        """
+        response = self.process_request(request)
+        if response is not None:
+            return response
+        endpoint, args = request.url_adapter.match()
+        
+        request.endpoint = endpoint
+        request.view_args = args
+        request.view_func = func = self.views[endpoint]
+        
+        try:
+            return self.make_response(func(**args))
+        except Exception, e:
+            response = self.process_exception(request, e)
+            if response is not None:
+                return response
+            raise
 
     def dispatch(self, environ, start_response):
         """The actual wsgi application. This is not implemented in `__call__`
@@ -316,28 +337,16 @@ class Application(Package):
 
         signal.send('request-started')
         try:
-            try:
-                endpoint, args = adapter.match()
-                
-                request.endpoint = endpoint
-                request.view_args = args
-                request.view_func = func = self.views[endpoint]
-
-                response = self.process_request(request)
-                if response is None:
-                    response = self.make_response(func(**args))
-            except HTTPException, e:
-                response = e
-            except Exception, e:
-                if self.debug:
-                    raise
-                response = self.process_exception(request, e)
-            response = self.process_response(request, response)
+            response = self.get_response(request)
+        except HTTPException, e:
+            response = e
         except Exception, e:
             signal.send('request-exception', error=e)
             raise
         finally:
             signal.send('request-finished')
+            
+        response = self.process_response(request, response)
 
         return ClosingIterator(response(environ, start_response),
                 [_local_manager.cleanup])
