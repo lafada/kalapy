@@ -56,6 +56,7 @@ SESSION_COOKIE = {
 
 # List of installed packages
 INSTALLED_PACKAGES = (
+    'rapido.contrib.sessions',
 )
 
 # Application options (subdomain, submount etc). 
