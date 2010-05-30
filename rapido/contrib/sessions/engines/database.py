@@ -1,7 +1,9 @@
 import pickle
 from werkzeug.contrib.sessions import SessionStore
 
-from rapido.contrib.sessions.models import Session
+from rapido import db
+from ..models import Session
+
 
 class Store(SessionStore):
     
@@ -17,12 +19,15 @@ class Store(SessionStore):
         try:
             obj.set_data(dict(session))
             obj.save()
+            db.commit()
         except pickle.PickleError:
-            raise
+            pass
 
     def delete(self, session):
         obj = self.get_session(session.sid)
-        if obj: obj.delete()
+        if obj: 
+            obj.delete()
+            db.commit()
 
     def get(self, sid):
         if not self.is_valid_key(sid):
