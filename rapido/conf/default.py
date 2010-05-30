@@ -14,6 +14,17 @@ DATABASE_PORT = ""
 
 USE_I18N = True
 
+MIDDLEWARE_CLASSES = (
+)
+
+SESSION_ENGINE = "memory"
+SESSION_COOKIE = {
+    'name': 'session_id',
+    'age': 60 * 60 * 24 * 7 * 2,
+    'domain': None,
+    'path': '/'
+}
+
 INSTALLED_PACKAGES = (
 )
 

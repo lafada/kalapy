@@ -40,7 +40,19 @@ USE_I18N = True
 
 # List of Middleware classes
 MIDDLEWARE_CLASSES = (
+    'rapido.contrib.sessions.SessionMiddleware',
 )
+
+# Session storage engine (memory, memcached or database)
+SESSION_ENGINE = "memory"
+
+# Session cookie options
+SESSION_COOKIE = {
+    'name': 'session_id',
+    'age': 60 * 60 * 24 * 7 * 2,
+    'domain': None,
+    'path': '/'
+}
 
 # List of installed packages
 INSTALLED_PACKAGES = (
