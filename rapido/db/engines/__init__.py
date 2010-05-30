@@ -54,6 +54,18 @@ class Connection(object):
 database = Connection()
 
 
+def commit():
+    """Commit the changes to the database.
+    """
+    database.commit()
+    
+
+def rollback():
+    """Rollback all the changes made since the last commit.
+    """
+    database.rollback()
+
+
 @signal.connect('request-started')
 def open_connection():
     """Open database connection when request started.
