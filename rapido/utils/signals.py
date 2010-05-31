@@ -1,22 +1,22 @@
 """This module implements simple signal dispatcher.
 
-Connecting a signal is as easy as using a `signal.connect` decorator
+Connecting a signal is as easy as using a `signals.connect` decorator
 with signal name on a handler function. The signal can be fired with 
-`signal.send` method along with params if any.
+`signals.send` method along with params if any.
 
 For example:
 
->>> @signal.connect('onfinish')
+>>> @signals.connect('onfinish')
 >>> def on_finish_1(state):
 >>>     pass
 
->>> @signal.connect('onfinish')
+>>> @signals.connect('onfinish')
 >>> def on_finish_2(state):
 >>>     pass
 
 The signal can be fired like this:
 
->>> signal.send('onfinish', state=1)
+>>> signals.send('onfinish', state=1)
 
 In this case both the handlers connected to the 'onfinish' signal will 
 be fired.
@@ -96,7 +96,7 @@ registry = {}
 def connect(signal):
     """A decorator to connect a function to the specified signal.
 
-    >>> @signal.connect('onfinish')
+    >>> @signals.connect('onfinish')
     >>> def on_finish_1(state):
     >>>     pass
 
@@ -111,8 +111,8 @@ def disconnect(signal, handler=None):
     """If handler is given then disconnect the handler from the specified signal
     else disconnect all the handlers of the given signal.
 
-    >>> signal.disconnect('onfinish', on_finish_1)
-    >>> signal.dispatcher('onfinish')
+    >>> signals.disconnect('onfinish', on_finish_1)
+    >>> signals.dispatcher('onfinish')
 
     :param signal: name of the signal
     :param handler: a signal handler
@@ -131,7 +131,7 @@ def send(signal, *args, **kw):
 
     The signal handlers will be called with the given *args and **kw.
 
-    >>> signal.send('onfinish', state=1)
+    >>> signals.send('onfinish', state=1)
 
     :param args: to be passed to the signal handlers
     :param kw: to be passed to the signal handlers

@@ -4,7 +4,7 @@ from werkzeug import import_string
 from werkzeug.local import LocalStack
 
 from rapido.conf import settings
-from rapido.utils import signal
+from rapido.utils import signals
 
 
 __all__ = ('Database', 'DatabaseError', 'IntegrityError', 'database')
@@ -66,21 +66,21 @@ def rollback():
     database.rollback()
 
 
-@signal.connect('request-started')
+@signals.connect('request-started')
 def open_connection():
     """Open database connection when request started.
     """
     database.connect()
 
 
-@signal.connect('request-finished')
+@signals.connect('request-finished')
 def close_connection():
     """Close database connection when request ends.
     """
     database.close()
 
 
-@signal.connect('request-exception')
+@signals.connect('request-exception')
 def rollback_connection(error):
     """Rollback database connection, if there is any unhandled exception
     during request processing.

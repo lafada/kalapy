@@ -32,7 +32,7 @@ from werkzeug.local import Local, LocalManager
 from jinja2 import Environment, BaseLoader, FileSystemLoader
 
 from rapido.conf import settings
-from rapido.utils import signal
+from rapido.utils import signals
 
 
 # context local support
@@ -338,16 +338,16 @@ class Application(Package):
         request.url_adapter = adapter = self.urls.bind_to_environ(
                                 environ, server_name=settings.SERVERNAME)
 
-        signal.send('request-started')
+        signals.send('request-started')
         try:
             response = self.get_response(request)
         except HTTPException, e:
             response = e
         except Exception, e:
-            signal.send('request-exception', error=e)
+            signals.send('request-exception', error=e)
             raise
         finally:
-            signal.send('request-finished')
+            signals.send('request-finished')
             
         response = self.process_response(request, response)
 
