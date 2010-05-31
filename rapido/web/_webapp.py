@@ -118,6 +118,7 @@ class Package(object):
         if self.static:
             prefix = '/static' if self.is_main else '/%s/static' % name
             self.add_rule('%s/<filename>' % prefix, 'static', build_only=True)
+            prefix = '%s%s' % (self.submount or '', prefix)
             self.static = (prefix, self.static)
             
         # create template loader
@@ -159,7 +160,7 @@ class Package(object):
 
         if endpoint is None:
             endpoint = '%s.%s' % (func.__module__, func.__name__)
-            endpoint = endpoint[-endpoint.rfind('views.')+1:]
+            __, endpoint = endpoint.rsplit('views.', 1)
         
         if not self.is_main:
             endpoint = '%s.%s' % (self.name, endpoint)
@@ -256,6 +257,7 @@ class Application(Package):
         if self.static:
             static_dirs.append(self.static)
         self.dispatch = SharedDataMiddleware(self.dispatch, dict(static_dirs))
+
 
     def process_request(self, request):
         """This method will be called before actual request dispatching and
