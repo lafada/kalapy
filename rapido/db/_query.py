@@ -112,6 +112,14 @@ class Query(object):
             return map(self._mapper, result)
         return result
 
+    def first(self):
+        """Fetch the first record from the query object.
+
+        :returns: model instance or None
+        """
+        res = self.fetch(1)
+        return res[0] if res else None
+
     def count(self):
         """Return the number of records in the query object.
         """
