@@ -446,20 +446,19 @@ def url_for(endpoint, **values):
     external = values.pop('_external', False)
     
     if ':' in endpoint:
-        reference = endpoint[:endpoint.find(':')]
-        endpoint = endpoint[endpoint.find(':')+1:]
+        reference, endpoint = endpoint.split(':', 1)
 
-    if endpoint == 'static' or endpoint.endswith(':static'):
-        ref = request.package if reference is None else reference
-        if ref: endpoint = '%s.%s' % (ref, endpoint)
+    if endpoint == 'static':
+        if reference is None:
+            reference = request.package
     else:
-        ref = reference
         if endpoint.startswith('.'):
-            ref = request.endpoint.rsplit('.', 1)[0]
-        if not ref:
-            ref = request.package
-        if ref:
-            endpoint = '%s.%s' % (ref, endpoint)
+            endpoint = endpoint[1:]
+            reference = request.endpoint.rsplit('.', 1)[0]
+        if not reference:
+            reference = request.package
+    if reference:
+            endpoint = '%s.%s' % (reference, endpoint)
     return request.url_adapter.build(endpoint, values, force_external=external)
 
 
