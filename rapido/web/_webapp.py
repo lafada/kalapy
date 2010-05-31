@@ -29,7 +29,7 @@ from werkzeug.exceptions import HTTPException, NotFound, InternalServerError
 from werkzeug.contrib.securecookie import SecureCookie
 from werkzeug.local import Local, LocalManager
 
-from jinja2 import Environment, FunctionLoader
+from jinja2 import Environment, BaseLoader, FileSystemLoader
 
 from rapido.conf import settings
 from rapido.utils import signal
@@ -119,6 +119,9 @@ class Package(object):
             prefix = '/static' if self.is_main else '/%s/static' % name
             self.add_rule('%s/<filename>' % prefix, 'static', build_only=True)
             self.static = (prefix, self.static)
+            
+        # create template loader
+        self.jinja_loader = FileSystemLoader(self.get_resource_path('templates'))
 
     @property
     def is_main(self):
@@ -460,39 +463,32 @@ def url_for(endpoint, **values):
     return request.url_adapter.build(endpoint, values, force_external=external)
 
 
-def load_template(template):
-    """Template loader used as callable for FunctionLoader.
+class JinjaLoader(BaseLoader):
+    """Custom Jinja template loader, loads the template from the
+    current package.
     """
-    reference = None
-    if ':' in template:
-        reference = template[:template.find(':')]
-        template = template[template.find(':')+1:]
-
-    if reference is None:
-        package = Package.ALL[request.package]
-    elif reference:
-        package = Package.ALL[reference]
-    else:
-        package = Package.ALL[None]
-
-    stream = package.get_resource_stream(os.path.join('templates', template))
-    filename = stream.name
-    try:
-        contents = stream.read()#.decode(self.encoding)
-    finally:
-        stream.close()
-
-    mtime = os.path.getmtime(filename)
-    def uptodate():
+    def get_source(self, environment, template):
+        package, name = template.split(':', 1)
         try:
-            return os.path.getmtime(filename) == mtime
-        except OSError:
-            return False
-    return contents, filename, uptodate
+            package = Package.ALL[package or None]
+            template = name
+        except KeyError:
+            package = Package.ALL[None]
+        return package.jinja_loader.get_source(environment, template)
 
 
-jinja_env = Environment(
-    loader=FunctionLoader(load_template),
+class JinjaEnvironment(Environment):
+    """Custom Jinja environment, makes sure that template is correctly resolved.
+    """
+    def join_path(self, template, parent):
+        if ':' not in template:
+            package = parent.split(':',1)[0]
+            return '%s:%s' % (package, template)
+        return template
+
+
+jinja_env = JinjaEnvironment(
+    loader=JinjaLoader(),
     autoescape=True,
     extensions=['jinja2.ext.autoescape', 'jinja2.ext.with_'])
 
@@ -522,6 +518,14 @@ def render_template(template, **context):
     =============== ===================== ==============================
 
     Same rule applies to the `extends` and `inculde` templates directives.
+    
+    .. notes::
+        
+        If you refer a template from another package, all the `extends`,
+        `include` and `import` statements will be resolved with current
+        package's template loader if the template names are not prefixed
+        appropriatly. Same is true for `url_for` used withing the referenced 
+        template
 
     :param template: the name of the template to be rendered.
     :param context: the variables that should be available in the context
@@ -531,6 +535,8 @@ def render_template(template, **context):
     :raises: :class:`TemplateNotFound` or any other exceptions thrown during
              rendering process
     """
+    if ':' not in template:
+        template = '%s:%s' % (request.package, template)
     return jinja_env.get_template(template).render(context)
 
 
