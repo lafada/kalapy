@@ -1,0 +1,23 @@
+{% extends 'layout.html' %}
+{% set hide_navigation = True %}
+{% set title = 'Recent Changes' %}
+
+{% block contents %}
+    <h1>Recent Changes</h1>
+    <table class="changes">
+      <tr>
+        <th class="timestamp">Date</th>
+        <th class="page">Page</th>
+        <th class="change_note">Change Note</th>
+      </tr>
+      {% for entry in pagination.entries %}
+      <tr class="{{ loop.cycle('even', 'odd') }}">
+        <td class="timestamp">{{ entry.time }}</td>
+        <td class="page"><a href="{{ url_for('show', name=entry.name) }}">{{ entry.title }}</a></td>
+        <td class="change_note">{{ entry.note or '' }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    {{ render_pagination(pagination) }}
+{% endblock %}
+

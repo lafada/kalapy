@@ -1,0 +1,22 @@
+{% extends 'layout.html' %}
+{% set hide_navigation = new %}
+{% set page_action = 'edit' %}
+{% set title = new and 'Create' or 'Edit' %}
+
+{% block contents %}
+    <h1>{{ new and 'Create' or 'Edit' }} “{{ revision.title or page_name }}”</h1>
+    <p>
+      You can now {{ new and 'create' or 'modify' }} the page contents.  To
+      format your text you can use <a target='_blank' href="http://docutils.sourceforge.net/docs/user/rst/quickstart.html">reStructuredText</a>.
+    </p>
+    <p class="error" py:if="error">{{ error }}</p>
+    <form action="{{ url_for('save', name=page_name) }}" method="post">
+      <p><textarea name="text" rows="15" cols="50">{{ revision.text }}</textarea></p>
+      <div class="actions">
+        <input type="text" name="note" value="{{ note }}" size="50" />
+        <input type="submit" value="Save" />
+        <input type="submit" name="cancel" value="Cancel" />
+      </div>
+    </form>
+{% endblock %}
+

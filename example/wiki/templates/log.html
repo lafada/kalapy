@@ -1,0 +1,37 @@
+{% extends 'layout.html' %}
+{% set page_action = 'log' %}
+{% set title = 'Revisions for “%s”' % revision.title %}
+{% block contents %}
+    <p>
+      In this list you can see all the revisions of the requested page.
+    </p>
+    <form action="{{ url_for('diff', name=revision.name) }}" method="get">
+      <table class="revisions">
+        <tr>
+          <th class="timestamp">Date</th>
+          <th class="change_note">Change Note</th>
+          <th class="diff"><input type="submit" value="Diff" /></th>
+          <th class="actions">Actions</th>
+        </tr>
+        {% for rev in revisions %}
+        <tr class="{{ loop.index % 2 == 1 and 'even' or 'odd' }}">
+          <td class="timestamp">{{ rev.time }}</td>
+          <td class="change_note">{{ rev.note or '' }}</td>
+          <td class="diff">
+            <input type="radio" name="old" value="{{ rev.key }}"
+                {{ {'checked': 'checked' if loop.index == 2 else None} | xmlattr }}" />
+            <input type="radio" name="new" value="{{ rev.key }}"
+                {{ {'checked': 'checked' if loop.index == 1 else None} | xmlattr }}" />
+          </td>
+          <td class="actions">
+            <a href="{{ url_for('show', name=revision.name, rev=rev.key) }}">show</a>
+            {% if loop.index > 1 %}
+              <a href="{{ url_for('revert', name=revision.name, rev=rev.key) }}">revert</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </table>
+    </form>
+{% endblock %}
+

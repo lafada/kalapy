@@ -1,0 +1,22 @@
+{% extends 'layout.html' %}
+{% set page_action = 'log' %}
+{% set title = 'View Diff' %}
+
+{% block contents %}
+    {% if not error %}
+    <h1>Diff for “<a href="{{ url_for('show', name=page.name) }}">{{ page.title }}</a>”</h1>
+      <p>
+        Below you can see the differences between the revision from
+        <a href="{{ url_for('show', name=page.name, rev=old_revision.key) }}"
+        >{{ old_revision.time }}</a> and the
+        revision from <a href="{{ url_for('show', name=page.name, rev=new_revision.key) }}"
+        >{{ new_revision.time }}</a> in unified
+        diff format.
+      </p>
+      <pre class="udiff">{{ diff|join('') }}</pre>
+    {% else %}
+      <h1>Cannot Display Diff</h1>
+      <p class="error">{{ error }}</p>
+    {% endif %}
+{% endblock %}
+

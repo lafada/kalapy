@@ -1,0 +1,24 @@
+{% extends 'layout.html' %}
+
+{% set hide_navigation = True %}
+{% set title = "Page Not Found" %}
+
+{% block contents %}
+    <p>The page you requested does not exist.</p>
+    {% if revision_requested %}
+    <p>
+        It also could be that there is no such revision of that page.
+    </p>
+    {% endif %}
+    {% if not protected %}
+    <p>
+        Feel free to <a href="{{ url_for('edit', name=page_name) }}">create such a page</a>.
+    </p>
+    {% else %}
+    <p>
+        Although this page does not exist by now you cannot create it because
+        the system protected the page name for future use.
+    </p>
+    {% endif %}
+{% endblock %}
+

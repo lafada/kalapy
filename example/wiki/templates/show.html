@@ -1,0 +1,8 @@
+{% extends 'layout.html' %}
+{% set title = revision.title %}
+{% set page_action = 'show' %}
+
+{% block contents %}
+    {{ revision.render() }}
+{% endblock %}
+
