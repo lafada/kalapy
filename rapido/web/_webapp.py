@@ -518,12 +518,12 @@ def render_template(template, **context):
 
     Same rule applies to the `extends` and `inculde` templates directives.
     
-    .. notes::
+    .. note::
         
         If you refer a template from another package, all the `extends`,
         `include` and `import` statements will be resolved with current
         package's template loader if the template names are not prefixed
-        appropriatly. Same is true for `url_for` used withing the referenced 
+        appropriately. Same is true for `url_for` used within the referenced 
         template
 
     :param template: the name of the template to be rendered.
