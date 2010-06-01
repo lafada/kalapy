@@ -1,0 +1,17 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+    <title>Rapido Examples</title>
+    <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet" />
+</head>
+<body>
+    <h1>Rapido Examples</h1>
+    This is the main page of the <i>Rapido</i> examples.<br>
+    Here is the list of installed <i>application packages</i>.
+    <ul>
+        <li><a href="{{ url_for('wiki:home') }}">Wiki</a></li>
+        <li><a href="{{ url_for('blog:show_entries') }}">Blog</a></li>
+    </ul>
+</body>
+</html>
