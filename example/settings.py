@@ -58,6 +58,7 @@ SESSION_COOKIE = {
 INSTALLED_PACKAGES = (
     'rapido.contrib.sessions',
     'wiki',
+    'blog',
 )
 
 # Application options (subdomain, submount etc).
@@ -72,6 +73,7 @@ INSTALLED_PACKAGES = (
 #
 PACKAGE_OPTIONS = {
     'wiki': {'submount': '/wiki'},
+    'blog': {'submount': '/blog'},
 }
 
 # Deployment server name (e.g. example.com)
