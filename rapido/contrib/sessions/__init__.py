@@ -4,6 +4,8 @@ from werkzeug.contrib.sessions import Session
 from rapido.conf import settings
 from rapido.web import Middleware
 
+from flash import flash, flashes
+
 
 class SessionMiddleware(Middleware):
 
@@ -18,6 +20,8 @@ class SessionMiddleware(Middleware):
     def process_request(self, request):
         sid = request.cookies.get(self.cookie_name, None)
         request.session = self.store.get(sid) if sid else self.store.new()
+        request.flash = flash
+        request.flashes = flashes
 
     def process_response(self, request, response):
         session = request.session
