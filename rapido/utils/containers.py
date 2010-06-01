@@ -1,4 +1,12 @@
+"""
+rapido.utils.containers
+~~~~~~~~~~~~~~~~~~~~~~~
 
+This module implements few container datastructures like `OrderedDict`.
+
+:copyright: (c) 2010 Amit Mendapara.
+:license: BSD, see LICENSE for more details.
+"""
 class OrderedDict(dict):
 
     def __init__(self, *args, **kw):

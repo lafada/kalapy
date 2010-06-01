@@ -1,25 +1,34 @@
-"""This module implements simple signal dispatcher.
+"""
+rapido.utils.signals
+~~~~~~~~~~~~~~~~~~~~
+
+This module implements simple signal/event dispatching api.
 
 Connecting a signal is as easy as using a `signals.connect` decorator
 with signal name on a handler function. The signal can be fired with
 `signals.send` method along with params if any.
 
-For example:
+For example::
 
->>> @signals.connect('onfinish')
->>> def on_finish_1(state):
->>>     pass
+    @signals.connect('onfinish')
+    def on_finish_1(state):
+         ...
+         ...
 
->>> @signals.connect('onfinish')
->>> def on_finish_2(state):
->>>     pass
+    @signals.connect('onfinish')
+    def on_finish_2(state):
+         ...
+         ...
 
-The signal can be fired like this:
+The signal can be fired like this::
 
->>> signals.send('onfinish', state=1)
+    signals.send('onfinish', state=1)
 
 In this case both the handlers connected to the 'onfinish' signal will
 be fired.
+
+:copyright: (c) 2010 Amit Mendapara.
+:license: BSD, see LICENSE for more details.
 """
 import types, inspect, weakref
 
@@ -28,7 +37,7 @@ __all__ = ('Signal', 'connect', 'disconnect', 'send')
 
 
 class Signal(object):
-    """Signal class caches all the registered handlers in WeakValueDictionary
+    """Signal class caches all the registered handlers in `WeakValueDictionary`
     so that handlers can be automatically garbage collected if the reference
     to the handler is the only reference.
 
@@ -90,26 +99,28 @@ class Signal(object):
             result.append(handler(*args, **kw))
         return result
 
-
-registry = {}
+#: global cache of all the signals
+REGISTRY = {}
 
 def connect(signal):
     """A decorator to connect a function to the specified signal.
 
-    >>> @signals.connect('onfinish')
-    >>> def on_finish_1(state):
-    >>>     pass
+    Example::
+
+        @signals.connect('onfinish')
+        def on_finish_1(state):
+             pass
 
     :param signal: name of the signal
     """
     def wrapper(func):
-        registry.setdefault(signal, Signal(signal)).connect(func)
+        REGISTRY.setdefault(signal, Signal(signal)).connect(func)
         return func
     return wrapper
 
 def disconnect(signal, handler=None):
-    """If handler is given then disconnect the handler from the specified signal
-    else disconnect all the handlers of the given signal.
+    """If handler is given then disconnect the handler from the specified
+    signal else disconnect all the handlers of the given signal.
 
     >>> signals.disconnect('onfinish', on_finish_1)
     >>> signals.dispatcher('onfinish')
@@ -117,13 +128,13 @@ def disconnect(signal, handler=None):
     :param signal: name of the signal
     :param handler: a signal handler
     """
-    if signal not in registry:
+    if signal not in REGISTRY:
         return
     if handler:
-        registry[signal].disconnect(handler)
+        REGISTRY[signal].disconnect(handler)
         return
-    registry[signal].registry.clear()
-    del registry[signal]
+    REGISTRY[signal].registry.clear()
+    del REGISTRY[signal]
 
 
 def send(signal, *args, **kw):
@@ -139,7 +150,6 @@ def send(signal, *args, **kw):
     :returns: list of the results of all the signal handlers
     """
     result = []
-    if signal in registry:
-        result.extend(registry[signal].send(*args, **kw))
+    if signal in REGISTRY:
+        result.extend(REGISTRY[signal].send(*args, **kw))
     return result
-
