@@ -1,6 +1,12 @@
 """
+rapido.conf.loader
+~~~~~~~~~~~~~~~~~~
+
 This module defines a Loader class to automatically load all the installed
 packages given in settings.INSTALLED_PACKAGES.
+
+:copyright: (c) 2010 Amit Mendapara.
+:license: BSD, see LINCESE for more details.
 """
 import os
 

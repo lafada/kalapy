@@ -1,3 +1,12 @@
+"""
+rapido.conf
+~~~~~~~~~~~
+
+Configurations and application package loading.
+
+:copyright: (c) 2010 Amit Mendapara.
+:license: BSD, see LINCESE for more details.
+"""
 import os, types
 
 from rapido.conf import default
@@ -36,4 +45,3 @@ class Settings(object):
 
 
 settings = Settings()
-
