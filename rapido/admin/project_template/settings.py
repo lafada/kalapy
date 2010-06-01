@@ -8,12 +8,12 @@ PROJECT_VERSION = "1.0"
 
 # Database backend engine
 # Possible value can be either sqlite3, postgresql, bigtable
-DATABASE_ENGINE = ""
+DATABASE_ENGINE = "sqlite3"
 
 # Database name
 # For sqlite3 use path to the sqlite3 database file
 # For bigtable keep empty
-DATABASE_NAME = ""
+DATABASE_NAME = "test_${name}.sqlite"
 
 # Database user (must have rights to create database tables)
 # Keep empty for sqlite3 and bigtable
