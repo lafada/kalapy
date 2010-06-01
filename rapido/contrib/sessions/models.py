@@ -1,3 +1,13 @@
+"""
+rapido.contrib.sessions.models
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Defines a Session :class:`db.Model` to be used by database
+storage backend.
+
+:copyright: (c) 2010 Amit Mendapara.
+:license: BSD, see LINCESE for more details.
+"""
 import pickle, base64
 from rapido import db
 
@@ -14,4 +24,3 @@ class Session(db.Model):
 
     def set_data(self, data):
         self.data = base64.encodestring(pickle.dumps(data))
-

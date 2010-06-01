@@ -1,3 +1,32 @@
+"""
+rapido.contrib.sessions.flash
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This module implements flashing message support via sessions. A message
+cab be flashed using `request.flash` function and the flashed messages
+can then be accessed using `request.flashes` function. A tipical use case
+is to flash a message that a records is saved or deleted.
+
+For example::
+
+    @web.route('/blog', methods=('POST',))
+    def save():
+        ...
+        ...
+        request.flash('Blog entry saved.')
+        return redirect(url_for('show'))
+        
+The flashed messages then can be used during next request, like:
+
+.. sourcecode:: html+jinja
+
+    {% for category, message in request.flashes() %}
+        <div class="flash-{{ category }}">{{ message }}</div>
+    {% endfor %}
+    
+:copyright: (c) 2010 Amit Mendapara.
+:license: BSD, see LINCESE for more details.
+"""
 from rapido.web import request
 
 

@@ -1,3 +1,12 @@
+"""
+rapido.contrib.sessions.engines.memory
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Simple local memory based storage backend for the session.
+
+:copyright: (c) 2010 Amit Mendapara.
+:license: BSD, see LINCESE for more details.
+"""
 import pickle
 
 try:
@@ -43,4 +52,3 @@ class Store(SessionStore):
 
     def list(self):
         return self.store.keys()
-

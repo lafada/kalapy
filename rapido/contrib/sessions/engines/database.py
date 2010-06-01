@@ -1,3 +1,12 @@
+"""
+rapido.contrib.sessions.engines.database
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Database based storage backend for the sessions.
+
+:copyright: (c) 2010 Amit Mendapara.
+:license: BSD, see LINCESE for more details.
+"""
 import pickle
 from werkzeug.contrib.sessions import SessionStore
 

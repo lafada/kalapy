@@ -1,3 +1,25 @@
+"""
+rapido.contrib.sessions
+~~~~~~~~~~~~~~~~~~~~~~~
+
+This package implements session middleware, flash message api and few
+session storage backends like `memory`, `memcached` and `database`.
+
+In order to enable session support in a project, this package should be
+included in `settings.INSTALLED_PACKAGES` and `settings.MIDDLEWARE_CLASSES`
+should list the `rapido.contrib.sessions.SessionMiddleware` as very first
+middleware class in the list.
+
+Then the `session` can be accessed via `request.session` variable.
+
+Besides the session support, this package also implements support for
+flashing messages which can be passed through the next requests.
+
+For more details on flashing messages see :func:`flash` and :func:`flashes`.
+
+:copyright: (c) 2010 Amit Mendapara.
+:license: BSD, see LINCESE for more details.
+"""
 from werkzeug import import_string
 from werkzeug.contrib.sessions import Session
 
@@ -8,7 +30,8 @@ from flash import flash, flashes
 
 
 class SessionMiddleware(Middleware):
-
+    """Implements Session middleware.
+    """
     def __init__(self):
         engine = import_string(
             'rapido.contrib.sessions.engines.%s' % settings.SESSION_ENGINE)
@@ -30,4 +53,3 @@ class SessionMiddleware(Middleware):
             response.set_cookie(
                 self.cookie_name, session.sid,
                 max_age=self.cookie_age)
-
