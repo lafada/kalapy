@@ -1,0 +1,45 @@
+===============================================================================
+Rapido
+===============================================================================
+
+A highly scalable python web application framework...
+
+-------------------------------------------------------------------------------
+Introduction
+-------------------------------------------------------------------------------
+
+Rapido is a web application framework for Python based on Werkzeug and Jinja2.
+It provides it's own unique Database Abstraction Layer (DAL), localisation via
+babel and pytz and more...
+
+This is just a preview release. The development is still under alpha stage and
+API might change during this phase. I welcome your useful suggestions/thoughts
+about how to improve it and how it should look like.
+
+At the moment it looks some what similar to Django, but it is only so to get
+started quickly. The intension is to implement a framework that combines power
+of OpenObject and Django. Let's see how it goes...
+
+-------------------------------------------------------------------------------
+TODO
+-------------------------------------------------------------------------------
+
+* localisation (using babel, pytz)
+* unit tests
+* documentation
+* google app engine support
+* mysql support
+* packages (are not applications)
+    - per package settings file
+    - support for extending an existing package with addon packages
+    - resources provided by addon package should get preference over
+      original package
+* auto views (using GWT or Dojo), can be mixed with normal html
+* admin interface
+    - activate/deactivate packages
+    - configuration
+* ...
+* ...
+
+-------------------------------------------------------------------------------
+Copyright (c) 2010 Amit Mendapara.

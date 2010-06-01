@@ -1,0 +1,5 @@
+include README CHANGES LICENSE AUTHORS
+recursive-include bin *
+recursive-include example *
+recursive-include rapido *
+recursive-include tests *
