@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-    rapido.web
-    ~~~~~~~~~~
+rapido.web
+~~~~~~~~~~
 
-    This module implements web component API on top of `werkzeug`. The API is
-    highly inspired of the `Flask`, a microframework.
+This module implements web component API on top of `Werkzeug`. It also provides
+template support using Jinja2 and exposes some useful api from `werkzeug` and
+`jinja2` packages.
 
-    :copyright: (c) 2010 Amit Mendapara.
-    :license: BSD, see LICENSE for more details.
+:copyright: (c) 2010 Amit Mendapara.
+:license: BSD, see LICENSE for more details.
 """
 import os, sys
 
@@ -579,5 +580,3 @@ def simple_server(host='127.0.0.1', port=8080, use_reloader=False):
     app = Application()
     app.debug = debug = settings.DEBUG
     run_simple(host, port, app, use_reloader=use_reloader, use_debugger=debug)
-
-
