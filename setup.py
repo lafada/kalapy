@@ -1,11 +1,12 @@
 """
 """
 from setuptools import setup
+import rapido
 
 
 setup(
     name='Rapido',
-    version='0.5',
+    version=rapido.__version__,
     url='http://github.com/cristatus/rapido/',
     license='BSD',
     author='Amit Medapara',

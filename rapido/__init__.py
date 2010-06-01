@@ -1,4 +1,4 @@
-__version__ = "0.8.1"
+__version__ = "0.1"
 
 def get_version():
     """Get the version number string of the project.
@@ -13,7 +13,7 @@ def get_version():
     significant fixes have been added, and the revision number is incremented when
     minor bugs are fixed.
 
-    0.8.x series will be used during first alpha developement stage
+    0.x.x series will be used during first alpha developement stage
     0.9.x series will be used during first beta development stage
 
     1.x.x series will be used during first public release.
