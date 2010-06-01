@@ -1,3 +1,13 @@
+"""
+rapido.admin.commands.run
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This module implements `runserver` command which is used to run a simple
+wsgi server during development.
+
+:copyright: (c) 2010 Amit Mendapara.
+:license: BSD, see LINCESE for more details.
+"""
 import os
 
 from rapido.admin import Command

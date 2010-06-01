@@ -1,3 +1,14 @@
+"""
+rapido.admin.commands.shell
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This module imeplements `shell` and `script` commands, which can be
+used to start a python shell or launch a python script in the context
+of current project.
+
+:copyright: (c) 2010 Amit Mendapara.
+:license: BSD, see LINCESE for more details.
+"""
 import os
 
 from rapido.admin import Command

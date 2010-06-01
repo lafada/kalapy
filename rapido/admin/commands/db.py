@@ -1,3 +1,13 @@
+"""
+rapido.admin.commands.db
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+This module implements `database` command to be used to perform
+database specific admin tasks.
+
+:copyright: (c) 2010 Amit Mendapara.
+:license: BSD, see LINCESE for more details.
+"""
 import sys
 from rapido.admin import ActionCommand
 

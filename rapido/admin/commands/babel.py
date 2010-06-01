@@ -1,3 +1,13 @@
+"""
+rapido.admin.commands.babel
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This module implements `babel` command, which can be used to perform
+various message catalogue related tasks. 
+
+:copyright: (c) 2010 Amit Mendapara.
+:license: BSD, see LINCESE for more details.
+"""
 from rapido.admin import ActionCommand
 
 
@@ -32,4 +42,3 @@ class BabelCommand(ActionCommand):
         """Compile message catalogs
         """
         pass
-

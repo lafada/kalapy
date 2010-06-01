@@ -1,3 +1,13 @@
+"""
+rapido.admin.commands.project
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This module implements `startproject` and `startpackage` commands to
+start a new project or an application package.
+
+:copyright: (c) 2010 Amit Mendapara.
+:license: BSD, see LINCESE for more details.
+"""
 import os, sys, re, shutil, string
 
 from rapido.admin import Command

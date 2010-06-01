@@ -1,3 +1,12 @@
+"""
+rapido.admin.commands.test
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This module implements `test` command to run testsuites.
+
+:copyright: (c) 2010 Amit Mendapara.
+:license: BSD, see LINCESE for more details.
+"""
 import os
 
 from rapido.admin import Command, execute_command
