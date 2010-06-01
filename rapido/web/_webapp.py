@@ -4,8 +4,8 @@
     ~~~~~~~~~~
 
     This module implements web component API on top of `werkzeug`. The API is
-    highly inspired of the `Flask`, a microframework. 
-    
+    highly inspired of the `Flask`, a microframework.
+
     :copyright: (c) 2010 Amit Mendapara.
     :license: BSD, see LICENSE for more details.
 """
@@ -55,7 +55,7 @@ class Request(BaseRequest):
 
 
 class Response(BaseResponse):
-    """The response object that is used by default, with default mimetype 
+    """The response object that is used by default, with default mimetype
     set to `'text/html'`.
     """
     default_mimetype = 'text/html'
@@ -85,10 +85,10 @@ class PackageType(type):
 
 class Package(object):
     """Container object that represents an installed package.
-    
+
     A package can be enabled/disabled from `settings.INSTALLED_PACKAGES`. This
     class is intended for internal use only.
-    
+
     For more information on packages, see...
 
     :param name: name of the package
@@ -104,7 +104,7 @@ class Package(object):
     def __init__(self, name):
         self.name = name
         self.path = os.path.abspath(os.path.dirname(sys.modules[name].__file__))
-        
+
         opts = settings.PACKAGE_OPTIONS.get(name, {})
         self.subdomain = opts.get('subdomain')
         self.submount = opts.get('submount')
@@ -120,7 +120,7 @@ class Package(object):
             self.add_rule('%s/<filename>' % prefix, 'static', build_only=True)
             prefix = '%s%s' % (self.submount or '', prefix)
             self.static = (prefix, self.static)
-            
+
         # create template loader
         self.jinja_loader = FileSystemLoader(self.get_resource_path('templates'))
 
@@ -145,11 +145,11 @@ class Package(object):
         return open(self.get_resource_path(name), 'rb')
 
     def add_rule(self, rule, endpoint, func=None, **options):
-        """Add URL rule with the specified rule string, endpoint, view 
+        """Add URL rule with the specified rule string, endpoint, view
         function and options.
 
         Function must be provided if endpoint is None. In that case endpoint
-        will be automatically generated from the function name. Also, the 
+        will be automatically generated from the function name. Also, the
         endpoint will be prefixed with current package name.
 
         Other options are similar to :class:`werkzeug.routing.Rule` constructor.
@@ -161,7 +161,7 @@ class Package(object):
         if endpoint is None:
             endpoint = '%s.%s' % (func.__module__, func.__name__)
             __, endpoint = endpoint.rsplit('views.', 1)
-        
+
         if not self.is_main:
             endpoint = '%s.%s' % (self.name, endpoint)
 
@@ -187,7 +187,7 @@ class Package(object):
 
 class Middleware(object):
     """Application middleware objects (don't confuse with WSGI middleware).
-    This is more similar to `Django's` middleware. It allows to hook into 
+    This is more similar to `Django's` middleware. It allows to hook into
     application's request/response cycle. It's a ligh, low-level 'plugin'
     system for globally alter the the application input/output.
 
@@ -235,7 +235,7 @@ class Application(Package):
     """
 
     def __init__(self):
-        
+
         # load all the settings.INSTALLED_PACKAGES
         from rapido.conf.loader import loader
         loader.load()
@@ -309,7 +309,7 @@ class Application(Package):
         if isinstance(value, dict):
             return jsonify(value)
         return Response.force_type(value, request.environ)
-    
+
     def get_response(self, request):
         """Returns an :class:`Response` instance for the given `request` object.
         """
@@ -317,11 +317,11 @@ class Application(Package):
         if response is not None:
             return response
         endpoint, args = request.url_adapter.match()
-        
+
         request.endpoint = endpoint
         request.view_args = args
         request.view_func = func = self.views[endpoint]
-        
+
         try:
             return self.make_response(func(**args))
         except Exception, e:
@@ -332,7 +332,7 @@ class Application(Package):
 
     def dispatch(self, environ, start_response):
         """The actual wsgi application. This is not implemented in `__call__`
-        so that wsgi middlewares can be applied without losing a reference to 
+        so that wsgi middlewares can be applied without losing a reference to
         the class.
         """
         _local.current_app = self
@@ -350,7 +350,7 @@ class Application(Package):
             raise
         finally:
             signals.send('request-finished')
-            
+
         response = self.process_response(request, response)
 
         return ClosingIterator(response(environ, start_response),
@@ -362,7 +362,7 @@ class Application(Package):
 
 def route(rule, **options):
     """A decorator to register a view function for a given URL rule.
-    
+
     Example::
 
         @web.route('/<path:page>')
@@ -381,7 +381,7 @@ def route(rule, **options):
 
     :param rule: the URL rule as string
     :param methods: a list of http methods this rule is limited to like
-                   (``'GET'``, ``'POST'``, etc). By default a rule is 
+                   (``'GET'``, ``'POST'``, etc). By default a rule is
                    limited to ``'GET'`` (and implicitly ``'HEAD'``).
     :param options: other options to be forwarded to the underlying
                     :class:`werkzeug.routing.Rule` object.
@@ -396,7 +396,7 @@ def url_for(endpoint, **values):
     """Generate a URL for the given endpoint with the method provided. The
     endpoint is relative to current package. If you wish to refers an endpoint
     from another package prefix it like `package:endpoint` and `module.endpoint`
-    to refer from another module in the same package and `.endpoint` to refer 
+    to refer from another module in the same package and `.endpoint` to refer
     to the function in the same module.
 
     Here are few examples:
@@ -446,7 +446,7 @@ def url_for(endpoint, **values):
 
     reference = None
     external = values.pop('_external', False)
-    
+
     if ':' in endpoint:
         reference, endpoint = endpoint.split(':', 1)
 
@@ -519,13 +519,13 @@ def render_template(template, **context):
     =============== ===================== ==============================
 
     Same rule applies to the `extends` and `inculde` templates directives.
-    
+
     .. note::
-        
+
         If you refer a template from another package, all the `extends`,
         `include` and `import` statements will be resolved with current
         package's template loader if the template names are not prefixed
-        appropriately. Same is true for `url_for` used within the referenced 
+        appropriately. Same is true for `url_for` used within the referenced
         template
 
     :param template: the name of the template to be rendered.
@@ -553,7 +553,7 @@ def jsonify(*args, **kw):
             return jsonify(name="somename", active=True, key=34)
 
     This will send a JSON response to the client like this::
-    
+
         {
             'name': 'somename',
             'active': true,
@@ -567,10 +567,10 @@ def jsonify(*args, **kw):
 
 def simple_server(host='127.0.0.1', port=8080, use_reloader=False):
     """Run a simple server for development purpose.
-    
+
     :param host: host name
     :param post: port number
-    :param use_reloader: whether to reload the server if any of the loaded 
+    :param use_reloader: whether to reload the server if any of the loaded
                          module changed.
     """
     from werkzeug import run_simple

@@ -8,7 +8,7 @@ class ScriptCommand(Command):
     """
     name = 'script'
     usage = '%name <FILE>'
-    
+
     def execute(self, options, args):
         try:
             script = args[0]
@@ -28,7 +28,7 @@ class ShellCommand(Command):
     """Runs a Python interactive interpreter
     """
     name = 'shell'
-    
+
     def execute(self, options, args):
 
         # load the packages

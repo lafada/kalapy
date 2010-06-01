@@ -17,7 +17,7 @@ IntegrityError = dbapi.IntegrityError
 
 
 class Database(RelationalDatabase):
-    
+
     data_types = {
         "key"       :   "SERIAL PRIMARY KEY",
         "char"      :   "VARCHAR(%(size)s)",
@@ -33,7 +33,7 @@ class Database(RelationalDatabase):
     def __init__(self, name, host=None, port=None, user=None, password=None):
         super(Database, self).__init__(name, host, port, user, password)
         self.connection = None
-        
+
     def connect(self):
         if self.connection is not None:
             return self
@@ -59,7 +59,7 @@ class Database(RelationalDatabase):
                 WHERE relkind = 'r' AND relname = %s;
             """, (name,))
         return bool(cursor.fetchone())
-    
+
     def lastrowid(self, cursor, model):
         cursor.execute('SELECT last_value FROM "%s_key_seq"' % model._meta.table)
         return cursor.fetchone()[0]

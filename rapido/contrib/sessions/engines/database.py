@@ -6,14 +6,14 @@ from ..models import Session
 
 
 class Store(SessionStore):
-    
+
     def __init__(self, session_class=None):
         super(Store, self).__init__(session_class)
 
     def get_session(self, sid):
         obj = Session.all().filter('sid == :sid', sid=sid).fetch(1)
         return obj[0] if obj else None
-    
+
     def save(self, session):
         obj = self.get_session(session.sid) or Session(sid=session.sid)
         try:
@@ -25,7 +25,7 @@ class Store(SessionStore):
 
     def delete(self, session):
         obj = self.get_session(session.sid)
-        if obj: 
+        if obj:
             obj.delete()
             db.commit()
 
@@ -38,7 +38,7 @@ class Store(SessionStore):
         except:
             data = {}
         return self.session_class(data, sid, False)
-    
+
     def list(self):
         return Session.select('sid').fetch(-1)
 

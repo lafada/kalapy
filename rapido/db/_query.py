@@ -8,7 +8,7 @@ __all__ = ('Query',)
 
 
 class Query(object):
-    """The `Query` class provides methods to filter and fetch records from the 
+    """The `Query` class provides methods to filter and fetch records from the
     database with simple pythonic conditions.
 
     >>> users = Query(User).filter("name = :name and age > :age", name="some", age=18)
@@ -20,23 +20,23 @@ class Query(object):
     The query string should not contain literal values but named parameters should
     be used to pass values.
 
-    Also, `=` has special meaning, it stands for case-insensitive match (ilike in 
+    Also, `=` has special meaning, it stands for case-insensitive match (ilike in
     some dbms). You should use `==` for exact match.
-    
+
     An instance of :class:`Query` can be constructed by passing :class:`Model`
     subclass as first argument. The contructor also accept a callable as a second
     argument to apply map on the result set.
-    
+
     >>> names = Query(User, lambda obj: obj.name).filter('name = :name', name='some').fetch(-1)
     >>> print names
     ['some', 'someone', 'some1']
-    
+
     :param model: a model, subclass of :class:`Model`
     :param mapper: a `callback` function to map query result
     """
 
     def __init__(self, model, mapper=None):
-        """Create a new instance of :class:`Query` for the given `model`. The result 
+        """Create a new instance of :class:`Query` for the given `model`. The result
         set will be mapped with the given mapper.
         """
         if mapper and not callable(mapper):
@@ -55,13 +55,13 @@ class Query(object):
         return obj
 
     def filter(self, query, **kw):
-        """Return a new :class:`Query` instance with the given query ANDed with 
+        """Return a new :class:`Query` instance with the given query ANDed with
         current query set.
-        
+
         >>> q = Query(User).filter('name = :name and age >= :age', name='some', age=20)
         >>> q1 = q.filter('dob >= :dob', dob='2001-01-01')
         >>> q2 = q.filter('dob < :dob', dob='2001-01-01')
-        
+
         :param query: The query string
         :keyword kw: Mapping to the keywords bound the given query
 
@@ -74,10 +74,10 @@ class Query(object):
 
     def order(self, spec):
         """Order the query result with given spec.
-        
+
         >>> q = Query(User).filter("name = :name and age >= :age", name="some", age=20)
         >>> q.order("-age")
-        
+
         :param spec: field name, if prefixed with `-` order by DESC else ASC
         """
         self._order = "ORDER BY"
@@ -91,7 +91,7 @@ class Query(object):
         """Fetch the given number of records from the query object from the given offset.
 
         If limit is `-1` fetch all records.
-        
+
         >>> q = Query(User).filter("name = :name and age >= :age", name="some", age=20)
         >>> for obj in q.fetch(20):
         >>>     print obj.name
@@ -100,7 +100,7 @@ class Query(object):
         :param offset: offset from where to fetch records should be >= 0
         :type limit: integer
         :type offset: integer or None
-        
+
         :returns: list of model instances or content if mapper is applied
         :rtype: list
         """
@@ -161,9 +161,9 @@ class Query(object):
 
     def _build_select(self, what, limit=None, offset=None):
         """Build the select query.
-        
+
         .. warning::
-            
+
             For internal use only.
         """
         query = "SELECT %s FROM \"%s\"" % (what, self._model._meta.table)
@@ -190,7 +190,7 @@ class Query(object):
                 raise IndexError('The query returned fewer then %r results' % arg)
         else:
             raise ValueError('Only integer indices are supported.')
-            
+
     def __iter__(self):
         offset = -1
         try:
@@ -233,7 +233,7 @@ class Parser(object):
 
         :param query: query substring, splited by `split`
         :param params: substitution values
-        
+
         :returns:
             A tuple `(str, list)` where `str` is the statement and list of
             values to be bounded to the statement.

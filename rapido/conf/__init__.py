@@ -4,7 +4,7 @@ from rapido.conf import default
 
 
 class Settings(object):
-    """Settings class holds package settings. 
+    """Settings class holds package settings.
     """
 
     __freezed = False

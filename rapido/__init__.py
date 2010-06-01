@@ -2,7 +2,7 @@ __version__ = "0.8.1"
 
 def get_version():
     """Get the version number string of the project.
-    
+
     The sequance based version number scheme is being followed. The version
     number represents three identifiers major, minor and revision.
 

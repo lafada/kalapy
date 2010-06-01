@@ -7,7 +7,7 @@ class BabelCommand(ActionCommand):
 
     name = 'babel'
     usage = '%name <action> [options]'
-    
+
     options = (
         ('l', 'locale', '', 'locale (e.g. en_US, fr_FR)'),
         ('d', 'domain', 'messages', 'message catalog domain'),
@@ -17,17 +17,17 @@ class BabelCommand(ActionCommand):
         """Create catalogs
         """
         pass
-    
+
     def action_extract(self, options, args):
         """Extract messages
         """
         pass
-    
+
     def action_update(self, options, args):
         """Update message catalogs
         """
         pass
-    
+
     def action_compile(self, options, args):
         """Compile message catalogs
         """

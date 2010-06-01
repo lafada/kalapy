@@ -1,7 +1,7 @@
 import decimal, datetime
 
 
-__all__ = ('FieldError', 'ValidationError', 'Field', 'String', 'Text', 'Integer', 
+__all__ = ('FieldError', 'ValidationError', 'Field', 'String', 'Text', 'Integer',
            'Float', 'Decimal', 'Boolean', 'DateTime', 'Date', 'Time', 'Binary')
 
 
@@ -19,23 +19,23 @@ class ValidationError(ValueError):
 
 class Field(object):
     """A Field is an attribute of a :class:`Model`.
-    
+
     It defines the type of an attribute, which determines how the value could be
     stored in the database. It provides options for validation, default value, type
     conversion etc. Different :class:`Field` type has different options.
-    
+
     A simplest example::
-        
+
         class User(db.Model):
             name = db.String(size=100, required=True)
-            
+
     :param label: field label, a verbose name
     :param name: field name, if not given uses the attribute name
     :param default: default value, can also be a callable
     :param required: whether the field value is required
     :param unique: whether the field value should be unique
     :param indexed: whether this field should be indexed
-    :param selection: 
+    :param selection:
         - a list of (value, string) tuple to restrict the input value to be
           one of the key.
         - a callable that returns a list of (value, string) tuple
@@ -88,18 +88,18 @@ class Field(object):
 
     def python_to_database(self, value):
         """Database representation of this field value.
-        
+
         :param value: the value to be converted to database supported type
-        
+
         :returns: converted value
         """
         return value
 
     def database_to_python(self, value):
         """Convert the given value to python representation for this field.
-        
+
         :param value: the value to be converted to python type
-        
+
         :returns: converted value
         """
         return value
@@ -107,10 +107,10 @@ class Field(object):
     def _validate(self, model_instance, value):
         """Validate the given value. For internal use only, subclasses should
         override `validate` method instead.
-        
+
         :param model_instance: an instance of the model to which the field is associated
         :param value: the value to be validated
-        
+
         :returns: validated value
         :raises: :class:`ValidationError`, :class:`ValueError`
         """
@@ -131,13 +131,13 @@ class Field(object):
 
     def validate(self, value):
         """Check whether the given value is compatible with this field.
-        
+
         Subclasses should override this method to convert provided value
-        in compatible form and should raise :class:`ValidationError` if the 
+        in compatible form and should raise :class:`ValidationError` if the
         value is not compatible and can't be converted to proper value.
-        
+
         :param value: the value to be validated
-        
+
         :returns: validated value
         :raises: :class:`ValidationError`, :class:`ValueError`
         """
@@ -149,9 +149,9 @@ class Field(object):
         In most cases, this is equivalent to "not value" but some fields
         like :class:`Boolean` the test is more subtle, so subclasses should
         override this method if necessary.
-        
+
         :param value: the value to check
-        
+
         :returns: True if value is empty in the context of this Field else False
         """
         return not value
@@ -230,22 +230,22 @@ class AutoKey(Field):
 class String(Field):
     """String field stores textual data, especially short string values like
     name, title etc.
-    
+
     For example::
-        
+
         class Article(db.Model):
             title = db.String(size=100)
-    
+
     :param label: field's label (verbose name)
     :param size: maximux string size
     :keyword kw: other :class:`Field` params
     """
     _data_type = "char"
-    
+
     def __init__(self, label=None, size=None, **kw):
         super(String, self).__init__(label=label, **kw)
         self._size = size or 250
-    
+
     @property
     def size(self):
         return self._size
@@ -260,9 +260,9 @@ class String(Field):
 class Text(String):
     """Text field is a variant of :class:`String` field that can hold relatively
     large textual data.
-    
+
     For example::
-        
+
         class Article(db.Model):
             title = db.String(size=100)
             content = db.Text()
@@ -378,12 +378,12 @@ class Boolean(Field):
 
 class DateTime(Field):
     """DateTime defines a :class:`Model` property of type `datetime`.
-    
+
     For example::
-        
+
         class Article(db.Model):
             pub_date = db.DateTime(default_now=True)
-            
+
     >>> a = Article()
     >>> print a.pub_date
     2010-05-16 23:52:21.539322
@@ -394,10 +394,10 @@ class DateTime(Field):
     2010-05-16 12:00:00
     >>> print type(a.pub_date)
     <type 'datetime.datetime'>
-        
+
     You can see that the input value in string is converted to python `datetime.datetime`
     object.
-    
+
     :param label: verbose label
     :param auto_now:
         If True the value will be updated with current time every time it is saved
@@ -448,7 +448,7 @@ class DateTime(Field):
 
 def _date_to_datetime(value):
     """Convert a date to a datetime for datastore storage.
-    
+
     :param value: A datetime.date object.
     :returns: A datetime object with time set to 0:00.
     """
@@ -458,7 +458,7 @@ def _date_to_datetime(value):
 
 def _time_to_datetime(value):
     """Convert a time to a datetime for datastore storage.
-    
+
     :param value: A datetime.time object.
     :returns: A datetime object with date set to 1970-01-01.
     """
@@ -476,7 +476,7 @@ def _parse_datetime(value, type=datetime.datetime):
 
     :param value: string value
     :param type: one of datetime, date or time
-    
+
     :returns: an instance of provided type
     :raises: :class:`ValidationError`
     """
@@ -525,7 +525,7 @@ class Date(DateTime):
     @staticmethod
     def now():
         return datetime.datetime.now().date()
-    
+
 class Time(DateTime):
     """Time field stores a time without date.
     """

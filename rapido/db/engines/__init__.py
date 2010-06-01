@@ -58,7 +58,7 @@ def commit():
     """Commit the changes to the database.
     """
     database.commit()
-    
+
 
 def rollback():
     """Rollback all the changes made since the last commit.

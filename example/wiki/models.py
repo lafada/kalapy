@@ -10,7 +10,7 @@ from rapido.web import url_for
 
 class Page(db.Model):
     name = db.String(size=60, required=True, unique=True)
-    
+
     @property
     def title(self):
         return self.name.replace('_', ' ')
@@ -40,7 +40,7 @@ class Revision(db.Model):
     @property
     def title(self):
         return self.page.title
-    
+
     @property
     def time(self):
         return self.timestamp.strftime('%Y-%m-%d %H:%M:%S')
@@ -55,7 +55,7 @@ def parse_rst(markup):
         settings_overrides={'file_insertion_enabled': 0, 'raw_enabled': 0},
         writer_name='html')['html_body'])
 
-        
+
 class Pagination(object):
     """
     Paginate a query object.
@@ -71,7 +71,7 @@ class Pagination(object):
     @property
     def entries(self):
         return self.query.fetch(self.per_page, (self.page - 1) * self.per_page)
-    
+
     @property
     def has_previous(self):
         return self.page > 1

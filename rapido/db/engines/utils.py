@@ -24,7 +24,7 @@ def datetime_to_python(value):
     times = list(re_datetime.match(value).groups())
 
     # strip out the timezone info
-    if len(times) == 8: 
+    if len(times) == 8:
         times.pop()
 
     # no microseconds?

@@ -5,10 +5,10 @@ from models import *
 
 
 class ModelTest(TestCase):
-    
+
     def tearDown(self):
         database.rollback()
-    
+
     def test_inherit_chain(self):
         u1 = User()
         u2 = UserDOB()
@@ -26,7 +26,7 @@ class ModelTest(TestCase):
 
         for u in [u1, u2, u3, u4]:
             self.assertTrue(u.do_something() == 4)
-        
+
 
     def test_model_save(self):
         u1 = User(name="some")
@@ -35,7 +35,7 @@ class ModelTest(TestCase):
         self.assertTrue(u2.key == u1.key)
 
     def test_model_save_related(self):
-        
+
         u1 = User(name="some1")
         ac1 = Account()
         ad1 = Address(street1="s1")
@@ -59,10 +59,10 @@ class ModelTest(TestCase):
     def test_model_delete(self):
         u1 = User(name="some2")
         k1 = u1.save()
-        
+
         u2 = User(name="some1")
         k2 = u2.save()
-        
+
         u1.delete()
 
         u3 = User.get(k1)
@@ -90,20 +90,20 @@ class ModelTest(TestCase):
     def test_model_all(self):
         u1 = User(name="some5")
         u1.save() # ensure at least one record exists
-        
+
         res = User.all().filter('name == :name', name=u1.name).fetch(-1)
         self.assertTrue(len(res) > 0)
 
     def test_model_select(self):
         u1 = User(name="some6")
         u1.save() # ensure at least one record exists
-        
+
         names = User.select('name').filter('name == :name', name=u1.name).fetch(-1)
         self.assertTrue(names[0] == u1.name)
 
 
 class FieldTest(TestCase):
-    
+
     def tearDown(self):
         database.rollback()
 
@@ -117,7 +117,7 @@ class FieldTest(TestCase):
             self.fail()
 
     def test_field_unique(self):
-        
+
         u = UniqueTest(a='aaa', b='bb', c='cc')
         u.save()
 
@@ -164,10 +164,10 @@ class QueryTest(TestCase):
             u.save()
 
         q = User.all()
-        
+
         q1 = q.filter('name in :names', names=['a', 'b', 'c'])
         q2 = q.filter('name in :names', names=['d', 'e', 'f'])
-        
+
         self.assertTrue(q != q1 != q2)
 
         self.assertTrue(q.count() == 26)

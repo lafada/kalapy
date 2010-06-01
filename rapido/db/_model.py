@@ -54,16 +54,16 @@ class ModelCache(object):
     def get_model(self, model_name, package_name=None):
         """Get the model from the cache of the given name resolving with the
         provided package_name if the name is not fully qualified name.
-        
+
         >>> db.get_model('base.user')
         >>> db.get_model('User', 'base')
 
         :param model_name: name of the model
         :param package_name: package name
-        
+
         :returns: model class or None
         :rtype: :class:`ModelType` or None
-        
+
         """
         if isinstance(model_name, ModelType):
             model_name = model_name._meta.name
@@ -83,16 +83,16 @@ class ModelCache(object):
                     return self.get_model(model_name, package_name)
                 except:
                     pass
-            
+
             raise KeyError('No such model %r' % model_name)
 
 
     def get_models(self, *packages):
         """Get the list of all models from the cache for the provided package names.
         If package names are not provided returns list of all models.
-        
+
         :arg packages: package names
-        
+
         :returns: list of models
         """
         result = []
@@ -105,7 +105,7 @@ class ModelCache(object):
 
     def register_model(self, cls):
         """Register the provided model class to the cache.
-        
+
         :param cls: the model class
         """
         assert not self.resolved, 'Cache is resolved, can\'t register new models'
@@ -176,10 +176,10 @@ class ModelType(type):
 
         if len(parents) > 1:
             raise TypeError("Multiple inheritance is not supported.")
-        
+
         check_reserved_names(attrs)
 
-        # always use the last defined base class in the inheritance chain 
+        # always use the last defined base class in the inheritance chain
         # to maintain linear hierarchy.
 
         meta = getattr(parents[0], '_meta', None) or Options()
@@ -233,7 +233,7 @@ class ModelType(type):
             else:
                 setattr(cls, name, attr)
 
-        # loop again so that every attributes are set before preparing 
+        # loop again so that every attributes are set before preparing
         # validators and unique constraints
         for name, attr in attributes:
 
@@ -267,7 +267,7 @@ class ModelType(type):
             del frame
 
     def add_field(cls, field, name=None):
-        
+
         name = name or field.name
 
         if not name:
@@ -284,7 +284,7 @@ class ModelType(type):
             cls._meta.fields[name] = field
 
         field.__configure__(cls, name)
-    
+
     def __repr__(cls):
         return "<Model %r: class %s>" % (cls._meta.name, cls.__name__)
 
@@ -294,7 +294,7 @@ class Model(object):
     the database.
 
     Database tables declared as subclasses of :class:`Model` defines table
-    properties as class members of type :class:`Field`. So if you want to 
+    properties as class members of type :class:`Field`. So if you want to
     publish a story with title, body and date, you would do it like::
 
         class Story(Model):
@@ -307,7 +307,7 @@ class Model(object):
 
         class A(Model):
             a = String()
-    
+
         class B(Model):
             b = String()
 
@@ -322,7 +322,7 @@ class Model(object):
             c = String()
 
     Another interesting behavior is that no matter which class it inherits
-    from, it always inherits from the last class defined of that base model 
+    from, it always inherits from the last class defined of that base model
     class. Let's see what it means::
 
         class D(C):
@@ -347,11 +347,11 @@ class Model(object):
     by simply creating subclasses without modifying existing code.
 
     Let's see an use case::
-        
+
         class User(Model):
             name = String(size=100, required=True)
             lang = String(size=6, selection=[('en_EN', 'English'), ('fr_FR', 'French')])
-            
+
             def do_something(self):
                 ...
                 ...
@@ -368,9 +368,9 @@ class Model(object):
     don't want to change your running system by modifying the source code,
     you simply create a subclass of `User` and all the methods/members defined
     in that subclass will be available to the package.
-    
+
     For example::
-        
+
         class UserEx(User):
             age = Integer(size=3)
 
@@ -383,14 +383,14 @@ class Model(object):
     change and still saving `age` value. You can also change the behavior of the
     base class by overriding methods.
 
-    Properties can also be initialized by providing keyword arguments to the 
+    Properties can also be initialized by providing keyword arguments to the
     constructor as keyword arguments.
 
     >>> u = User(name="some")
     >>> u.save()
-    
+
     :keyword kw: keyword arguments mapping to instance properties.
-    
+
     """
 
     __metaclass__ = ModelType
@@ -425,7 +425,7 @@ class Model(object):
 
     @property
     def is_dirty(self):
-        """Check if the instance is dirty. An instance is dirty if it's 
+        """Check if the instance is dirty. An instance is dirty if it's
         properties are changed since it is saved last time.
 
         :returns: True if dirty, else False
@@ -446,7 +446,7 @@ class Model(object):
         all values.
 
         :param dirty: if True only return values of fields marked dirty
-        
+
         :returns: a dict, key-value maping of this model's fields.
         """
         fields = self.fields().values()
@@ -483,9 +483,9 @@ class Model(object):
         """Get the list of all related model instances associated with this
         model instance. Used to get all dirty instances of related model
         instances referenced by ManyToOne and OneToOne properties.
-        
+
         .. notes::
-            
+
             For internal use only.
 
         :returns: list of related model instances
@@ -499,7 +499,7 @@ class Model(object):
                 if isinstance(value, Model) and value.is_dirty:
                     related.append(value)
         return related
-        
+
     def save(self):
         """Writes the instance to the database.
 
@@ -524,7 +524,7 @@ class Model(object):
 
     def delete(self):
         """Deletes the instance from the database.
-        
+
         :raises:
             - :class:`TypeError`: if instance is not saved
             - :class:`DatabaseError`: if instance could not be deleted.
@@ -534,7 +534,7 @@ class Model(object):
         from rapido.db.engines import database
         database.delete_records(self)
         self._key = None
-        
+
     @classmethod
     def get(cls, keys):
         """Fetch the instance(s) from the database using the provided keys.
@@ -552,7 +552,7 @@ class Model(object):
         :param keys: an key or list of keys
 
         :returns:
-            If `keys` is single value it will return and instance of the model 
+            If `keys` is single value it will return and instance of the model
             else returns list of instances.
 
         :raises: :class:`DatabaseError` if instances can't be retrieved.
@@ -571,7 +571,7 @@ class Model(object):
     def all(cls):
         """Returns a :class:`Query` object over all instances of this model from
         the database.
-        
+
         :returns: :class:`Query` instance
         """
         return Query(cls)
@@ -590,9 +590,9 @@ class Model(object):
         >>> users = User.select().fetch(-1)
         >>> print users
         [<Object ...> ...]
-        
+
         :arg fields: sequence of fields
-        
+
         :returns: :class:`Query` instance
         """
         def mapper(obj):
@@ -609,7 +609,7 @@ class Model(object):
         """Return the defined fields.
         """
         return OrderedDict(cls._meta.fields)
-    
+
     def __repr__(self):
         return "<Model %r: %s object at %s>" % (self._meta.name,
                                           self.__class__.__name__, hex(id(self)))

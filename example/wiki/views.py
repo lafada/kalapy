@@ -10,7 +10,7 @@ from models import Page, Revision, Pagination
 @web.route('/', defaults={'page': 'Main_Page'})
 def home(page):
     return web.redirect(web.url_for('show', name=page))
-    
+
 @web.route('/<name>')
 def show(name):
     revision = request.args.get('rev')
@@ -21,7 +21,7 @@ def show(name):
         revision = Page.by_name(name)
         revision_requested = False
     if revision is None:
-        return (web.render_template('missing.html', 
+        return (web.render_template('missing.html',
                 revision_requested=revision_requested,
                 page_name=name,
                 protected=False), 404)
@@ -31,20 +31,20 @@ def show(name):
 def edit(name):
     note = error = ''
     revision = Page.by_name(name)
-    
-    return web.render_template('edit.html', 
-        new=revision is None, 
-        revision=revision, 
+
+    return web.render_template('edit.html',
+        new=revision is None,
+        revision=revision,
         page_name=name,
-        note=note, 
+        note=note,
         error=error)
 
 @web.route('/<name>', methods=('POST',))
 def save(name):
-    
+
     revision = Page.by_name(name)
     text = request.form.get('text')
-    
+
     if request.form.get('cancel') or \
         revision and revision.text == text:
         return web.redirect(web.url_for('show', name=name))
@@ -56,7 +56,7 @@ def save(name):
         revision = Revision(text=text, page=page)
         revision.save()
         db.commit()
-        
+
     return web.redirect(web.url_for('show', name=name))
 
 @web.route('/<name>/log')
@@ -70,7 +70,7 @@ def log(name):
 
 @web.route('/<name>/diff')
 def diff(name):
-    
+
     old = request.args.get('old', type=int)
     new = request.args.get('new', type=int)
     error = ''
@@ -82,7 +82,7 @@ def diff(name):
         revision = Page.by_name(name)
         revisions = dict([(rev.key, rev) for rev in revision.page.revisions \
             .all().filter('key in :keys', keys=[old, new]).fetch(-1)])
-            
+
         if len(revisions) != 2:
             error = 'At least one of the revisions requested ' \
                     'does not exist.'

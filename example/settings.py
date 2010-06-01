@@ -60,10 +60,10 @@ INSTALLED_PACKAGES = (
     'wiki',
 )
 
-# Application options (subdomain, submount etc). 
-# 
+# Application options (subdomain, submount etc).
+#
 # For example::
-# 
+#
 # PACKAGE_OPTIONS = {
 #     'wiki': dict(subdomain='wiki'),
 #     'blog': dict(subdomain='blog'),

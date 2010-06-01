@@ -55,7 +55,7 @@ def build_suite(name):
 def run_tests(names, verbosity=1):
     """Run unittests for all the test names.
 
-    A name can be either an package name, or fully quilified test class name of 
+    A name can be either an package name, or fully quilified test class name of
     test class method name. For example:
 
         - package
@@ -64,7 +64,7 @@ def run_tests(names, verbosity=1):
             Run all the tests found in the given test class
         - package.tests.TestClass.test_method
             Run the specific test method
-            
+
     :param names: a sequence of names
     :param verbosity: verbose level
     """

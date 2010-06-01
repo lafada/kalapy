@@ -1,7 +1,7 @@
 """This module implements simple signal dispatcher.
 
 Connecting a signal is as easy as using a `signals.connect` decorator
-with signal name on a handler function. The signal can be fired with 
+with signal name on a handler function. The signal can be fired with
 `signals.send` method along with params if any.
 
 For example:
@@ -18,7 +18,7 @@ The signal can be fired like this:
 
 >>> signals.send('onfinish', state=1)
 
-In this case both the handlers connected to the 'onfinish' signal will 
+In this case both the handlers connected to the 'onfinish' signal will
 be fired.
 """
 import types, inspect, weakref
@@ -31,7 +31,7 @@ class Signal(object):
     """Signal class caches all the registered handlers in WeakValueDictionary
     so that handlers can be automatically garbage collected if the reference
     to the handler is the only reference.
-    
+
     :param name: name for the signal
     """
     def __init__(self, name):
@@ -39,20 +39,20 @@ class Signal(object):
         """
         self.name = name
         self.registry = weakref.WeakValueDictionary()
-        
+
     def make_id(self, handler):
         if hasattr(handler, 'im_func'):
             return id(handler.im_self), id(handler.im_func)
         return id(handler)
 
     def connect(self, handler):
-        """Connect the given handler to the signal. The handler must be a 
+        """Connect the given handler to the signal. The handler must be a
         function.
 
         :param handler: a signal handler
 
         :return: returns the handler itself
-        :raises: 
+        :raises:
             `TypeError`: if handler is not a function
         """
         if not isinstance(handler, types.FunctionType):

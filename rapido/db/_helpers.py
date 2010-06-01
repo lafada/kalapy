@@ -21,7 +21,7 @@ def meta(name=None):
         class User(db.Model):
             name = db.String()
 
-    In this case, instead of auto-generating the model name, the `User` model 
+    In this case, instead of auto-generating the model name, the `User` model
     will be given name 'base.user'.
 
     :param name: name for the model
@@ -41,18 +41,18 @@ def meta(name=None):
 
 def validate(field):
     """A helper decorator to assign a validator for a :class:`Field`.
-    
-    Should only be used with the methods of the model class where the field 
+
+    Should only be used with the methods of the model class where the field
     is defined. For example::
 
         class User(Model):
             name = String(size=50)
-            
+
             @validate('name')
             def check_name(self, value):
                 if len(value) < 3:
                     raise ValidationError('Name is too short.')
-                
+
     """
     def decore(func):
         func._validates = field
@@ -61,7 +61,7 @@ def validate(field):
 
 
 def unique(*fields):
-    """A helper function to be used to define unique constraints, single or 
+    """A helper function to be used to define unique constraints, single or
     combined, in :class:`Model` subclasses.
 
     For example::
@@ -70,11 +70,11 @@ def unique(*fields):
             a = db.String()
             b = db.String()
             c = db.String()
-        
+
             db.unique(a, [b, c])
 
     Declares uniqueness of `a` and combined uniqueness of `b` & `c`.
-    
+
     :param fields: sequence of field or list of fields
     """
 

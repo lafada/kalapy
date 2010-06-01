@@ -20,7 +20,7 @@ IntegrityError = dbapi.IntegrityError
 
 
 class Database(RelationalDatabase):
-    
+
     data_types = {
         "key"       :   "INTEGER PRIMARY KEY AUTOINCREMENT",
         "char"      :   "VARCHAR(%(size)s)",
@@ -43,16 +43,16 @@ class Database(RelationalDatabase):
 
         self.connection = dbapi.connect(self.name, detect_types=dbapi.PARSE_DECLTYPES)
         return self
-        
+
     def exists_table(self, name):
         cursor = self.cursor()
         cursor.execute("""
-            SELECT "name" FROM sqlite_master 
+            SELECT "name" FROM sqlite_master
                 WHERE type = "table" AND name = %s;
             """, (name,))
         return bool(cursor.fetchone())
-    
-    
+
+
     def cursor(self):
         if not self.connection:
             self.connect()
@@ -60,15 +60,15 @@ class Database(RelationalDatabase):
 
 
 class SQLiteCursor(dbapi.Cursor):
-    
+
     def execute(self, query, params=()):
         query = self.convert_query(query, len(params))
         return super(SQLiteCursor, self).execute(query, params)
-    
+
     def executemany(self, query, params_list):
         query = self.convert_query(query, len(params_list[0]))
         return super(SQLiteCursor, self).executemany(query, params_list)
-    
+
     def convert_query(self, query, num_params):
         return query % tuple("?" * num_params)
 

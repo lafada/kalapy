@@ -9,7 +9,7 @@ class RunServer(Command):
     """
     name = 'runserver'
     usage = '%name [options]'
-    
+
     options = (
         ('p', 'port', 8080, 'Port of the server to run on'),
         ('a', 'address', '127.0.0.1', 'Address to which the server should bind.'),

@@ -34,10 +34,10 @@ class DBCommand(ActionCommand):
     usage = '%name <action> [options]'
 
     def execute(self, options, args):
-        
+
         if settings.DATABASE_ENGINE == "dummy":
             raise self.error("DATABASE_ENGINE is not configured.")
-        
+
         database.connect()
         try:
             # load packages
@@ -47,20 +47,20 @@ class DBCommand(ActionCommand):
             database.close()
 
     def get_models(self, *packages):
-        """Similar to `db.get_models` but returns a tuple, (list of models, 
+        """Similar to `db.get_models` but returns a tuple, (list of models,
         list of models referenced from other packages)
-        
+
         Where list of models will be sorted according to relationships to ensure
         a model comes next to models it referencing.
-        
+
         :param packages: sequence of package names
         :returns: a tuple
         """
         models = db.get_models(*packages)
-        
+
         result = []
         pending = []
-        
+
         def adjust_models(args):
             for model in args:
                 if model in result or model in pending:
@@ -89,7 +89,7 @@ class DBCommand(ActionCommand):
             print
 
     def action_sync(self, options, args):
-        """Create the database tables for all the INSTALLED_PACKAGES whose 
+        """Create the database tables for all the INSTALLED_PACKAGES whose
         tables haven't been created yet.
         """
         models, __pending = self.get_models()
@@ -103,11 +103,11 @@ class DBCommand(ActionCommand):
             raise
         else:
             database.commit()
-            
+
     def action_reset(self, options, args):
         """Reset the model tables. Use with care, will drop all the tables.
         """
-        
+
         ans = raw_input("""
 Be careful, all the tables of database %r will be dropped.
 All the data stored in the database will be lost too.
@@ -115,7 +115,7 @@ All the data stored in the database will be lost too.
 Are you sure about this action? (y/N): """ % settings.DATABASE_NAME)
 
         if ans.lower() != 'y': return
-        
+
         models, __pending = self.get_models()
         models.reverse()
         try:
@@ -128,6 +128,6 @@ Are you sure about this action? (y/N): """ % settings.DATABASE_NAME)
             raise
         else:
             database.commit()
-            
+
         self.action_sync(options, args)
 

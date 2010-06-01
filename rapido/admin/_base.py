@@ -145,13 +145,13 @@ class CommandType(type):
                 if opt not in options:
                     options.append(opt)
         cls.options = tuple(options)
-        
+
         if cls.name and cls.scope == cls.current_scope:
             REGISTRY[cls.name] = cls
 
     @property
     def current_scope(cls):
-        """Comman script scope, tells if the script being invoked from the 
+        """Comman script scope, tells if the script being invoked from the
         project directory or not.
         """
         from rapido.conf import settings
@@ -189,7 +189,7 @@ class Command(object):
 
     #: usage string (single line only)
     usage = "%name [options] [args]"
-    
+
     #: command execution scope, project or None, if None then execute anywhere
     scope = "project"
 
@@ -201,7 +201,7 @@ class Command(object):
 
     def __init__(self):
         self.parser = Parser(self.options)
-        
+
     @property
     def doc(self):
         """Additional help for the command.
@@ -219,7 +219,7 @@ class Command(object):
         """
         prog = os.path.basename(sys.argv[0])
         usage = self.usage.replace('%name', self.name, 1)
-        
+
         text = '%s %s\n%s%s' % (
             prog, usage, self.doc, self.parser.options_text())
         return text
@@ -235,7 +235,7 @@ class Command(object):
         """
         print msg
         sys.exit(1)
-        
+
     def print_help(self):
         """Print help text and exit.
         """
@@ -260,11 +260,11 @@ class Command(object):
 
         if options.help:
             self.print_help()
-        
+
         self.execute(options, args)
 
     def execute(self, options, args):
-        """Subclasses should implment this method the perform any 
+        """Subclasses should implment this method the perform any
         actions.
         """
         raise NotImplementedError()
@@ -292,9 +292,9 @@ class ActionCommand(Command):
                 ...
 
     """
-    
+
     usage = '%name <action> [options] [args]'
-    
+
     def __init__(self):
         super(ActionCommand, self).__init__()
         self.actions = [a[7:] for a in dir(self) if a.startswith('action_') \
@@ -326,11 +326,11 @@ class Main(object):
 
     def __init__(self):
         self.prog = os.path.basename(sys.argv[0])
-        
+
         # load all the available commands
         for m in find_modules('rapido.admin.commands'):
             import_string(m)
-            
+
     def print_help(self):
         print "Usage: %s <command> [options] [args]" % self.prog
         print
@@ -349,21 +349,21 @@ class Main(object):
 
     def run(self, args=None):
         args = args or sys.argv[1:]
-        
+
         try:
             opts, args = getopt.getopt(args, 'h', ['help', 'version'])
             opts = dict(opts)
         except:
             opts = {}
             args = []
-            
+
         if '-h' in opts or '--help' in opts:
             self.print_help()
-        
+
         if '--version' in opts:
             print get_version()
             sys.exit(0)
-        
+
         if not args:
             self.print_help()
         if args[0] == 'help':
@@ -372,10 +372,10 @@ class Main(object):
             args = [args[1], '-h']
 
         cmd = args.pop(0)
-        
+
         if cmd.startswith('-'):
             self.print_help()
-        
+
         try:
             command = REGISTRY[cmd]
         except:

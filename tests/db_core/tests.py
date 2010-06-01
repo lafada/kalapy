@@ -5,7 +5,7 @@ from models import Article
 
 
 class DBTest(TestCase):
-    
+
     def tearDown(self):
         database.rollback()
 
@@ -52,24 +52,24 @@ class DBTest(TestCase):
         self.assertTrue(a1.key is None)
         self.assertTrue(a2.key is None)
         self.assertTrue(a1.is_dirty and a2.is_dirty)
-        
+
     def test_select_from(self):
         a = Article(title='some')
         a.save()
-        
+
         a = Article(title='sometitle')
         a.save()
-        
+
         res = Article.select('title').filter('title = :title', title='some%').fetch(-1)
         self.assertTrue(len(res) == 2)
-    
+
     def test_select_count(self):
         a = Article(title='some')
         a.save()
-        
+
         a = Article(title='sometitle')
         a.save()
-        
+
         res = Article.all().count()
         self.assertTrue(res == 2)
 

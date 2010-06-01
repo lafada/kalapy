@@ -7,11 +7,11 @@ __all__ = ('RelationalDatabase')
 
 
 class RelationalDatabase(IDatabase):
-    
+
     def __init__(self, name, host=None, port=None, user=None, password=None):
         super(RelationalDatabase, self).__init__(name, host, port, user, password)
         self.connection = None
-        
+
     def close(self):
         if self.connection:
             self.connection.close()
@@ -61,7 +61,7 @@ class RelationalDatabase(IDatabase):
 
     def schema_table(self, model):
         return self.get_create_sql(model)
-    
+
     def create_table(self, model):
         if not self.exists_table(model._meta.table):
             cursor = self.cursor()
@@ -118,7 +118,7 @@ class RelationalDatabase(IDatabase):
             obj.set_dirty(False)
 
         return result
-    
+
     def delete_records(self, instance, *args):
 
         assert isinstance(instance, Model), 'delete_records expectes Model instances'
