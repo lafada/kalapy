@@ -308,12 +308,20 @@ class ActionCommand(Command):
         self.actions = [a[7:] for a in dir(self) if a.startswith('action_') \
                 and isinstance(getattr(self, a), types.MethodType)]
 
+    def _action_help(self, action, n):
+        doc = getattr(self, 'action_%s' % action).__doc__ or ''
+        pat = re.compile('^(    |\t)', re.M)
+        doc = pat.sub(' '*n, doc)
+        return doc.strip()
+
     def get_help(self):
         help = super(ActionCommand, self).get_help()
         if self.actions:
             help += "\navailable actions:\n\n"
+            n = max([len(a) for a in self.actions])
+            fmt = '  %%-%ds  %%s\n' % n
             for action in self.actions:
-                help += '  %s\n' % action
+                help += fmt % (action, self._action_help(action, n))
         return help
 
     def execute(self, options, args):
