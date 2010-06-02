@@ -4,8 +4,8 @@ of the model class.
 
 import sys
 
-from _fields import Field
-from _model import ModelType
+from fields import Field
+from model import ModelType
 
 
 __all__ = ('meta', 'validate', 'unique')

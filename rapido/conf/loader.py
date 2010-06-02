@@ -81,7 +81,7 @@ class Loader(object):
             self.loaded = True
 
             # resolve any model references
-            from rapido.db._model import cache
+            from rapido.db.model import cache
             cache.resolve_references()
         finally:
             self.lock.release()

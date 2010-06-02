@@ -4,8 +4,8 @@ from types import FunctionType
 from rapido.conf import settings
 from rapido.utils.containers import OrderedDict
 
-from _fields import Field, AutoKey, FieldError
-from _query import Query
+from fields import Field, AutoKey, FieldError
+from query import Query
 
 
 __all__ = ['Model', 'get_model', 'get_models']
@@ -34,7 +34,7 @@ class ModelCache(object):
         if self.resolved:
             return
 
-        from _reference import IRelation, ManyToOne
+        from reference import IRelation, ManyToOne
 
         for model in self.get_models():
             ref_models = model._meta.ref_models
@@ -490,7 +490,7 @@ class Model(object):
 
         :returns: list of related model instances
         """
-        from _reference import IRelation
+        from reference import IRelation
 
         related = []
         for field in self._meta.fields.values():

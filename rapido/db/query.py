@@ -1,7 +1,7 @@
 import re
 from copy import deepcopy
 
-from _fields import FieldError
+from fields import FieldError
 
 
 __all__ = ('Query',)

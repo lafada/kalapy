@@ -1,5 +1,5 @@
-from rapido.db._model import Model
-from rapido.db._reference import ManyToOne
+from rapido.db.model import Model
+from rapido.db.reference import ManyToOne
 from rapido.db.engines.interface import IDatabase
 
 
