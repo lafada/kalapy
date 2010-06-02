@@ -29,6 +29,7 @@ from rapido.utils import signals
 
 
 __all__ = (
+    'request',
     'route', 
     'url_for',
     'locate',
