@@ -1,7 +1,7 @@
 import re
 from copy import deepcopy
 
-from fields import FieldError
+from rapido.db.fields import FieldError
 
 
 __all__ = ('Query',)

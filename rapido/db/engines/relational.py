@@ -1,6 +1,6 @@
+from rapido.db.engines.interface import IDatabase
 from rapido.db.model import Model
 from rapido.db.reference import ManyToOne
-from rapido.db.engines.interface import IDatabase
 
 
 __all__ = ('RelationalDatabase')

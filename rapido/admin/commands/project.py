@@ -12,6 +12,7 @@ import os, sys, re, shutil, string
 
 from rapido.admin import Command
 
+
 JUNK_FILE = re.compile('^(.*?)(\.swp|\.pyc|\.pyo|\~)$')
 
 def copy_helper(arg, path, files):

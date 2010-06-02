@@ -1,11 +1,8 @@
-import sys, threading
-from types import FunctionType
+import sys, types
 
-from rapido.conf import settings
+from rapido.db.fields import Field, AutoKey, FieldError
+from rapido.db.query import Query
 from rapido.utils.containers import OrderedDict
-
-from fields import Field, AutoKey, FieldError
-from query import Query
 
 
 __all__ = ['Model', 'get_model', 'get_models']
@@ -243,7 +240,7 @@ class ModelType(type):
                 del attr._unique_with
 
             # prepare validators
-            if isinstance(attr, FunctionType) and hasattr(attr, '_validates'):
+            if isinstance(attr, types.FunctionType) and hasattr(attr, '_validates'):
 
                 field = attr._validates
                 if isinstance(field, basestring):

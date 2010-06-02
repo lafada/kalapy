@@ -21,12 +21,10 @@ For more details on flashing messages see :func:`flash` and :func:`flashes`.
 :license: BSD, see LINCESE for more details.
 """
 from werkzeug import import_string
-from werkzeug.contrib.sessions import Session
 
+from rapido.contrib.sessions.flash import flash, flashes
 from rapido.conf import settings
 from rapido.web import Middleware
-
-from flash import flash, flashes
 
 
 class SessionMiddleware(Middleware):

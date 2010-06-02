@@ -9,12 +9,13 @@ Simple local memory based storage backend for the session.
 """
 import pickle
 
+from werkzeug.contrib.sessions import SessionStore
+
+
 try:
     import threading
 except ImportError:
     import dummy_threading as threading
-
-from werkzeug.contrib.sessions import SessionStore
 
 
 class Store(SessionStore):

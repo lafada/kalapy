@@ -9,7 +9,9 @@ storage backend.
 :license: BSD, see LINCESE for more details.
 """
 import pickle, base64
+
 from rapido import db
+
 
 class Session(db.Model):
     sid = db.String(size=50, required=True, unique=True)

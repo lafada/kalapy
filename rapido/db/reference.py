@@ -1,9 +1,9 @@
 """This module defines field classes to define relationship like many-to-one,
 one-to-one, many-to-one and many-to-many between models.
 """
+from rapido.db.fields import Field, FieldError
+from rapido.db.model import ModelType, Model, get_model
 
-from fields import Field, FieldError
-from model import ModelType, Model, get_model
 
 __all__ = ('ManyToOne', 'OneToOne', 'OneToMany', 'ManyToMany')
 

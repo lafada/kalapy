@@ -1,9 +1,6 @@
-import os, decimal
-
 import psycopg2 as dbapi
 from psycopg2.extensions import UNICODE
 
-from rapido.db.engines import utils
 from rapido.db.engines.relational import RelationalDatabase
 
 

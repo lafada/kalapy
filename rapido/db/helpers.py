@@ -1,11 +1,10 @@
 """This module defines some class helpers to modify the behavior/properties
 of the model class.
 """
-
 import sys
 
-from fields import Field
-from model import ModelType
+from rapido.db.fields import Field
+from rapido.db.model import ModelType
 
 
 __all__ = ('meta', 'validate', 'unique')

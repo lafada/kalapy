@@ -30,7 +30,7 @@ be fired.
 :copyright: (c) 2010 Amit Mendapara.
 :license: BSD, see LICENSE for more details.
 """
-import types, inspect, weakref
+import types, weakref
 
 
 __all__ = ('Signal', 'connect', 'disconnect', 'send')

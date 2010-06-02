@@ -9,13 +9,13 @@ database specific admin tasks.
 :license: BSD, see LINCESE for more details.
 """
 import sys
-from rapido.admin import ActionCommand
-
-from rapido.conf import settings
-from rapido.conf.loader import loader
 
 from rapido import db
+from rapido.admin import ActionCommand
+from rapido.conf import settings
+from rapido.conf.loader import loader
 from rapido.db.engines import database
+
 
 try:
     from pygments import highlight

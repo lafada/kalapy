@@ -8,10 +8,11 @@ Database based storage backend for the sessions.
 :license: BSD, see LINCESE for more details.
 """
 import pickle
+
 from werkzeug.contrib.sessions import SessionStore
 
+from rapido.contrib.sessions.models import Session
 from rapido import db
-from ..models import Session
 
 
 class Store(SessionStore):

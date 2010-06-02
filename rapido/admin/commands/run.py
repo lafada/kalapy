@@ -8,8 +8,6 @@ wsgi server during development.
 :copyright: (c) 2010 Amit Mendapara.
 :license: BSD, see LINCESE for more details.
 """
-import os
-
 from rapido.admin import Command
 from rapido.web import simple_server
 

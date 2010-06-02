@@ -8,10 +8,10 @@ packages given in settings.INSTALLED_PACKAGES.
 :copyright: (c) 2010 Amit Mendapara.
 :license: BSD, see LINCESE for more details.
 """
-import os
+from werkzeug import find_modules, import_string
 
 from rapido.conf import settings
-from werkzeug import find_modules, import_string
+
 
 try:
     import threading as _threading

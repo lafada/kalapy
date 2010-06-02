@@ -1,8 +1,8 @@
 """This module defines several utility functions to type cast values from
 python to database and vice versa.
 """
-
 import re, decimal, datetime
+
 
 re_datetime = re.compile(
     "(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)(?:.(\d+)(?:-(\d+))?)?")

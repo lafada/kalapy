@@ -13,6 +13,7 @@ from rapido.admin import Command, execute_command
 from rapido.conf import settings
 from rapido.test import run_tests
 
+
 class TestCommand(Command):
     """Run the specified tests names. A test name can be,
 
