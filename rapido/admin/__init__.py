@@ -325,6 +325,8 @@ class ActionCommand(Command):
             raise self.error('no action given')
 
         action = args.pop(0)
+        if action not in self.actions:
+            raise self.error('no such action %s' % action)
         getattr(self, 'action_%s' % action)(options, args)
 
 

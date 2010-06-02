@@ -89,6 +89,8 @@ class DBCommand(ActionCommand):
     def action_info(self, options, packages):
         """Show the table schema for the given packages
         """
+        if not packages:
+            raise self.error('no package name provided.')
         models, pending = self.get_models(*packages)
         for model in models:
             print_colorized(database.schema_table(model))
