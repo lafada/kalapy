@@ -13,28 +13,34 @@ template support using Jinja2 and exposes some useful api from `werkzeug` and
 import os, sys
 
 try:
-    import json
-except ImportError:
     import simplejson as json
-
-from werkzeug import (
-    Request as BaseRequest,
-    Response as BaseResponse,
-    ClosingIterator,
-    SharedDataMiddleware,
-    Href, redirect, abort,
-    import_string,
-)
-
-from werkzeug.routing import Rule, Map, Submount
-from werkzeug.exceptions import HTTPException, NotFound, InternalServerError
-from werkzeug.contrib.securecookie import SecureCookie
-from werkzeug.local import Local, LocalManager
+except ImportError:
+    import json
 
 from jinja2 import Environment, BaseLoader, FileSystemLoader
+from werkzeug import Request as BaseRequest, Response as BaseResponse, \
+        ClosingIterator, SharedDataMiddleware, import_string, redirect
+from werkzeug.exceptions import HTTPException
+from werkzeug.local import Local, LocalManager
+from werkzeug.routing import Rule, Map
 
 from rapido.conf import settings
 from rapido.utils import signals
+
+
+__all__ = (
+    'route', 
+    'url_for',
+    'locate',
+    'jsonify',
+    'render_template',
+    'simple_server',
+    'Request', 
+    'Response',
+    'Package', 
+    'Application', 
+    'Middleware'
+)
 
 
 # context local support
@@ -464,6 +470,19 @@ def url_for(endpoint, **values):
     if reference:
             endpoint = '%s.%s' % (reference, endpoint)
     return request.url_adapter.build(endpoint, values, force_external=external)
+
+
+def locate(endpoint, **values):
+    """Similar to `werkzeug.redirect` but uses `url_for` to generate
+    target location from the url rules.
+
+    :param endpoint: the endpoint for the URL
+    :param values: the variable arguments for the URL
+    :param _external: if set to True, an absolute URL will be generated.
+    :param _code: http status code, default 302
+    """
+    code = values.pop('_code', 302)
+    return redirect(url_for(endpoint, **values), code)
 
 
 class JinjaLoader(BaseLoader):
