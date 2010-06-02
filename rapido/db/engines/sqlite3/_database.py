@@ -1,3 +1,12 @@
+"""
+rapido.db.engines.sqlite3
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+SQLite3 backend engine.
+
+:copyright: (c) 2010 Amit Mendapara.
+:license: BSD, see LICENSE for more details.
+"""
 import os, decimal
 import sqlite3 as dbapi
 

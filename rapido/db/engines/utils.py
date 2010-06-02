@@ -1,5 +1,12 @@
-"""This module defines several utility functions to type cast values from
+"""
+rapido.db.engines.utils
+~~~~~~~~~~~~~~~~~~~~~~~
+
+This module defines several utility functions to type cast values from
 python to database and vice versa.
+
+:copyright: (c) 2010 Amit Mendapara.
+:license: BSD, see LICENSE for more details.
 """
 import re, decimal, datetime
 

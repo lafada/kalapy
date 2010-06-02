@@ -1,3 +1,79 @@
+"""
+rapido.db.query
+~~~~~~~~~~~~~~~
+
+This module implements Query class, which can be used to query for records
+from the database. For example::
+
+    users = Query(User).filter('name = :name', name='some') \\
+                       .order('-name') \\
+                       .fetch(10)
+
+This is equivalent to:
+
+.. sourcecode:: sql
+
+    SELECT * FROM 'user' WHERE 'name' like '%some%' ORDER BY 'name' DESC LIMIT 10
+
+The query string accepted by filter method is simple pythonic expression
+when LHS is a name of the field and RHS is a placeholder for the named 
+parameter bound to the provided keyword arguments.
+
+The exact systax of the query statement should be like:
+
+.. sourcecode:: antlr-python
+
+    statement   ::=     expression (("and" | "or") expression)*
+    expression  ::=     identifier operator ":"identifier
+    identifier  ::=     ("a"..."z"|"A"..."Z"|"_")("a"..."z"|"A"..."Z"|"0".."9"|"_")*
+    operator    ::=     "=" | "==" | "!=" | ">" | "<" | ">=" | "<=" | ["not"] "in"
+
+The query expression supports following operators:
+
+    ============= ==========================
+    Operator      Meaning
+    ============= ==========================
+    `=`           case insensitive match
+    `==`          exact match
+    `>`           greater then
+    `<`           less then
+    `>=`          greater then or equal to
+    `<=`          less then or equal to
+    `!=`          not equal to
+    `in`          within the given items
+    `not in`      not within the give items
+    ============= ==========================
+
+Here are few valid query statements::
+
+    "name = :name and age >= :age"
+    "country == :contry or lang == :lang"
+
+For convenience, all of the filtering and ordering methods return "self", so
+you can chain method calls like this::
+
+    users = Query(User).filter('name = :name and age >= :age', 
+                                name='some', age=18) \\
+                       .filter('country == :country or lang in :lang',
+                                country='in', lang=['en', 'hi', 'gu']) \\
+                       .order('-country').fetch(100)
+
+This is equivalent to:
+
+.. sourcecode:: sql
+
+    SELECT * FROM 'user' WHERE
+        ('name' like '%some%' AND 'age' >= 18)
+        AND
+        ('country' = 'in' OR 'lang' in ('en', 'hi', 'gu'))
+    ORDER BY 'country' DESC
+    LIMIT 100
+
+
+:copyright: (c) 2010 Amit Mendapara.
+:license: BSD, see LICENSE for more details.
+
+"""
 import re
 from copy import deepcopy
 
@@ -112,13 +188,23 @@ class Query(object):
             return map(self._mapper, result)
         return result
 
-    def first(self):
-        """Fetch the first record from the query object.
+    def fetchone(self, offset=0):
+        """Fetch a single record from the query object with given offset.
 
         :returns: model instance or None
         """
-        res = self.fetch(1)
+        res = self.fetch(1, offset)
         return res[0] if res else None
+
+    def fetchall(self):
+        """Fetch all records. An alias to :meth:`fetch` with limit as -1.
+        """
+        return self.fetch(-1)
+
+    def first(self):
+        """Fetch the first record from the query object.
+        """
+        return self.fetchone()
 
     def count(self):
         """Return the number of records in the query object.
@@ -203,6 +289,9 @@ class Query(object):
 
 class Parser(object):
     """Simple regex based query parser.
+
+    .. todo: move to `engines` as an inteface and let backend engines provide
+             engine specific implementation.
     """
 
     pat_stmt = re.compile('([\w]+)\s+(>|<|>=|<=|==|!=|=|in|not in)\s+(:([\w]+))', re.I)

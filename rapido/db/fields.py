@@ -1,3 +1,13 @@
+"""
+rapido.db.fields
+~~~~~~~~~~~~~~~~
+
+This module implements field classes which can be used to define properties
+of a data model.
+
+:copyright: (c) 2010 Amit Mendapara.
+:license: BSD, see LICENSE for more details.
+"""
 import decimal, datetime
 
 

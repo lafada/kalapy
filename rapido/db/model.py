@@ -1,3 +1,13 @@
+"""
+rapido.db.model
+~~~~~~~~~~~~~~~
+
+This module implements the Model class. It also exposes get_model 
+and get_models functions.
+
+:copyright: (c) 2010 Amit Mendapara.
+:license: BSD, see LICENSE for more details.
+"""
 import sys, types
 
 from rapido.db.fields import Field, AutoKey, FieldError
@@ -291,13 +301,14 @@ class Model(object):
     the database.
 
     Database tables declared as subclasses of :class:`Model` defines table
-    properties as class members of type :class:`Field`. So if you want to
-    publish a story with title, body and date, you would do it like::
+    properties as class members of type :class:`db.Field`. So if you want to
+    publish an article with title, text, and publishing date, you would do it 
+    like this::
 
-        class Story(Model):
-            title = String(size=100, required=True)
-            body = Text()
-            date = DateTime()
+        class Article(db.Model):
+            title = db.String(size=100, required=True)
+            pubdate = db.DateTime(default_now=True)
+            text = db.Text(required=True)
 
     You can extend a model by creating subclasses of that model but you
     can't inherit from more then one models. For example::
@@ -320,7 +331,7 @@ class Model(object):
 
     Another interesting behavior is that no matter which class it inherits
     from, it always inherits from the last class defined of that base model
-    class. Let's see what it means::
+    class. Let's see what does it means::
 
         class D(C):
             d = String()
@@ -329,9 +340,9 @@ class Model(object):
             e = String()
 
     Here even though `E` is extending `C` it is actually extending `D`, the
-    last defined class of `A`. So E will have access to all the methods/members
-    of `D` not just from `C`. In other words the inheritance hierarchy will be
-    forcefully maintained in linear fashion.
+    last defined class of `A`. So `E` will have access to all the members
+    of `D` not just from `C`. In other words the inheritance hierarchy will 
+    be forcefully maintained in linear fashion.
 
     Also whatever class you use of the hierarchy to instantiate you will
     always get an instance of the last defined class. For example:
@@ -347,29 +358,30 @@ class Model(object):
 
         class User(Model):
             name = String(size=100, required=True)
-            lang = String(size=6, selection=[('en_EN', 'English'), ('fr_FR', 'French')])
+            lang = String(size=6, selection=[('en_EN', 'English'),
+                                             ('fr_FR', 'French')])
 
             def do_something(self):
                 ...
                 ...
 
-    Your package is using this class like this:
+    Your application is using this class like this:
 
     >>> user = User(**kwargs)
     >>> user.do_something()
-    >>> user.put()
+    >>> user.save()
 
     Where `kwargs` are `dict` of form variables coming from an http post request.
 
     Now if you think that `User` should have one more property `age` but you
     don't want to change your running system by modifying the source code,
-    you simply create a subclass of `User` and all the methods/members defined
-    in that subclass will be available to the package.
+    you simply create a subclass of `User` and all the members defined in that 
+    subclass will be available to the application.
 
     For example::
 
         class UserEx(User):
-            age = Integer(size=3)
+            age = db.Integer()
 
             def do_something(self):
                 super(UserEx, self).do_something()
@@ -386,8 +398,7 @@ class Model(object):
     >>> u = User(name="some")
     >>> u.save()
 
-    :keyword kw: keyword arguments mapping to instance properties.
-
+    :param kw: keyword arguments mapping to instance properties.
     """
 
     __metaclass__ = ModelType

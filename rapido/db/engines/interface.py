@@ -1,6 +1,13 @@
-"""This module defines the database interface to be implemented by backend engines.
+"""
+rapido.db.engines.interface
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This module defines the database interface to be implemented by backend engines.
 The implementation is meant for internal use only. Users should use Model API
 instead.
+
+:copyright: (c) 2010 Amit Mendapara.
+:license: BSD, see LICENSE for more details.
 """
 
 class IDatabase(object):

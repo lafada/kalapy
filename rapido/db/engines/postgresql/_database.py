@@ -1,3 +1,12 @@
+"""
+rapido.db.engines.postgresql
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+PostgreSQL backend engine.
+
+:copyright: (c) 2010 Amit Mendapara.
+:license: BSD, see LICENSE for more details.
+"""
 import psycopg2 as dbapi
 from psycopg2.extensions import UNICODE
 

@@ -1,5 +1,12 @@
-"""This module defines some class helpers to modify the behavior/properties
+"""
+rapido.do.helpers
+~~~~~~~~~~~~~~~~~
+
+This module defines some class helpers to modify the behavior/properties
 of the model class.
+
+:copyright: (c) 2010 Amit Mendapara.
+:license: BSD, see LICENSE for more details.
 """
 import sys
 

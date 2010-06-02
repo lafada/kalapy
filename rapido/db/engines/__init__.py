@@ -1,3 +1,13 @@
+"""
+rapido.db.engines
+~~~~~~~~~~~~~~~~~
+
+This module provides database backend storage interface. Dynamically
+loads the configured storage engine and exports implemented interfaces.
+
+:copyright: (c) 2010 Amit Mendapara.
+:license: BSD, see LICENSE for more details.
+"""
 import os
 
 from werkzeug import import_string

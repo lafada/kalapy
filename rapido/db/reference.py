@@ -1,5 +1,12 @@
-"""This module defines field classes to define relationship like many-to-one,
+"""
+rapido.db.reference
+~~~~~~~~~~~~~~~~~~~
+
+This module implements field classes to define relationship like many-to-one,
 one-to-one, many-to-one and many-to-many between models.
+
+:copyright: (c) 2010 Amit Mendapara.
+:license: BSD, see LICENSE for more details.
 """
 from rapido.db.fields import Field, FieldError
 from rapido.db.model import ModelType, Model, get_model

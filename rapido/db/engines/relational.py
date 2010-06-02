@@ -1,3 +1,14 @@
+"""
+rapido.db.engines.relational
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This module provides an abstract implementation of database engine interface
+for relational database systems. Engines for an RDBMS should inherit from the
+:class:`RelationalDatabase` instead of :class:`IDatabase`.
+
+:copyright: (c) 2010 Amit Mendapara.
+:license: BSD, see LICENSE for more details.
+"""
 from rapido.db.engines.interface import IDatabase
 from rapido.db.model import Model
 from rapido.db.reference import ManyToOne
