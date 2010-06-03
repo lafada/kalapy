@@ -1,20 +1,35 @@
-.. Rapido documentation master file, created by
-   sphinx-quickstart on Thu Jun  3 17:14:45 2010.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+Welcome to Rapido
+=================
 
-Welcome to Rapido's documentation!
-==================================
+Welcome to the *Rapido's* documentation. *Rapido* is a new web application
+framework for *python* providing it's own database abstraction layer, web 
+components based on `Werkzeug`_, templating using powerful `Jinja2`_ template
+engine.
 
-Contents:
+.. _Jinja2: http://jinja.pocoo.org/2/
+.. _Werkzeug: http://werkzeug.pocoo.org/
+
+
+User's Guide
+------------
+
+.. toctree::
+    :maxdepth: 2
+
+    introduction
+    installation
+    quickstart
+    tutorial
+    license
+
+API Reference
+~~~~~~~~~~~~~
 
 .. toctree::
    :maxdepth: 2
 
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   api/db
+   api/web
+   api/utils
+   api/admin
 
