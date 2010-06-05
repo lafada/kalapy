@@ -132,6 +132,29 @@ class ManyToOne(IRelation):
 
 class OneToOne(ManyToOne):
     """OneToOne is basically ManyToOne with unique constraint.
+       
+    A reverse lookup field of type :class:`OneToOne` will be created in the 
+    referenced model.
+    
+    For example::
+        
+        class Car(db.Model):
+            name = db.String(size=100)
+            
+        class Engine(db.Model):
+            name = db.String(size=100)
+            car = db.OneToOne(Car)
+            
+    The class `Car` will get an `OneToOne` field named `engine` referencing the
+    `Engine` class and can be accessed like this::
+        
+        >>> car = Car(name='nano')
+        >>> car.engine = Engine(name='micro')
+        >>> car.save()
+        >>> print car.engine.name
+        ... 'micro'
+        >>> print car.engine.car.name
+        ... 'nano'
     """
     def __init__(self, reference, reverse_name=None, cascade=False, **kw):
         kw['unique'] = True

@@ -1,8 +1,10 @@
+.. _intro:
+
 Introduction
 ================================================================================
 
 *Rapido* is a web application framework for `Python`_ based on `Werkzeug`_ and 
-`Jinja2`_. It provides it's own unique `Database Abstraction Layer <dal>`_, 
+`Jinja2`_. It provides it's own unique :ref:`Database Abstraction Layer <dal>`,
 localisation via `Babel`_ and `pytz`_ and more...
 
 This is just a preview release. The development is still under alpha stage and
