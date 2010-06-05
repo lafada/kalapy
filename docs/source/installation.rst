@@ -33,7 +33,7 @@ Issue following commands if you haven't installed virtualenv package yet.
 
 .. sourcecode:: bash
 
-    $ sudo apt-get install python-vertualenv
+    $ sudo apt-get install python-virtualenv
     
 Now create your virtualenv directory, like:
 
