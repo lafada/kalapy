@@ -97,10 +97,10 @@ settings::
     DATABASE_ENGINE = "sqlite3"
     DATABASE_NAME = "test_hello.sqlite"
     
-Currently, sqlite3 and postgresql backend engines are supported. For simplicity
+Currently, `sqlite3` and `postgresql` backend engines are supported. For simplicity
 let you use `sqlite3` for this demo project.
 
-Now as you have configured you database setup, next step is to create datanase
+Now as you have configured you database setup, next step is to create database
 and required tables for the defined models.
 
 First create the database file:
@@ -122,9 +122,25 @@ If you want to see the table schema, issue this command:
     $ ./admin.py database info foo
     
 This will print CREATE TABLE statements of all the modules defined in the `foo`
-package.
+package like this:
 
-Use `help` to see more information on available commands.
+.. sourcecode:: sql
+
+    CREATE TABLE "foo_article" (
+        "key" INTEGER PRIMARY KEY AUTOINCREMENT,
+        "title" VARCHAR(100) NOT NULL,
+        "pubdate" DATETIME,
+        "text" TEXT NOT NULL
+    );
+    CREATE TABLE "foo_comment" (
+        "key" INTEGER PRIMARY KEY AUTOINCREMENT,
+        "title" VARCHAR(100) NOT NULL,
+        "text" TEXT,
+        "article" INTEGER REFERENCES "foo_article" ("key")
+    );
+
+The output varies depending on the database backend you have selected. Use `help` 
+to see more information on other available commands.
 
 Playing with API
 ----------------
