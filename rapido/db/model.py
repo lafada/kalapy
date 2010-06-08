@@ -2,7 +2,7 @@
 rapido.db.model
 ~~~~~~~~~~~~~~~
 
-This module implements the Model class. It also exposes get_model 
+This module implements the Model class. It also exposes get_model
 and get_models functions.
 
 :copyright: (c) 2010 Amit Mendapara.
@@ -27,71 +27,38 @@ class ModelCache(object):
         cache = {},
         aliases = {},
         packages = {},
-        resolved = False,
+        pending = {},
     )
 
     def __init__(self):
         self.__dict__ = self.__shared_state
 
+    def get_model(self, model_name):
+        """Get the model from the cache of the given name. The format of the `model_name`
+        should `package:name`.
 
-    def resolve_references(self):
-        """Prepare all reference fields for the registered models.
-        """
+        For example::
 
-        if self.resolved:
-            return
+            >>> get_model('foo:Foo')
+            >>> get_model('bar:Bar')
 
-        from reference import IRelation, ManyToOne
-
-        for model in self.get_models():
-            ref_models = model._meta.ref_models
-            fields = model._meta.fields.values() + model._meta.virtual_fields.values()
-            for field in fields:
-                if not isinstance(field, IRelation):
-                    continue
-                field.prepare(model)
-                if isinstance(field, ManyToOne) and \
-                        field.reference not in ref_models:
-                    if model in field.reference._meta.ref_models:
-                        raise FieldError("Recursive dependency, field %r in '%s.%s'" % (
-                            field.name, model.__module__, model.__name__))
-                    ref_models.append(field.reference)
-        self.resolved = True
-
-    def get_model(self, model_name, package_name=None):
-        """Get the model from the cache of the given name resolving with the
-        provided package_name if the name is not fully qualified name.
-
-        >>> db.get_model('base.user')
-        >>> db.get_model('User', 'base')
+        The `name` part in the `model_name` is case insensitive.
 
         :param model_name: name of the model
-        :param package_name: package name
 
         :returns: model class or None
-        :rtype: :class:`ModelType` or None
-
         """
         if isinstance(model_name, ModelType):
             model_name = model_name._meta.name
 
-        name = self.aliases.get(model_name, model_name)
+        assert model_name.count(':') == 1, 'Invalid model name format'
+
+        package, name = model_name.split(':')
+        alias = self.aliases.get(model_name.lower(), model_name.lower())
         try:
-            return self.cache[name]
+            return self.cache[alias]
         except KeyError:
-
-            if package_name:
-                return self.get_model('%s.%s' % (package_name, model_name))
-
-            if not package_name: # try to resolve package_name
-                try:
-                    namespace = sys._getframe().f_back.f_back.f_globals
-                    package_name = namespace.get('__package__').split('.')[0]
-                    return self.get_model(model_name, package_name)
-                except:
-                    pass
-
-            raise KeyError('No such model %r' % model_name)
+            raise TypeError('No such model %r in package %r' % (name, package))
 
 
     def get_models(self, *packages):
@@ -115,8 +82,6 @@ class ModelCache(object):
 
         :param cls: the model class
         """
-        assert not self.resolved, 'Cache is resolved, can\'t register new models'
-
         package, name = cls._meta.package, cls._meta.name
         names = self.packages.setdefault(package, [])
         if name not in names:
@@ -124,10 +89,14 @@ class ModelCache(object):
 
         alias = cls.__name__
         if package:
-            alias = '%s.%s' % (package, alias)
+            alias = '%s:%s' % (package, alias)
 
         self.aliases[alias] = name
         self.cache[name] = cls
+
+        # resolve any pending references
+        for field in self.pending.pop(alias, []):
+            field.prepare(field.model_class)
 
 
 cache = ModelCache()
@@ -218,8 +187,8 @@ class ModelType(type):
         cls._update_meta(meta)
 
         if meta.name is None:
-            meta.name = meta.package + '.' + name.lower() if meta.package else name.lower()
-            meta.table = meta.name.replace('.', '_')
+            meta.name = meta.package + ':' + name.lower() if meta.package else name.lower()
+            meta.table = meta.name.replace(':', '_')
 
         # create primary key field if it is root model
         if not parent:
@@ -302,7 +271,7 @@ class Model(object):
 
     Database tables declared as subclasses of :class:`Model` defines table
     properties as class members of type :class:`db.Field`. So if you want to
-    publish an article with title, text, and publishing date, you would do it 
+    publish an article with title, text, and publishing date, you would do it
     like this::
 
         class Article(db.Model):
@@ -341,7 +310,7 @@ class Model(object):
 
     Here even though `E` is extending `C` it is actually extending `D`, the
     last defined class of `A`. So `E` will have access to all the members
-    of `D` not just from `C`. In other words the inheritance hierarchy will 
+    of `D` not just from `C`. In other words the inheritance hierarchy will
     be forcefully maintained in linear fashion.
 
     Also whatever class you use of the hierarchy to instantiate you will
@@ -375,7 +344,7 @@ class Model(object):
 
     Now if you think that `User` should have one more property `age` but you
     don't want to change your running system by modifying the source code,
-    you simply create a subclass of `User` and all the members defined in that 
+    you simply create a subclass of `User` and all the members defined in that
     subclass will be available to the application.
 
     For example::

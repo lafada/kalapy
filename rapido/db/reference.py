@@ -9,7 +9,7 @@ one-to-one, many-to-one and many-to-many between models.
 :license: BSD, see LICENSE for more details.
 """
 from rapido.db.fields import Field, FieldError
-from rapido.db.model import ModelType, Model, get_model
+from rapido.db.model import ModelType, Model, cache
 
 
 __all__ = ('ManyToOne', 'OneToOne', 'OneToMany', 'ManyToMany')
@@ -25,6 +25,19 @@ class IRelation(Field):
         super(IRelation, self).__init__(**kw)
         self._reference = reference
 
+    def __configure__(self, model_class, name):
+        super(IRelation, self).__configure__(model_class, name)
+
+        ref = self._reference
+        if isinstance(ref, basestring) and ':' not in ref:
+            self._reference = ref = '%s:%s' % (model_class._meta.package, ref)
+        try:
+            ref = cache.get_model(ref)
+        except:
+            cache.pending.setdefault(ref, []).append(self)
+        else:
+            self.prepare(model_class)
+
     def prepare(self, model_class):
         """The relation field should implement this method to implement
         support code as at this point all the models will be resolved.
@@ -37,7 +50,7 @@ class IRelation(Field):
     def reference(self):
         """Returns the reference class.
         """
-        return get_model(self._reference, self.model_class._meta.package)
+        return cache.get_model(self._reference)
 
     @property
     def is_virtual(self):
@@ -92,6 +105,14 @@ class ManyToOne(IRelation):
 
     def prepare(self, model_class, reverse_name=None, reverse_class=None):
 
+        # check for recursive dependency and update dependency info
+        ref_models = model_class._meta.ref_models
+        if self.reference not in ref_models:
+            if model_class in self.reference._meta.ref_models:
+                raise FieldError("Recursive dependency, field %r in %s'" % (
+                    self.name, model_class.__name__))
+        ref_models.append(self.reference)
+
         if not self.reverse_name:
             self.reverse_name = reverse_name or ('%s_set' % model_class.__name__.lower())
 
@@ -132,22 +153,22 @@ class ManyToOne(IRelation):
 
 class OneToOne(ManyToOne):
     """OneToOne is basically ManyToOne with unique constraint.
-       
-    A reverse lookup field of type :class:`OneToOne` will be created in the 
+
+    A reverse lookup field of type :class:`OneToOne` will be created in the
     referenced model.
-    
+
     For example::
-        
+
         class Car(db.Model):
             name = db.String(size=100)
-            
+
         class Engine(db.Model):
             name = db.String(size=100)
             car = db.OneToOne(Car)
-            
+
     The class `Car` will get an `OneToOne` field named `engine` referencing the
     `Engine` class and can be accessed like this::
-        
+
         >>> car = Car(name='nano')
         >>> car.engine = Engine(name='micro')
         >>> car.save()

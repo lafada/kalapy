@@ -79,10 +79,6 @@ class Loader(object):
                     registry['tests'] = self.load_modules(package, 'tests')
 
             self.loaded = True
-
-            # resolve any model references
-            from rapido.db.model import cache
-            cache.resolve_references()
         finally:
             self.lock.release()
 
