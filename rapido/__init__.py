@@ -1,3 +1,7 @@
+
+# import i18n so that `_` is available as builtin
+import i18n
+
 __version__ = "0.1"
 
 def get_version():

@@ -38,6 +38,12 @@ DATABASE_OPTIONS = {
 # Enable/Disable internationalization support
 USE_I18N = True
 
+# Default locale
+DEFAULT_LOCALE = 'en_US'
+
+# Default timezone, UTC recommended
+DEFAULT_TIMEZONE = 'UTC'
+
 # List of Middleware classes
 MIDDLEWARE_CLASSES = (
     'rapido.contrib.sessions.SessionMiddleware',

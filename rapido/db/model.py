@@ -15,7 +15,7 @@ from rapido.db.query import Query
 from rapido.utils.containers import OrderedDict
 
 
-__all__ = ['Model', 'get_model', 'get_models']
+__all__ = ('Model', 'get_model', 'get_models')
 
 
 class ModelCache(object):
@@ -58,7 +58,9 @@ class ModelCache(object):
         try:
             return self.cache[alias]
         except KeyError:
-            raise TypeError('No such model %r in package %r' % (name, package))
+            raise TypeError(
+                _('No such model %(name)r in package %(package)r',
+                    name=name, package=package))
 
 
     def get_models(self, *packages):
@@ -74,7 +76,7 @@ class ModelCache(object):
             try:
                 result.extend(map(self.cache.get, self.packages[package]))
             except KeyError:
-                raise Exception('No such package %r' % package)
+                raise Exception(_('No such package %(name)r', name=package))
         return result
 
     def register_model(self, cls):
@@ -122,7 +124,8 @@ class Options(object):
 
     def __setattr__(self, name, value):
         if getattr(self, name, None) is not None:
-            raise AttributeError('Attribute %r is already initialized' % name)
+            raise AttributeError(
+                _('Attribute %(name)r is already initialized', name=name))
         super(Options, self).__setattr__(name, value)
 
 
@@ -151,7 +154,7 @@ class ModelType(type):
             return super_new(cls, name, bases, attrs)
 
         if len(parents) > 1:
-            raise TypeError("Multiple inheritance is not supported.")
+            raise TypeError(_('Multiple inheritance is not supported.'))
 
         check_reserved_names(attrs)
 
@@ -226,7 +229,9 @@ class ModelType(type):
                     field = getattr(cls, field, None)
 
                 if not isinstance(field, Field):
-                    raise FieldError("Field '%s' is not defined." % attr._validates)
+                    raise FieldError(
+                        _("Field '%(name)s' is not defined.",
+                            name=attr._validates))
 
                 # use bound method
                 field._validator = getattr(cls, name)
@@ -250,7 +255,9 @@ class ModelType(type):
             raise ValueError('Field has no name')
 
         if hasattr(cls, name):
-            raise FieldError('Field %r already defined in model %r' % (name, cls.__name__))
+            raise FieldError(
+                _('Field %(name)r already defined in model %(model)r',
+                    name=name, model=cls.__name__))
 
         setattr(cls, name, field)
 
@@ -374,7 +381,7 @@ class Model(object):
 
     def __new__(cls, **kw):
         if cls is Model:
-            raise TypeError("You can't create instance of Model class")
+            raise TypeError(_("You can't create instance of Model class"))
         klass = cache.get_model(cls)
         return super(Model, cls).__new__(klass)
 
@@ -507,7 +514,7 @@ class Model(object):
             - :class:`DatabaseError`: if instance could not be deleted.
         """
         if not self.is_saved:
-            raise TypeError("Can't delete, instance doesn't exists.")
+            raise TypeError(_("Can't delete, instance doesn't exists."))
         from rapido.db.engines import database
         database.delete_records(self)
         self._key = None

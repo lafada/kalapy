@@ -1,0 +1,37 @@
+#: rapido/db/model.py:62
+#, python-format
+msgid "No such model %(name)r in package %(package)r"
+msgstr ""
+
+#: rapido/db/model.py:79
+#, python-format
+msgid "No such package %(name)r"
+msgstr ""
+
+#: rapido/db/model.py:128
+#, python-format
+msgid "Attribute %(name)r is already initialized"
+msgstr ""
+
+#: rapido/db/model.py:157
+msgid "Multiple inheritance is not supported."
+msgstr ""
+
+#: rapido/db/model.py:233
+#, python-format
+msgid "Field '%(name)s' is not defined."
+msgstr ""
+
+#: rapido/db/model.py:259
+#, python-format
+msgid "Field %(name)r already defined in model %(model)r"
+msgstr ""
+
+#: rapido/db/model.py:384
+msgid "You can't create instance of Model class"
+msgstr ""
+
+#: rapido/db/model.py:517
+msgid "Can't delete, instance doesn't exists."
+msgstr ""
+

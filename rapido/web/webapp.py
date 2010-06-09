@@ -520,6 +520,11 @@ jinja_env.globals.update(
         url_for=url_for,
         request=request)
 
+if settings.USE_I18N:
+    from rapido.i18n.utils import gettext, ngettext
+    jinja_env.add_extension('jinja2.ext.i18n')
+    jinja_env.install_gettext_callables(gettext, ngettext, newstyle=True)
+
 
 def render_template(template, **context):
     """Render the template from the `templates` folder of the current package
