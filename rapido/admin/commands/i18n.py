@@ -105,17 +105,17 @@ class BabelCommand(ActionCommand):
 
         argv = ['-F', mapping] if mapping else []
 
-        for pkg, path, locales in self.locale_info(options, args):
-            if not os.path.exists(path):
-                os.mkdir(path)
-            pot, po, mo = self.get_files(pkg, None, options.domain)
-            if options.verbose:
-                print 'creating PO template %r' % pot
-            try:
+        try:
+            for pkg, path, locales in self.locale_info(options, args):
+                if not os.path.exists(path):
+                    os.mkdir(path)
+                pot, po, mo = self.get_files(pkg, None, options.domain)
+                if options.verbose:
+                    print 'creating PO template %r' % pot
                 self.run_babel('extract', pkg, '-o', pot, *argv)
-            finally:
-                if mapping:
-                    os.remove(mapping)
+        finally:
+            if mapping:
+                os.remove(mapping)
 
     def action_update(self, options, args):
         """update existing message catalogs from generated POT file
