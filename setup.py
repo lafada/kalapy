@@ -1,6 +1,8 @@
 """
 """
 from setuptools import setup
+from babel.messages import frontend as babel
+
 import rapido
 
 
@@ -40,4 +42,16 @@ setup(
               'rapido.web'],
     include_package_data=True,
     scripts = ['bin/rapido-admin.py'],
+    cmdclass = {
+        'compile_catalog': babel.compile_catalog,
+        'extract_messages': babel.extract_messages,
+        'init_catalog': babel.init_catalog,
+        'update_catalog': babel.update_catalog
+    },
+    message_extractors = {
+        'rapido': [
+            ('**.py', 'python', None),
+        ],
+    },
 )
+
