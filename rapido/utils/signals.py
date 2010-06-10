@@ -65,7 +65,7 @@ class Signal(object):
             `TypeError`: if handler is not a function
         """
         if not isinstance(handler, types.FunctionType):
-            raise TypeError('Signal handler must be a function')
+            raise TypeError(_('Signal handler must be a function'))
         id = self.make_id(handler)
         if id not in self.registry:
             self.registry[id] = handler

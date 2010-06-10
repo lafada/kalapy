@@ -48,7 +48,8 @@ class Database(RelationalDatabase):
 
         if self.name != ":memory:":
             if not os.path.isfile(self.name):
-                raise DatabaseError("Database '%s' doesn't exist." % self.name)
+                raise DatabaseError(
+                    _("Database %(name)r doesn't exist.", name=self.name))
 
         self.connection = dbapi.connect(self.name, detect_types=dbapi.PARSE_DECLTYPES)
         return self

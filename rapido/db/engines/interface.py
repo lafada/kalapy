@@ -68,7 +68,8 @@ class IDatabase(object):
                 [(k, getattr(field, k)) for k in dir(field)])
         except KeyError:
             from rapido.db.engines import DatabaseError
-            raise DatabaseError("Unsupported datatype '%s'" % field.data_type)
+            raise DatabaseError(
+                _('Unsupported datatype %(type)r', type=field.data_type))
 
     def schema_table(self, model):
         """Returns the schema information of the table for the given model.

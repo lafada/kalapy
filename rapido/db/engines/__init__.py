@@ -25,7 +25,8 @@ if not settings.DATABASE_ENGINE:
 
 _engine_dir = os.path.join(os.path.dirname(__file__), settings.DATABASE_ENGINE)
 if not os.path.exists(os.path.join(_engine_dir, '__init__.py')):
-    raise ValueError("Engine '%s' not supported." % settings.DATABASE_ENGINE)
+    raise ValueError(
+        _("Engine %(name)r not supported.", name=settings.DATABASE_ENGINE))
 
 engine = import_string('rapido.db.engines.%s' % settings.DATABASE_ENGINE)
 

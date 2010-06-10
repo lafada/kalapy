@@ -109,8 +109,9 @@ class ManyToOne(IRelation):
         ref_models = model_class._meta.ref_models
         if self.reference not in ref_models:
             if model_class in self.reference._meta.ref_models:
-                raise FieldError("Recursive dependency, field %r in %s'" % (
-                    self.name, model_class.__name__))
+                raise FieldError(
+                    _('Recursive dependency, field %(name)r in %(model)r',
+                        name=self.name, model=model_class.__name__))
         ref_models.append(self.reference)
 
         if not self.reverse_name:
@@ -122,8 +123,9 @@ class ManyToOne(IRelation):
                     return
             except:
                 pass
-            raise FieldError('field %r already defined in referenced model %r' % (
-                self.reverse_name, self.reference.__name__))
+            raise FieldError(
+                _('Field %(name)r already defined in referenced model %(model)r',
+                    name=self.reverse_name, model=self.reference.__name__))
 
         c = reverse_class or OneToMany
         f = c(model_class, name=self.reverse_name, reverse_name=self.name)
@@ -134,8 +136,9 @@ class ManyToOne(IRelation):
 
     def __set__(self, model_instance, value):
         if value is not None and not isinstance(value, self.reference):
-            raise ValueError("ManyToOne field %r value should be an instance of %r" % (
-                self.name, self._reference.__name__))
+            raise ValueError(
+                _('ManyToOne field %(name)r value should be an instance of %(model)r',
+                    name=self.name, model=self._reference.__name__))
         super(ManyToOne, self).__set__(model_instance, value)
 
     def python_to_database(self, value):
@@ -224,7 +227,8 @@ class O2ORel(IRelation):
             raise AttributeError('%r must be accessed with model instance' % (self.name))
 
         if not isinstance(value, self.reference):
-            raise TypeError('Expected %r instance' % (self.reference._meta.name))
+            raise TypeError(
+                _('Expected %(model)r instance', model=self.reference._meta.name))
 
         super(O2ORel, self).__set__(model_instance, value)
         if getattr(value, self.reverse_name, None) != model_instance:
@@ -247,7 +251,8 @@ class O2MSet(object):
     def __check(self, *objs):
         for obj in objs:
             if not isinstance(obj, self.__ref):
-                raise TypeError('%s instances is_required' % (self.__ref._meta.name))
+                raise TypeError(
+                    _('%(model)r instances required', model=self.__ref._meta.name))
         if not self.__obj.is_saved:
             self.__obj.save()
         return objs
@@ -277,8 +282,9 @@ class O2MSet(object):
             - `TypeError`: if any given object is not an instance of referenced model
         """
         if self.__ref_field.is_required:
-            raise FieldError("objects can't be removed from %r, delete the objects instead." % (
-                self.__field.name))
+            raise FieldError(
+                _("objects can't be removed from %(name)r, delete the objects instead.",
+                    name=self.__field.name))
 
         self.__check(*objs)
 
@@ -296,9 +302,9 @@ class O2MSet(object):
             return
 
         if self.__ref_field.is_required:
-            raise FieldError("objects can't be removed from %r, \
-                    delete the objects instead." % (
-                self.__field.name))
+            raise FieldError(
+                _("objects can't be removed from %(name)r, delete the objects instead.",
+                    name=self.__field.name))
 
         from rapido.db.engines import database
 
@@ -328,7 +334,8 @@ class M2MSet(object):
     def __check(self, *objs):
         for obj in objs:
             if not isinstance(obj, self.__ref):
-                raise TypeError('%s instances required' % (self.__ref._meta.name))
+                raise TypeError(
+                    _('%(model)r instances required', model=self.__ref._meta.name))
         if not self.__obj.is_saved:
             self.__obj.save()
         return objs
@@ -441,8 +448,9 @@ class OneToMany(IRelation):
                     return
             except:
                 pass
-            raise FieldError('field %r already defined in referenced model %r' % (
-                self.reverse_name, self.reference.__name__))
+            raise FieldError(
+                _('Field %(name)r already defined in referenced model %(model)r',
+                    name=self.reverse_name, model=self.reference.__name__))
 
         f = ManyToOne(model_class, self.name, name=self.reverse_name)
         self.reference.add_field(f)
@@ -453,7 +461,8 @@ class OneToMany(IRelation):
         return O2MSet(self, model_instance)
 
     def __set__(self, model_instance, value):
-        raise ValueError("Field %r is readonly." % self.name)
+        raise ValueError(
+            _('Field %(name)r is readonly.', name=self.name))
 
 
 class ManyToMany(IRelation):
@@ -504,8 +513,9 @@ class ManyToMany(IRelation):
         reverse_field = getattr(self.reference, self.reverse_name, None)
 
         if reverse_field and reverse_field.reverse_name != self.name:
-            raise FieldError('field %r already defined in referenced model %r' % (
-                self.reverse_name, self.reference.__name__))
+            raise FieldError(
+                _('Field %(name)r already defined in referenced model %(model)r',
+                    name=self.reverse_name, model=self.reference.__name__))
 
         return reverse_field
 
@@ -549,5 +559,6 @@ class ManyToMany(IRelation):
         return M2MSet(self, model_instance)
 
     def __set__(self, model_instance, value):
-        raise ValueError('Field %r is read-only' % (self.name))
+        raise ValueError(
+            _('Field %(name)r is readonly.', name=self.name))
 

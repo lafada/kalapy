@@ -128,8 +128,9 @@ class Field(object):
             raise ValidationError("Field '%s' is required.", self.name)
 
         if self._selection and value not in self._selection_list:
-            raise ValidationError("Field '%s' is '%s'; must be one of %s" % (
-                                self.name, value, self._selection_list))
+            raise ValidationError(
+                _("Field '%(name)s' is '%(value)s'; must be one of %(selection)s",
+                    name=self.name, value=value, selection=self._selection_list))
 
         if self._validator:
             self._validator(model_instance, value)
@@ -234,7 +235,8 @@ class AutoKey(Field):
         return model_instance._key
 
     def __set__(self, model_instance, value):
-        raise AttributeError('%r is a read-only primary key field.' % self.name)
+        raise AttributeError(
+            _('%(name)r is a read-only primary key field.', name=self.name))
 
 
 class String(Field):
@@ -263,8 +265,8 @@ class String(Field):
     def validate(self, value):
         if not isinstance(value, basestring):
             raise ValidationError(
-                    'Property %r must be a str or unicode instance, not %r'
-                    % (self.name, type(value).__name__))
+                _('Field %(name)r must be a str or unicode instance, not %(type)r',
+                    name=self.name, type=type(value).__name__))
         return value
 
 class Text(String):
@@ -295,8 +297,8 @@ class Integer(Field):
                 raise ValidationError('Invalid value: %r' % value)
         if not isinstance(value, (int, long)) or isinstance(value, bool):
             raise ValidationError(
-                    'Property %s must be an int or long, not a %s'
-                    % (self.name, type(value).__name__))
+                _('Field %(name)r must be an int or long, not a %(type)r',
+                    name=self.name, type=type(value).__name__))
         return value
 
     def empty(self, value):
@@ -319,11 +321,12 @@ class Float(Field):
             try:
                 return float(value)
             except:
-                raise ValidationError('Invalid value: %r' % value)
+                raise ValidationError(
+                    _('Invalid value: %(value)s', value=value))
         if not isinstance(value, float):
             raise ValidationError(
-                    'Property %s must be a float, not a %s'
-                    % (self.name, type(value).__name__))
+                _('Field %(name)r must be a float, not a %(type)r',
+                    name=self.name, type=type(value).__name__))
         return value
 
     def empty(self, value):
@@ -346,11 +349,12 @@ class Decimal(Float):
             try:
                 return decimal.Decimal(value)
             except:
-                raise ValidationError('Invalid decimal value: %r' % value)
+                raise ValidationError(
+                    _('Invalid decimal value: %(value)s', value=value))
         if not isinstance(value, decimal.Decimal):
             raise ValidationError(
-                    'Property %s must be a decimal.Decimal value, not a %s'
-                    % (self.name, type(value).__name__))
+                _('Field %(name)s must be a decimal.Decimal value, not a %(type)r',
+                    name=self.name, type=type(value).__name__))
         return value
 
     def empty(self, value):
@@ -374,7 +378,9 @@ class Boolean(Field):
         if value in (True, False): return value
         if value in ('t', 'True', 'y', 'Yes', '1'): return True
         if value in ('f', 'False', 'n', 'No', '0'): return False
-        raise ValidationError('Expected either True or False')
+        raise ValidationError(
+            _('Expected either %(true)s or %(false)s',
+                true='True', false='False'))
 
     def empty(self, value):
         """Is Boolean property empty?
@@ -427,7 +433,8 @@ class DateTime(Field):
     def validate(self, value):
         value = _parse_datetime(value, datetime.datetime)
         if not isinstance(value, datetime.datetime):
-            raise ValidationError('Property %r must be a datetime' % self.name)
+            raise ValidationError(
+                _('Field %(name)r must be a datetime', name=self.name))
         return value
 
     def default_value(self):
@@ -516,7 +523,8 @@ class Date(DateTime):
     def validate(self, value):
         value = _parse_datetime(value, datetime.date)
         if not isinstance(value, datetime.date):
-            raise ValidationError('Property %r must be a date' % self.name)
+            raise ValidationError(
+                _('Field %(name)r must be a date', name=self.name))
         return value
 
     def python_to_database(self, value):
@@ -543,7 +551,8 @@ class Time(DateTime):
     def validate(self, value):
         value = _parse_datetime(value, datetime.time)
         if not isinstance(value, datetime.time):
-            raise ValidationError('Property %r must be a time' % self.name)
+            raise ValidationError(
+                _('Field %(name)r must be a time', name=self.name))
         return value
 
     def python_to_database(self, value):

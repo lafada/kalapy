@@ -208,9 +208,11 @@ class Query(object):
             try:
                 return self.fetch(1, arg)[0]
             except IndexError:
-                raise IndexError('The query returned fewer then %r results' % arg)
+                raise IndexError(
+                    _('The query returned fewer then %(num)r results', num=arg))
         else:
-            raise ValueError('Only integer indices are supported.')
+            raise ValueError(
+                _('Only integer indices are supported.'))
 
     def __iter__(self):
         offset = -1
@@ -266,11 +268,13 @@ class Parser(object):
         try:
             name, op, __var, var = self.pat_stmt.match(query).groups()
         except:
-            raise Exception('Malformed query: %s', query)
+            raise Exception(
+                _('Malformed query: %(query)s', query=query))
 
         if name not in self.model._meta.fields:
-            raise FieldError('No such field %r in model %r' % (
-                name, self.model._meta.name))
+            raise FieldError(
+                _('No such field %(name)r in model %(model)r',
+                    name=name, model=self.model._meta.name))
 
         field = self.model._meta.fields[name]
 
