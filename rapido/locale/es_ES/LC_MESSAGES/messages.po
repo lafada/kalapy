@@ -1,0 +1,190 @@
+# Spanish (Spain) translations for PROJECT.
+# Copyright (C) 2010 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2010.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2010-06-10 11:18+0530\n"
+"PO-Revision-Date: 2010-06-10 11:18+0530\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: es_ES <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 0.9.5\n"
+
+#: rapido/db/fields.py:132
+#, python-format
+msgid "Field '%(name)s' is '%(value)s'; must be one of %(selection)s"
+msgstr ""
+
+#: rapido/db/fields.py:239
+#, python-format
+msgid "%(name)r is a read-only primary key field."
+msgstr ""
+
+#: rapido/db/fields.py:269
+#, python-format
+msgid "Field %(name)r must be a str or unicode instance, not %(type)r"
+msgstr ""
+
+#: rapido/db/fields.py:301
+#, python-format
+msgid "Field %(name)r must be an int or long, not a %(type)r"
+msgstr ""
+
+#: rapido/db/fields.py:325
+#, python-format
+msgid "Invalid value: %(value)s"
+msgstr ""
+
+#: rapido/db/fields.py:329
+#, python-format
+msgid "Field %(name)r must be a float, not a %(type)r"
+msgstr ""
+
+#: rapido/db/fields.py:353
+#, python-format
+msgid "Invalid decimal value: %(value)s"
+msgstr ""
+
+#: rapido/db/fields.py:357
+#, python-format
+msgid "Field %(name)s must be a decimal.Decimal value, not a %(type)r"
+msgstr ""
+
+#: rapido/db/fields.py:382
+#, python-format
+msgid "Expected either %(true)s or %(false)s"
+msgstr ""
+
+#: rapido/db/fields.py:437
+#, python-format
+msgid "Field %(name)r must be a datetime"
+msgstr ""
+
+#: rapido/db/fields.py:527
+#, python-format
+msgid "Field %(name)r must be a date"
+msgstr ""
+
+#: rapido/db/fields.py:555
+#, python-format
+msgid "Field %(name)r must be a time"
+msgstr ""
+
+#: rapido/db/model.py:62
+#, python-format
+msgid "No such model %(name)r in package %(package)r"
+msgstr ""
+
+#: rapido/db/model.py:79
+#, python-format
+msgid "No such package %(name)r"
+msgstr ""
+
+#: rapido/db/model.py:128
+#, python-format
+msgid "Attribute %(name)r is already initialized"
+msgstr ""
+
+#: rapido/db/model.py:157
+msgid "Multiple inheritance is not supported."
+msgstr ""
+
+#: rapido/db/model.py:233
+#, python-format
+msgid "Field '%(name)s' is not defined."
+msgstr ""
+
+#: rapido/db/model.py:259
+#, python-format
+msgid "Field %(name)r already defined in model %(model)r"
+msgstr ""
+
+#: rapido/db/model.py:384
+msgid "You can't create instance of Model class"
+msgstr ""
+
+#: rapido/db/model.py:517
+msgid "Can't delete, instance doesn't exists."
+msgstr ""
+
+#: rapido/db/query.py:212
+#, python-format
+msgid "The query returned fewer then %(num)r results"
+msgstr ""
+
+#: rapido/db/query.py:215
+msgid "Only integer indices are supported."
+msgstr ""
+
+#: rapido/db/query.py:272
+#, python-format
+msgid "Malformed query: %(query)s"
+msgstr ""
+
+#: rapido/db/query.py:276
+#, python-format
+msgid "No such field %(name)r in model %(model)r"
+msgstr ""
+
+#: rapido/db/reference.py:113
+#, python-format
+msgid "Recursive dependency, field %(name)r in %(model)r"
+msgstr ""
+
+#: rapido/db/reference.py:127 rapido/db/reference.py:452
+#: rapido/db/reference.py:517
+#, python-format
+msgid "Field %(name)r already defined in referenced model %(model)r"
+msgstr ""
+
+#: rapido/db/reference.py:140
+#, python-format
+msgid "ManyToOne field %(name)r value should be an instance of %(model)r"
+msgstr ""
+
+#: rapido/db/reference.py:231
+#, python-format
+msgid "Expected %(model)r instance"
+msgstr ""
+
+#: rapido/db/reference.py:255 rapido/db/reference.py:338
+#, python-format
+msgid "%(model)r instances required"
+msgstr ""
+
+#: rapido/db/reference.py:286 rapido/db/reference.py:306
+#, python-format
+msgid "objects can't be removed from %(name)r, delete the objects instead."
+msgstr ""
+
+#: rapido/db/reference.py:465 rapido/db/reference.py:563
+#, python-format
+msgid "Field %(name)r is readonly."
+msgstr ""
+
+#: rapido/db/engines/__init__.py:29
+#, python-format
+msgid "Engine %(name)r not supported."
+msgstr ""
+
+#: rapido/db/engines/interface.py:72
+#, python-format
+msgid "Unsupported datatype %(type)r"
+msgstr ""
+
+#: rapido/db/engines/sqlite3/_database.py:52
+#, python-format
+msgid "Database %(name)r doesn't exist."
+msgstr ""
+
+#: rapido/utils/signals.py:68
+msgid "Signal handler must be a function"
+msgstr ""
+
