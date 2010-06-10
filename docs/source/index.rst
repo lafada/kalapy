@@ -20,6 +20,8 @@ User's Guide
     installation
     quickstart
     tutorial
+    i18n
+    settings
     license
 
 API Reference

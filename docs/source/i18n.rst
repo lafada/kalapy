@@ -1,0 +1,232 @@
+Internationalization and Localization
+=====================================
+
+This guild will help you to understand internationalization and localisation
+support provided by Rapido framework.
+
+Overview
+--------
+
+Rapido has full support for internationalization of text in code and templates,
+and format localization of dates and numbers. The terms internationalization
+and localization are generally abbreviated as `i18n` and `L10n` respectively.
+Internationalization and localization is a process of adapting a computer
+software to different languages and regional differences. For more information
+on the topic, see `Wikipedia`_.
+
+The general workflow of the process is like this:
+
+* Application authors have to specify which part of their application
+  should be translatable.
+* Application authors or integrators should provide translation catalogs
+  for different locale.
+* Rapido will translate web applications for users according to their
+  language preferences.
+
+Rapido provides internationalization and localization support using `Babel`_ and
+`pytz`_.
+
+.. _Wikipedia: http://en.wikipedia.org/wiki/Internationalization_and_localization
+.. _Babel: http://babel.edgewall.org/
+.. _pytz: http://pytz.sourceforge.net/
+
+Internationalization
+--------------------
+
+The general goal of internationalization is to allow a single web application
+to offer it's contents in multiple languages.
+
+Rapido provides a way to specify which part of the application should be
+translated. The developers have to mark translatable strings using several
+`gettext` functions; and only those strings will be translated.
+
+Standard Translations
++++++++++++++++++++++
+
+You can specify a translation with function ``rapido.i18n.gettext`` which is
+aliased to ``_()`` for convention. The alias ``_()`` is installed as a
+``__builtins__`` so that you can directly use ``_()`` in your code without
+importing them.
+
+Here is an example of translating a python module::
+
+    from rapido import web
+    from rapido.web import request
+
+    @web.route('/')
+    def index():
+        return _('Hello World!')
+
+    @web.route('/hello/<msg>')
+    def hello(msg):
+        return _('Hello %(msg)s', msg=msg)
+
+And here is an example of translating `Jinja2` template:
+
+.. sourcecode:: html+jinja
+
+    <title>{{ gettext('Hello World!') }}</title>
+    <title>{{ gettext(title) }}</title>
+    <title>{{ _('Hello World!') }}</title>
+
+For more information, see `Jinja2 documentation`_.
+
+.. _Jinja2 documentation: http://jinja.pocoo.org/2/documentation/extensions#newstyle-gettext
+
+Pluralization
++++++++++++++
+
+You can specify pluralized messages with function ``rapido.i18n.ngettext``.
+
+This function does a plural-forms lookup of a given string depending on the `num`
+parameter and uses `plural` instead of `string` if `num` represents plural in
+the current locale.
+
+For example::
+
+    from rapido.i18n import ngettext
+
+    from foo.models import Apple
+
+    @web.route('/')
+    def index():
+        apples = Apple.all().fetch(-1)
+        return ngettext('%(num)d Apple', '%(num)d Apples!', num=len(apples))
+
+In this example, if number of apples represents plural in current locale, the
+second string will be return. For example, if ``num`` is `2` it returns ``'2 Apples!'``
+but if ``num`` is either `0` or `1`, it returns ``'1 Apple'``.
+
+Translating JavaScript
+++++++++++++++++++++++
+
+todo
+
+Using translations with JavaScript
+++++++++++++++++++++++++++++++++++
+
+todo
+
+Localization
+------------
+
+Localization of an application is a process of adapting regional deferences.
+This can be achieved by creating region specific language files and formatting
+numbers and dates accordingly.
+
+Working with Catalogs
++++++++++++++++++++++
+
+Once the strings in the application are marked to be translatable, next step
+is to create message catalogs for a particular language. A message catalog is
+a plain text file with extension `.po`, representing a single language, containing
+all the translatable strings and how they should be represented in particular
+language.
+
+Rapido uses `Babel`_ command line interface to generate message files. The files
+when translated should be compiled in `.mo` format in order to use the new translations.
+
+This can be done with the `admin.py` script generated in your project directory.
+Type following command on your terminal to see help on catalog related commands.
+
+::
+
+    $ ./admin help babel
+    admin.py babel <action> [options] [package [package [...]]]
+
+    Perform i18n message catalog actions.
+
+    options:
+
+      -l --locale  locale (e.g. en_US, fr_FR)
+      -d --domain  message catalog domain
+      -v --verbose enable verbose output
+      -h --help    display help and exit
+
+    available actions:
+
+      compile  compile message catalogs to MO files
+      extract  extract messages from source files and generate a POT file
+      init     create new message catalogs from generated POT file
+      update   update existing message catalogs from generated POT file
+
+This actions provided by `admin.py babel` command is identical to the `pybabel`
+script that comes with `Babel`_.
+
+Extracting messages
+~~~~~~~~~~~~~~~~~~~
+
+The first step is to extract translatable strings into a message catalog template
+file. This can be done with `admin.py babel extract` command::
+
+    $ ./admin.py babel extract
+
+This command will generate catalog templates for all the available packages in
+current project. If you want to extract strings for only a particular package, do
+this::
+
+    $ ./admin.py babel extract foo bar
+
+Where, `foo` and `bar` are packages of current project. A `locale/messages.pot`
+file will be created under every specified packages.
+
+Creating message catalogs
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The next step is to create message catalogs for a new file. If you already have
+created message catalog for the language, head over to next section on how to
+update existing catalogs. Creating new catalogs is as easy as::
+
+    $ ./admin.py babel init -l fr_FR foo
+
+Where, `foo` is a package of current project, if omitted, catalogs will be created
+for all the available packages.
+
+A catalog file `locale/fr_FR/LC_MESSAGES/messages.po` will be created under all
+the specified packages.
+
+.. note::
+
+    Catalogs will be only created if it doesn't exit.
+
+Updating message catalogs
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If message catalog is already created and you have changed your code and think
+that the translatable strings have been changed, you should consider updating
+existing catalogs. This can be done like this::
+
+    $ ./admin.py babel update -l fr_FR foo
+
+If you omit package name, it will perform update on all the available packages.
+Even if you omit the locale option it will perform update for all the existing
+languages for a package.
+
+Compiling message catalogs
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Once you have created/updated message catalog for a particular language. You have
+to translate the catalogs and then compile it to `.mo` format so that the translations
+can be used by the system. This can be done like this::
+
+    $ ./admin.py babel compile -l fr_FR foo
+
+If you omit package name, it will compile catalogs of the given language for all
+the available packages. Even if you omit the locale option it will compile all
+the available catalogs.
+
+Catalogs for JavaScript
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Message catalogs for JavaScript falls under `javascript` domain. Perform all the
+above actions with option `-d javascript` to create message catalogs for javascript.
+
+Formatting
+++++++++++
+
+Rapido provides several functions to format numbers, decimals and date values to
+locale specific formats. It also provides few functions to parse localized numbers,
+decimals and date values.
+
+See API documentation for more information.
+
