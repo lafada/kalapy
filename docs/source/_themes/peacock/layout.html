@@ -5,6 +5,11 @@
     <script type="text/javascript">
         $(function(){
             $('div.header > div.linkbar').corner('keep 6px');
+
+            {% if theme_page_width %}
+            $('div.related').first().corner('top keep 6px').end()
+                            .last().corner('bottom keep 6px')
+            {% endif %}
         })
     </script>
 {% endblock %}

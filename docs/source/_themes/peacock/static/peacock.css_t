@@ -1,6 +1,9 @@
 
 @import url("nature.css");
 
+{% set page_width = theme_page_width %}
+{% set sidebar_width = theme_sidebar_width %}
+
 body {
     font-size: medium;
     margin: 0;
@@ -11,6 +14,26 @@ body {
 body, h1, h2, h3, h4, h5, h6 {
     font-family: "Georgia", serif !important;
 }
+
+{%- if page_width %}
+div.header,
+div.footer,
+div.document,
+div.related {
+    width: {{ page_width }};
+    margin: auto;
+}
+{%- endif %}
+
+{%- if sidebar_width %}
+div.sphinxsidebar {
+    width: {{ sidebar_width }};
+}
+
+div.bodywrapper {
+    margin: 0px 0px 0px {{ sidebar_width }};
+}
+{%- endif %}
 
 div.header {
     position: relative;

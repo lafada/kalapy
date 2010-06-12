@@ -99,6 +99,8 @@ html_theme = 'peacock'
 # further.  For a list of options available for each theme, see the
 # documentation.
 html_theme_options = {
+    'sidebar_width': '200px',
+    'page_width': '910px',
     'headerlinks': {
         'index':            (1, 'Home Page', 'H', 'Home'),
         'documentation':    (2, 'Documentation', 'D', 'Documentation'),
