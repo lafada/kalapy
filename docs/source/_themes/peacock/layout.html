@@ -22,28 +22,27 @@
         <h1><a href="{{ pathto(master_doc) }}">{{ shorttitle|e }}</a></h1>
     {%- endif %}
     </div>
-    {% if theme_linkbar_links != 'None' %}
+    {%- if theme_headerlinks != 'None' %}
     <div class="linkbar">
         <ul>
-        {% for name, link in theme_linkbar_links %}
-            {% if loop.first %}
+        {% for _page, (_index, _title, _key, _text) in theme_headerlinks|dictsort(false, 'value') -%}
+            {%- if loop.first -%}
             <li class="linkbar-first">
-            {% elif loop.last %}
+            {%- elif loop.last -%}
             <li class="linkbar-last">
-            {% else %}
+            {%- else -%}
             <li>
-            {% endif %}
-                {% if loop.index == theme_linkbar_active_item %}
-                    <a class="linkbar-active" href="{{ link }}">{{ name }}</a>
-                {% else %}
-                    <a href="{{ link }}">{{ name }}</a>
-                {% endif %}
+            {%- endif -%}
+                {%- if _page == pagename or (pagename not in theme_headerlinks and _page == theme_headerlinks_default) -%}
+                <a class="linkbar-active" href="{{ pathto(_page) }}">{{ _text }}</a>
+                {%- else -%}
+                <a href="{{ pathto(_page) }}">{{ _text }}</a>
+                {%- endif -%}
             </li>
-        {% endfor %}
+        {% endfor -%}
         </ul>
     </div>
-    {% endif %}
-
+    {%- endif %}
 </div>
 {% endblock %}
 

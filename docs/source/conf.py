@@ -35,7 +35,7 @@ source_suffix = '.rst'
 #source_encoding = 'utf-8'
 
 # The master toctree document.
-master_doc = 'index'
+master_doc = 'documentation'
 
 # General information about the project.
 project = u'Rapido'
@@ -99,14 +99,14 @@ html_theme = 'peacock'
 # further.  For a list of options available for each theme, see the
 # documentation.
 html_theme_options = {
-    'linkbar_links': [
-        ('Home', '#'),
-        ('Documentation', '#'),
-        ('Downloads', '#'),
-        ('Community', '#'),
-        ('Support', '#'),
-    ],
-    'linkbar_active_item': 2,
+    'headerlinks': {
+        'index':            (1, 'Home Page', 'H', 'Home'),
+        'documentation':    (2, 'Documentation', 'D', 'Documentation'),
+        'downloads':        (3, 'Downloads', '', 'Downloads'),
+        'community':        (4, 'Community', 'C', 'Community'),
+        'support':          (5, 'Support', 'S', 'Support'),
+    },
+    'headerlinks_default': 'documentation',
 }
 
 # Add any paths that contain custom themes here, relative to this directory.
@@ -142,11 +142,21 @@ html_static_path = ['_static']
 #html_use_smartypants = True
 
 # Custom sidebar templates, maps document names to template names.
-#html_sidebars = {}
+html_sidebars = {
+    'index': [],
+    'downloads': [],
+    'community': [],
+    'support': [],
+}
 
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
-#html_additional_pages = {}
+html_additional_pages = {
+    'index': 'index.html',
+    'downloads': 'downloads.html',
+    'community': 'community.html',
+    'support': 'support.html',
+}
 
 # If false, no module index is generated.
 html_use_modindex = False
