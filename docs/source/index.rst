@@ -25,7 +25,7 @@ User's Guide
     license
 
 API Reference
-~~~~~~~~~~~~~
+-------------
 
 .. toctree::
    :maxdepth: 2
