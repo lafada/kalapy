@@ -4,8 +4,8 @@ import difflib
 from docutils.core import publish_parts
 from jinja2 import Markup
 
-from rapido import db
-from rapido.web import url_for
+from kalapy import db
+from kalapy.web import url_for
 
 
 class Page(db.Model):

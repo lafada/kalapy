@@ -1,5 +1,5 @@
-from rapido.db.engines import database
-from rapido.test import TestCase
+from kalapy.db.engines import database
+from kalapy.test import TestCase
 
 from models import *
 

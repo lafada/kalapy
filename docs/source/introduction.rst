@@ -3,7 +3,7 @@
 Introduction
 ================================================================================
 
-*Rapido* is a web application framework for `Python`_ based on `Werkzeug`_ and 
+*KalaPy* is a web application framework for `Python`_ based on `Werkzeug`_ and
 `Jinja2`_. It provides it's own unique :ref:`Database Abstraction Layer <dal>`,
 localisation via `Babel`_ and `pytz`_ and more...
 

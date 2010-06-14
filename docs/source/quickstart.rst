@@ -3,8 +3,8 @@
 Quickstart
 ==========
 
-This guide will help you quickly getting started with *Rapido*. This assumes 
-you already have *Rapido* installed, if not please check the :ref:`installation` 
+This guide will help you quickly getting started with *KalaPy*. This assumes
+you already have *KalaPy* installed, if not please check the :ref:`installation`
 section.
 
 .. note::
@@ -17,8 +17,8 @@ Create project
 
 .. sourcecode:: bash
 
-    $ rapido-admin.py startproject hello
-    
+    $ kalapy-admin.py startproject hello
+
 A new project directory `hello` will be created with `admin.py` and `settings.py`
 files.
 
@@ -30,8 +30,8 @@ Create package
 
     $ cd hello
     $ ./admin.py startpackage foo
-    
-A new application package `foo` will be created under the current project 
+
+A new application package `foo` will be created under the current project
 directory with following contents::
 
     foo/__init__.py
@@ -55,19 +55,19 @@ module of the project created earlier. Open the `settings.py` file and append
 
     This is is similar to Django but will be changed in future. As the concept
     of package is not exactly the same as application in Django.
-    
+
     A package can be extended by addon packages. Resources provided by those
     addon packages will be available to the original package (this feature is
     still not implemented though).
-    
+
 
 Define models
 -------------
 
 Models should be defined under `models.py` like this::
 
-    from rapido import db
-    
+    from kalapy import db
+
     class Article(db.Model):
         title = db.String(size=100, required=True)
         pubdate = db.DateTime(default_now=True)
@@ -96,7 +96,7 @@ settings::
 
     DATABASE_ENGINE = "sqlite3"
     DATABASE_NAME = "test_hello.sqlite"
-    
+
 Currently, `sqlite3` and `postgresql` backend engines are supported. For simplicity
 let you use `sqlite3` for this demo project.
 
@@ -108,19 +108,19 @@ First create the database file:
 .. sourcecode:: bash
 
     $ touch test_hello.sqlite
-    
+
 Then create tables:
 
 .. sourcecode:: bash
 
     $ ./admin.py database sync
-    
+
 If you want to see the table schema, issue this command:
 
 .. sourcecode:: bash
 
     $ ./admin.py database info foo
-    
+
 This will print CREATE TABLE statements of all the modules defined in the `foo`
 package like this:
 
@@ -139,13 +139,13 @@ package like this:
         "article" INTEGER REFERENCES "foo_article" ("key")
     );
 
-The output varies depending on the database backend you have selected. Use `help` 
+The output varies depending on the database backend you have selected. Use `help`
 to see more information on other available commands.
 
 Playing with API
 ----------------
 
-The `admin.py` script provides two commands to play with the *Rapido* api.
+The `admin.py` script provides two commands to play with the *KalaPy* api.
 
 Start an interactive python shell:
 
@@ -153,16 +153,16 @@ Start an interactive python shell:
 
     $ ./admin.py shell
 
-or, run an arbitrary python script in the context of current project    
+or, run an arbitrary python script in the context of current project
 
 .. sourcecode:: bash
 
     $ ./admin.py script somescript.py
-    
-    
+
+
 Let's check with shell::
 
-    >>> from rapido import db
+    >>> from kalapy import db
     >>> from foo.models import *
     >>> article = Article(title='my first article')
     >>> article.text = """
@@ -174,22 +174,22 @@ Let's check with shell::
     >>> articles = Article.all().fetch(10)
     >>> for article in articales:
     ...     print article.title
-            
+
 
 Define views
 ------------
 
 You should define your view functions inside the `views.py` module like::
 
-    from rapido import web
-    from rapido.web import request
-    
+    from kalapy import web
+    from kalapy.web import request
+
     @web.route('/')
     def index():
         return """
         <h1>Hello World!</h1>
         """
-        
+
     @web.route('/foo/<msg>')
     def foo(msg):
         return "Say: %s" % msg
@@ -199,8 +199,8 @@ For for information on web component api see :ref:`webapi`.
 Start the development server
 ----------------------------
 
-As you have defined your views, it's time to see it in action. *Rapido* provides
-a simple server for development purpose which can be lauched using the admin 
+As you have defined your views, it's time to see it in action. *KalaPy* provides
+a simple server for development purpose which can be lauched using the admin
 script like:
 
 .. sourcecode:: bash
@@ -208,7 +208,7 @@ script like:
     $ ./admin.py runserver
      * Running on http://127.0.0.1:8080/
      * Restarting with reloader...
-    
+
 Launch you web browser and go to `http://127.0.0.1:8080/ <http://127.0.0.1:8080/>`_,
 you should see your hello world greetings.
 

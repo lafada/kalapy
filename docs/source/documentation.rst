@@ -1,7 +1,7 @@
-Welcome to Rapido
+Welcome to KalaPy
 =================
 
-Welcome to the *Rapido's* documentation. *Rapido* is a new web application
+Welcome to the *KalaPy's* documentation. *KalaPy* is a new web application
 framework for `Python`_ providing it's own :ref:`Database Abstraction Layer <dal>`,
 web components based on `Werkzeug`_, templating using powerful `Jinja2`_ template
 engine and more...

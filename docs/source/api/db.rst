@@ -1,6 +1,6 @@
 .. _dal:
 
-.. currentmodule:: rapido.db
+.. currentmodule:: kalapy.db
 
 Database Abstraction Layer
 ==========================

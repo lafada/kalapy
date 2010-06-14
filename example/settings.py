@@ -40,7 +40,7 @@ USE_I18N = True
 
 # List of Middleware classes
 MIDDLEWARE_CLASSES = (
-    'rapido.contrib.sessions.SessionMiddleware',
+    'kalapy.contrib.sessions.SessionMiddleware',
 )
 
 # Session storage engine (memory, memcached or database)
@@ -56,7 +56,7 @@ SESSION_COOKIE = {
 
 # List of installed packages
 INSTALLED_PACKAGES = (
-    'rapido.contrib.sessions',
+    'kalapy.contrib.sessions',
     'main',
     'wiki',
     'blog',

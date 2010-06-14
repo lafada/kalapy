@@ -1,8 +1,8 @@
 License
 =======
 
-Rapido is licensed under a three clause `BSD License`_.  It basically
-means: do whatever you want with it as long as the copyright in Rapido
+KalaPy is licensed under a three clause `BSD License`_.  It basically
+means: do whatever you want with it as long as the copyright in KalaPy
 sticks around, the conditions are not modified and the disclaimer is
 present.  Furthermore you must not use the names of the authors to promote
 derivates of the software without written consent.

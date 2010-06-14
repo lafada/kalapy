@@ -3,7 +3,7 @@
 Installation
 ============
 
-This guide with help you to properly install *Rapido* and all it's dependencies.
+This guide with help you to properly install *KalaPy* and all it's dependencies.
 
 
 .. note::
@@ -49,18 +49,18 @@ Now, you should activate it, whenever you work with it.
 
     $ . env/bin/activate
     
-Now you can just enter the following command to get Rapido installed in
+Now you can just enter the following command to get KalaPy installed in
 your virtualenv::
 
-    $ easy_install Rapido
+    $ easy_install KalaPy
 
 After installed, type following command to see whether it is properly installed
 or not:
 
 .. sourcecode:: bash
 
-    $ rapido-admin.py
-    Usage: rapido-admin.py <command> [options] [args]
+    $ kalapy-admin.py
+    Usage: kalapy-admin.py <command> [options] [args]
 
     options:
 
@@ -71,24 +71,24 @@ or not:
 
       startproject
 
-    use "rapido-admin.py help <command>" for more details on a command
+    use "kalapy-admin.py help <command>" for more details on a command
 
 .. _virtualenv: http://pypi.python.org/pypi/virtualenv/
 
 System Wide Installation
 ------------------------
 
-This is not recommended, as Rapido is still unstable, under heavy development
+This is not recommended, as KalaPy is still unstable, under heavy development
 and not tested well.
 
 .. sourcecode:: bash
 
-    $ sudo easy_install Rapido
+    $ sudo easy_install KalaPy
 
 
 Playing with Source
 -------------------
 
-*Rapido* is an open source project released under BSD license. You can grab
-the latest sources from `github.com <http://github.com/cristatus/Rapido>`_.
+*KalaPy* is an open source project released under BSD license. You can grab
+the latest sources from `github.com <http://github.com/cristatus/KalaPy>`_.
 

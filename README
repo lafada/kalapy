@@ -1,8 +1,8 @@
 ===============================================================================
-Rapido
+KalaPy
 ===============================================================================
 
-Rapido is a web application framework for Python based on Werkzeug and Jinja2.
+KalaPy is a web application framework for Python based on Werkzeug and Jinja2.
 It provides it's own unique Database Abstraction Layer (DAL), localisation via
 babel and pytz and more...
 

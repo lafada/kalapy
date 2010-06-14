@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Rapido documentation build configuration file, created by
+# KalaPy documentation build configuration file, created by
 # sphinx-quickstart on Thu Jun  3 16:49:30 2010.
 #
 # This file is execfile()d with the current directory set to its containing dir.
@@ -38,14 +38,14 @@ source_suffix = '.rst'
 master_doc = 'documentation'
 
 # General information about the project.
-project = u'Rapido'
+project = u'KalaPy'
 copyright = u'2010, Amit Mendapara'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
-from rapido import get_version
+from kalapy import get_version
 # The short X.Y version.
 version = get_version()
 # The full version, including alpha/beta/rc tags.
@@ -123,12 +123,12 @@ html_theme_path = ['_themes']
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-#html_logo = None
+html_logo = 'logo.png'
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large.
-#html_favicon = None
+html_favicon = 'favicon.png'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -181,7 +181,7 @@ html_use_modindex = False
 #html_file_suffix = ''
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'Rapidodoc'
+htmlhelp_basename = 'KalaPydoc'
 
 
 # -- Options for LaTeX output --------------------------------------------------
@@ -195,7 +195,7 @@ htmlhelp_basename = 'Rapidodoc'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'Rapido.tex', u'Rapido Documentation',
+  ('index', 'KalaPy.tex', u'KalaPy Documentation',
    u'Amit Mendapara', 'manual'),
 ]
 

@@ -3,13 +3,13 @@
 from setuptools import setup
 from babel.messages import frontend as babel
 
-import rapido
+import kalapy
 
 
 setup(
-    name='Rapido',
-    version=rapido.__version__,
-    url='http://github.com/cristatus/rapido/',
+    name='KalaPy',
+    version=kalapy.__version__,
+    url='http://github.com/cristatus/kalapy/',
     license='BSD',
     author='Amit Medapara',
     author_email='mendapara.amit@gmail.com',
@@ -33,15 +33,15 @@ setup(
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
         'Topic :: Software Development :: Libraries :: Python Modules'
     ],
-    packages=['rapido', 'rapido.admin', 'rapido.admin.commands', 'rapido.conf',
-              'rapido.contrib', 'rapido.contrib.sessions',
-              'rapido.db', 'rapido.db.engines',
-              'rapido.db.engines.sqlite3',
-              'rapido.db.engines.postgresql',
-              'rapido.db.engines.dummy',
-              'rapido.web'],
+    packages=['kalapy', 'kalapy.admin', 'kalapy.admin.commands', 'kalapy.conf',
+              'kalapy.contrib', 'kalapy.contrib.sessions',
+              'kalapy.db', 'kalapy.db.engines',
+              'kalapy.db.engines.sqlite3',
+              'kalapy.db.engines.postgresql',
+              'kalapy.db.engines.dummy',
+              'kalapy.web'],
     include_package_data=True,
-    scripts = ['bin/rapido-admin.py'],
+    scripts = ['bin/kalapy-admin.py'],
     cmdclass = {
         'compile_catalog': babel.compile_catalog,
         'extract_messages': babel.extract_messages,
@@ -49,7 +49,7 @@ setup(
         'update_catalog': babel.update_catalog
     },
     message_extractors = {
-        'rapido': [
+        'kalapy': [
             ('**.py', 'python', None),
         ],
     },

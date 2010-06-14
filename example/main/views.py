@@ -1,4 +1,4 @@
-from rapido import web
+from kalapy import web
 
 @web.route('/')
 def index():

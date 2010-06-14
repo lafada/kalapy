@@ -2,12 +2,12 @@ Internationalization and Localization
 =====================================
 
 This guild will help you to understand internationalization and localisation
-support provided by Rapido framework.
+support provided by KalaPy framework.
 
 Overview
 --------
 
-Rapido has full support for internationalization of text in code and templates,
+KalaPy has full support for internationalization of text in code and templates,
 and format localization of dates and numbers. The terms internationalization
 and localization are generally abbreviated as `i18n` and `L10n` respectively.
 Internationalization and localization is a process of adapting a computer
@@ -20,10 +20,10 @@ The general workflow of the process is like this:
   should be translatable.
 * Application authors or integrators should provide translation catalogs
   for different locale.
-* Rapido will translate web applications for users according to their
+* KalaPy will translate web applications for users according to their
   language preferences.
 
-Rapido provides internationalization and localization support using `Babel`_ and
+KalaPy provides internationalization and localization support using `Babel`_ and
 `pytz`_.
 
 .. _Wikipedia: http://en.wikipedia.org/wiki/Internationalization_and_localization
@@ -36,22 +36,22 @@ Internationalization
 The general goal of internationalization is to allow a single web application
 to offer it's contents in multiple languages.
 
-Rapido provides a way to specify which part of the application should be
+KalaPy provides a way to specify which part of the application should be
 translated. The developers have to mark translatable strings using several
 `gettext` functions; and only those strings will be translated.
 
 Standard Translations
 +++++++++++++++++++++
 
-You can specify a translation with function ``rapido.i18n.gettext`` which is
+You can specify a translation with function ``kalapy.i18n.gettext`` which is
 aliased to ``_()`` for convention. The alias ``_()`` is installed as a
 ``__builtins__`` so that you can directly use ``_()`` in your code without
 importing them.
 
 Here is an example of translating a python module::
 
-    from rapido import web
-    from rapido.web import request
+    from kalapy import web
+    from kalapy.web import request
 
     @web.route('/')
     def index():
@@ -76,7 +76,7 @@ For more information, see `Jinja2 documentation`_.
 Pluralization
 +++++++++++++
 
-You can specify pluralized messages with function ``rapido.i18n.ngettext``.
+You can specify pluralized messages with function ``kalapy.i18n.ngettext``.
 
 This function does a plural-forms lookup of a given string depending on the `num`
 parameter and uses `plural` instead of `string` if `num` represents plural in
@@ -84,7 +84,7 @@ the current locale.
 
 For example::
 
-    from rapido.i18n import ngettext
+    from kalapy.i18n import ngettext
 
     from foo.models import Apple
 
@@ -123,7 +123,7 @@ a plain text file with extension `.po`, representing a single language, containi
 all the translatable strings and how they should be represented in particular
 language.
 
-Rapido uses `Babel`_ command line interface to generate message files. The files
+KalaPy uses `Babel`_ command line interface to generate message files. The files
 when translated should be compiled in `.mo` format in order to use the new translations.
 
 This can be done with the `admin.py` script generated in your project directory.
@@ -224,7 +224,7 @@ above actions with option `-d javascript` to create message catalogs for javascr
 Formatting
 ++++++++++
 
-Rapido provides several functions to format numbers, decimals and date values to
+KalaPy provides several functions to format numbers, decimals and date values to
 locale specific formats. It also provides few functions to parse localized numbers,
 decimals and date values.
 

@@ -1,4 +1,4 @@
-from rapido import db
+from kalapy import db
 
 class Article(db.Model):
     title = db.String(size=100, required=True)

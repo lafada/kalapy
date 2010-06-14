@@ -13,7 +13,7 @@ DATABASE_ENGINE = "postgresql"
 # Database name
 # For sqlite3 use path to the sqlite3 database file
 # For bigtable keep empty
-DATABASE_NAME = "test_rapido"
+DATABASE_NAME = "test_kalapy"
 
 # Database user (must have rights to create database tables)
 # Keep empty for sqlite3 and bigtable

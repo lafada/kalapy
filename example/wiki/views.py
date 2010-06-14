@@ -1,8 +1,8 @@
 from difflib import unified_diff
 
-from rapido import db
-from rapido import web
-from rapido.web import request
+from kalapy import db
+from kalapy import web
+from kalapy.web import request
 
 from models import Page, Revision, Pagination
 

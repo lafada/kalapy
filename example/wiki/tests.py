@@ -1,4 +1,4 @@
-from rapido.test import TestCase, WebTestCase
+from kalapy.test import TestCase, WebTestCase
 
 # Create your unittest classes here
 

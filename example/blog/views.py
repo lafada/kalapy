@@ -1,6 +1,6 @@
-from rapido import db
-from rapido import web
-from rapido.web import request, render_template, url_for, redirect, abort
+from kalapy import db
+from kalapy import web
+from kalapy.web import request, render_template, url_for, redirect, abort
 
 from models import Entry
 

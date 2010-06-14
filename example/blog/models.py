@@ -1,4 +1,4 @@
-from rapido import db
+from kalapy import db
 
 
 class Entry(db.Model):

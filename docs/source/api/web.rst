@@ -3,7 +3,7 @@
 Web Components
 ==============
 
-.. automodule:: rapido.web
+.. automodule:: kalapy.web
     :members:
 
 

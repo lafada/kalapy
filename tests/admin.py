@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 import os, sys
 
-# make rapido namespace avialable
+# make kalapy namespace avialable
 sys.path.append(os.path.abspath(os.path.pardir))
 
-from rapido import admin
+from kalapy import admin
 try:
     import settings
 except ImportError:
