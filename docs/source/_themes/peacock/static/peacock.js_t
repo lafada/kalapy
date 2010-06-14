@@ -1,0 +1,9 @@
+{%- set page_width = theme_page_width %}
+{%- set sidebar_width = theme_sidebar_width %}
+
+{% if page_width %}
+$(function(){
+    $('div.related').first().corner('top keep 6px').end()
+                    .last().corner('bottom keep 6px');
+})
+{% endif %}

@@ -1,4 +1,3 @@
-
 @import url("nature.css");
 @import url("http://fonts.googleapis.com/css?family=Droid+Serif");
 
@@ -34,62 +33,4 @@ div.bodywrapper {
     margin: 0px 0px 0px {{ sidebar_width }};
 }
 {% endif %}
-
-div.header {
-    position: relative;
-    overflow: hidden;
-    height: 100px;
-}
-
-div.header div.logo {
-    float: left;
-    margin-left: 20px;
-}
-
-div.header div.linkbar {
-    float: right;
-    font-size: 0.9em;
-    margin-top: 30px;
-    margin-right: 20px;
-    background-color: #0F67A1;
-    border: 1px solid #000a14;
-}
-
-div.header div.linkbar ul {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    float: left;
-    line-height: 34px;
-}
-
-div.header div.linkbar li {
-    list-style: none;
-    float: left;
-    border-left: 1px solid #1175AE;
-    border-right: 1px solid #0D5995;
-}
-
-div.header div.linkbar li.linkbar-first {
-    border-left: none;
-}
-
-div.header div.linkbar li.linkbar-last {
-    border-right: none;
-}
-
-
-div.header div.linkbar a {
-    color: #ccc;
-    text-decoration: none;
-    float: left;
-    margin-bottom:2px;
-    padding: 0 12px;
-}
-
-div.header div.linkbar a.linkbar-active,
-div.header div.linkbar a:hover {
-    color: #FFFFFF;
-    text-shadow: #444 0px 1px 0px;
-}
 
