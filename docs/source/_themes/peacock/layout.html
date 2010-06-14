@@ -1,10 +1,9 @@
 {% extends "basic/layout.html" %}
-{% set script_files = script_files + [pathto('_static/jquery.corner.js', 1)] %}
-{% set script_files = script_files + [pathto('_static/peacock.js', 1)] %}
+{% set script_files = script_files + ['_static/jquery.corner.js'] %}
+{% set script_files = script_files + ['_static/peacock.js'] %}
 
 {% block header %}
 <div class="header">
     <h1><a href="{{ pathto(master_doc) }}">{{ shorttitle|e }}</a></h1>
 </div>
 {% endblock %}
-
