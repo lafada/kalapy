@@ -1,21 +1,21 @@
 
 @import url("nature.css");
+@import url("http://fonts.googleapis.com/css?family=Droid+Serif");
 
-{% set page_width = theme_page_width %}
-{% set sidebar_width = theme_sidebar_width %}
+{%- set page_width = theme_page_width %}
+{%- set sidebar_width = theme_sidebar_width %}
 
 body {
-    font-size: medium;
     margin: 0;
     padding: 0;
     color: #3E4349;
 }
 
 body, h1, h2, h3, h4, h5, h6 {
-    font-family: "Georgia", serif !important;
+    font-family: "Georgia", "Droid Serif", "Times", serif !important;
 }
 
-{%- if page_width %}
+{% if page_width %}
 div.header,
 div.footer,
 div.document,
@@ -23,9 +23,9 @@ div.related {
     width: {{ page_width }};
     margin: auto;
 }
-{%- endif %}
+{% endif %}
 
-{%- if sidebar_width %}
+{% if sidebar_width %}
 div.sphinxsidebar {
     width: {{ sidebar_width }};
 }
@@ -33,21 +33,23 @@ div.sphinxsidebar {
 div.bodywrapper {
     margin: 0px 0px 0px {{ sidebar_width }};
 }
-{%- endif %}
+{% endif %}
 
 div.header {
     position: relative;
     overflow: hidden;
+    height: 100px;
 }
 
 div.header div.logo {
     float: left;
+    margin-left: 20px;
 }
 
 div.header div.linkbar {
     float: right;
     font-size: 0.9em;
-    margin-top: 20px;
+    margin-top: 30px;
     margin-right: 20px;
     background-color: #0F67A1;
     border: 1px solid #000a14;
