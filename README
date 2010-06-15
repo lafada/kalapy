@@ -18,7 +18,6 @@ of OpenObject and Django. Let's see how it goes...
 TODO
 -------------------------------------------------------------------------------
 
-* localisation (using babel, pytz)
 * unit tests
 * documentation
 * google app engine support

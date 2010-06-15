@@ -3,6 +3,19 @@ KalaPy Changelog
 
 Here you can see the full list of changes between each KalaPy release.
 
+Version 0.2
+-----------
+
+- Project has been renamed to KalaPy
+- Added a sphinx theme, peacock, for documentation
+- Added fr_FR, de_DE and es_ES locale (not translated though)
+- Translated all the string instances in the code
+- Implemented full i18n support using babel and pytz
+- Implemented Babel commands to work with message catalogs
+- The get_model now follows same 'package:name' format as web api does
+- Improved the pending dependency resolution for Reference fields
+
+
 Version 0.1
 -----------
 
