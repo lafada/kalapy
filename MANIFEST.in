@@ -3,3 +3,8 @@ recursive-include bin *
 recursive-include example *
 recursive-include kalapy *
 recursive-include tests *
+recursive-include docs *
+prune docs/build
+prune .git
+exclude example/example.db
+global-exclude *pyc *~ *.swp .gitignore

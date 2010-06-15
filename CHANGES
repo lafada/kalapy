@@ -3,6 +3,12 @@ KalaPy Changelog
 
 Here you can see the full list of changes between each KalaPy release.
 
+Version 0.2.1
+-------------
+
+- Fixed distribution packaging issues
+
+
 Version 0.2
 -----------
 
