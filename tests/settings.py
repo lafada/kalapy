@@ -41,6 +41,7 @@ USE_I18N = True
 # List of Middleware classes
 MIDDLEWARE_CLASSES = (
     'kalapy.contrib.sessions.SessionMiddleware',
+    'web_core.middleware.TestMiddleware',
 )
 
 # Session storage engine (memory, memcached or database)
