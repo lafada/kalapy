@@ -31,11 +31,50 @@ DATABASE_HOST = ""
 # Keep empty for sqlite3 and bigtable
 DATABASE_PORT = ""
 
+# Database specific options
+DATABASE_OPTIONS = {
+}
+
 # Enable/Disable internationalization support
 USE_I18N = True
 
+# List of Middleware classes
+MIDDLEWARE_CLASSES = (
+    'kalapy.contrib.sessions.SessionMiddleware',
+)
+
+# Session storage engine (memory, memcached or database)
+SESSION_ENGINE = "memory"
+
+# Session cookie options
+SESSION_COOKIE = {
+    'name': 'session_id',
+    'age': 60 * 60 * 24 * 7 * 2,
+    'domain': None,
+    'path': '/'
+}
+
 # List of installed packages
 INSTALLED_PACKAGES = (
+    'kalapy.contrib.sessions',
     'db_core',
     'db_model',
+    'web_core',
 )
+
+# Application options (subdomain, submount etc).
+#
+# For example::
+#
+# PACKAGE_OPTIONS = {
+#     'wiki': dict(subdomain='wiki'),
+#     'blog': dict(subdomain='blog'),
+#     'foo': dict(submount='/foo'),
+# }
+#
+PACKAGE_OPTIONS = {
+}
+
+# Deployment server name (e.g. example.com)
+SERVERNAME = 'localhost:8080'
+
