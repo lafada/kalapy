@@ -1,2 +1,3 @@
-from .base import *
-from .utils import *
+from kalapy.test.base import *
+from kalapy.test.utils import *
+

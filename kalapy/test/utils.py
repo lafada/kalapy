@@ -1,3 +1,12 @@
+"""
+kalapy.test.utils
+~~~~~~~~~~~~~~~~~
+
+This module implements helper functions for test api.
+
+:copyright: (c) 2010 Amit Mendapara.
+:license: BSD,
+"""
 import unittest
 
 

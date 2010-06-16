@@ -1,4 +1,4 @@
-from kalapy.test import TestCase, WebTestCase
+from kalapy.test import TestCase
 
 # Create your unittest classes here
 
