@@ -57,10 +57,8 @@ class Loader(object):
 
         return result
 
-    def load(self, tests=False):
+    def load(self):
         """Load the installed packages.
-
-        :param tests: whether to load unittest module or not
         """
         if self.loaded:
             return
@@ -74,9 +72,6 @@ class Loader(object):
 
                 registry['models'] = self.load_modules(package, 'models')
                 registry['views'] = self.load_modules(package, 'views')
-
-                if tests:
-                    registry['tests'] = self.load_modules(package, 'tests')
 
             self.loaded = True
         finally:
