@@ -12,20 +12,21 @@ about how to improve it and how it should look like.
 
 At the moment it looks some what similar to Django, but it is only so to get
 started quickly. The intention is to implement a framework that combines power
-of OpenObject and Django. Let's see how it goes...
+of OpenERP and Django. Let's see how it goes...
 
 -------------------------------------------------------------------------------
 TODO
 -------------------------------------------------------------------------------
 
-* unit tests
-* documentation
-* google app engine support
-* mysql support
+* write more unit tests
+* improve documentation
+* support for google app engine
+* support for mysql
+* support for openerp
 * packages (are not applications)
     - per package settings file
     - support for extending an existing package with addon packages
-    - resources provided by addon package should get preference over
+    - resources provided by an addon package should get preference over
       original package
 * auto views (using GWT or Dojo), can be mixed with normal html
 * admin interface
