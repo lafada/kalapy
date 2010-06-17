@@ -59,7 +59,7 @@ class CoreTest(TestCase):
 
     def test_static_files(self):
         static_file = web.url_for('static', filename='index.html')
-        assert static_file == '/web_core/static/index.html'
+        assert static_file == '/core/static/index.html'
         rv = self.client.get(static_file)
         assert rv.status_code == 200
         assert rv.data.strip() == '<h1>Hello World!</h1>'

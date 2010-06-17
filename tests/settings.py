@@ -41,7 +41,7 @@ USE_I18N = True
 # List of Middleware classes
 MIDDLEWARE_CLASSES = (
     'kalapy.contrib.sessions.SessionMiddleware',
-    'web_core.middleware.TestMiddleware',
+    'core.middleware.TestMiddleware',
 )
 
 # Session storage engine (memory, memcached or database)
@@ -58,9 +58,7 @@ SESSION_COOKIE = {
 # List of installed packages
 INSTALLED_PACKAGES = (
     'kalapy.contrib.sessions',
-    'db_core',
-    'db_model',
-    'web_core',
+    'core',
 )
 
 # Application options (subdomain, submount etc).
