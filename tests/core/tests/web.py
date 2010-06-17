@@ -94,3 +94,18 @@ class MiddlewareTest(TestCase):
         assert rv.data == 'process_exception'
 
 
+class PackageTest(TestCase):
+
+    def test_package_resolution(self):
+        assert self.client.get('/foo/foo').data == \
+"""/foo/foo/static/foo.js
+/bar/bar/static/bar.js
+/foo/foo
+/bar/bar"""
+
+        assert self.client.get('/bar/bar').data == \
+"""/bar/bar/static/foo.js
+/foo/foo/static/bar.js
+/bar/bar
+/foo/foo"""
+

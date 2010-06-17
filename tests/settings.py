@@ -59,6 +59,8 @@ SESSION_COOKIE = {
 INSTALLED_PACKAGES = (
     'kalapy.contrib.sessions',
     'core',
+    'foo',
+    'bar',
 )
 
 # Application options (subdomain, submount etc).
@@ -72,6 +74,8 @@ INSTALLED_PACKAGES = (
 # }
 #
 PACKAGE_OPTIONS = {
+    'foo': {'submount': '/foo'},
+    'bar': {'submount': '/bar'},
 }
 
 # Deployment server name (e.g. example.com)
