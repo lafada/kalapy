@@ -19,8 +19,6 @@ def response(kind):
         return u'Hällo Wörld'.encode('utf-8')
     if kind == 'tuple':
         return 'Meh', 400, {'X-Foo': 'Testing'}, 'text/plain'
-    if kind == 'dict':
-        return dict(json=True)
     if kind == 'None':
         return None
     return 'Hello World'

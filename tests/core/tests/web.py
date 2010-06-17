@@ -41,8 +41,6 @@ class CoreTest(TestCase):
         assert rv.status_code == 400
         assert rv.mimetype == 'text/plain'
         rv = c.get('/response/dict')
-        assert rv.data == '{"json": true}'
-        assert rv.mimetype == 'application/json'
         try:
             rv = c.get('/response/None')
         except ValueError, e:

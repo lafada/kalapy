@@ -315,8 +315,6 @@ class Application(Package):
             return Response(value)
         if isinstance(value, tuple):
             return Response(*value)
-        if isinstance(value, dict):
-            return jsonify(value)
         return Response.force_type(value, request.environ)
 
     def get_response(self, request):
