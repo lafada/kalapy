@@ -227,9 +227,10 @@ class Command(object):
         """
         prog = os.path.basename(sys.argv[0])
         usage = self.usage.replace('%name', self.name, 1)
+        doc = self.doc.replace('%prog', prog)
 
         text = '%s %s\n%s%s' % (
-            prog, usage, self.doc, self.parser.options_text())
+            prog, usage, doc, self.parser.options_text())
         return text
 
     @property
