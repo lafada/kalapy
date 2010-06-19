@@ -19,6 +19,8 @@ __all__ = ('RelationalDatabase')
 
 class RelationalDatabase(IDatabase):
 
+    schema_mime = 'text/x-sql'
+
     def __init__(self, name, host=None, port=None, user=None, password=None):
         super(RelationalDatabase, self).__init__(name, host, port, user, password)
         self.connection = None

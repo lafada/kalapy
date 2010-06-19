@@ -23,6 +23,9 @@ class IDatabase(object):
 
     data_types = {}
 
+    #: mimetype of return value of :meth:`schema_table`.
+    schema_mime = "text/plain"
+
     def __init__(self, name, host=None, port=None, user=None, password=None):
         """Initialize the database.
         """

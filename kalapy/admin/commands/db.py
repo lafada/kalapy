@@ -19,10 +19,10 @@ from kalapy.db.engines import database
 
 try:
     from pygments import highlight
-    from pygments.lexers import SqlLexer
+    from pygments.lexers import get_lexer_for_mimetype
     from pygments.formatters import TerminalFormatter
 
-    lexer = SqlLexer()
+    lexer = get_lexer_for_mimetype(database.schema_mime)
     formatter = TerminalFormatter()
 
     def print_colorized(text):
