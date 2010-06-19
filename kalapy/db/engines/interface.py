@@ -52,11 +52,6 @@ class IDatabase(object):
         """
         raise NotImplementedError
 
-    def cursor(self):
-        """Return a `dbapi2` complaint cursor instance.
-        """
-        raise NotImplementedError
-
     def get_data_type(self, field):
         """Get the internal datatype for the given field supported by the
         database.

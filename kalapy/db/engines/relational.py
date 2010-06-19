@@ -35,6 +35,8 @@ class RelationalDatabase(IDatabase):
         self.connection.rollback()
 
     def cursor(self):
+        """Return a `dbapi2` complaint cursor instance.
+        """
         if not self.connection:
             self.connect()
         return self.connection.cursor()
