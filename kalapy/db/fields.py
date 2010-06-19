@@ -56,8 +56,8 @@ class Field(object):
 
     _data_type = "char"
 
-    def __init__(self, label=None, name=None, default=None, required=None,
-        unique=False, indexed=None, selection=None):
+    def __init__(self, label=None, name=None, default=None, required=False,
+        unique=False, indexed=False, selection=None):
         """Create a new instance of this :class:`Field`.
         """
 
@@ -225,7 +225,7 @@ class AutoKey(Field):
     _data_type = 'key'
 
     def __init__(self):
-        super(AutoKey, self).__init__(name="key")
+        super(AutoKey, self).__init__(name="key", required=True)
         # negative serial id so that it become first field in the model
         self._serial = - self._serial
 
