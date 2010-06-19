@@ -17,8 +17,10 @@ from kalapy.web import Application, Response
 __all__ = ('TestCase',)
 
 
-#: the wsgi application instance
-test_app = Application()
+def test_app():
+    """Returns an Application instance
+    """
+    return Application() # Application is a Singleton
 
 
 class TestCase(unittest.TestCase):
@@ -28,7 +30,7 @@ class TestCase(unittest.TestCase):
         :class:`werkzeug.Client`, which can be used to send virtual requests
         to the test application.
         """
-        self.client = Client(test_app, Response)
+        self.client = Client(test_app(), Response)
         super(TestCase, self).__call__(result)
 
     def assertMatch(self, data, pattern, message=None, flags=0):
