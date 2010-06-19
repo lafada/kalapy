@@ -421,7 +421,7 @@ class Model(object):
 
         :param dirty: if True set dirty else set clean
         """
-        self._dirty = {} if not dirty else dict([(n, True) for n in self.fields()])
+        self._dirty = dict.fromkeys(self._values, True) if dirty else {}
 
     def _to_database_values(self, dirty=False):
         """Return values to be stored in database table for this model instance.
