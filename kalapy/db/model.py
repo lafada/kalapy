@@ -545,7 +545,7 @@ class Model(object):
         if not isinstance(keys, (list, tuple)):
             keys = [keys]
             single = True
-        result = cls.all().filter('key in :keys', keys=keys).fetch(len(keys))
+        result = cls.all().filter('key in', keys).fetch(len(keys))
 
         if single:
             return result[0] if result else None

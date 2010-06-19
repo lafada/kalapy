@@ -60,7 +60,7 @@ class DBTest(TestCase):
         a = Article(title='sometitle')
         a.save()
 
-        res = Article.select('title').filter('title = :title', title='some%').fetch(-1)
+        res = Article.select('title').filter('title =', 'some%').fetch(-1)
         self.assertTrue(len(res) == 2)
 
     def test_select_count(self):
@@ -161,14 +161,14 @@ class ModelTest(TestCase):
         u1 = User(name="some5")
         u1.save() # ensure at least one record exists
 
-        res = User.all().filter('name == :name', name=u1.name).fetch(-1)
+        res = User.all().filter('name ==', u1.name).fetch(-1)
         self.assertTrue(len(res) > 0)
 
     def test_model_select(self):
         u1 = User(name="some6")
         u1.save() # ensure at least one record exists
 
-        names = User.select('name').filter('name == :name', name=u1.name).fetch(-1)
+        names = User.select('name').filter('name ==', u1.name).fetch(-1)
         self.assertTrue(names[0] == u1.name)
 
 
@@ -235,8 +235,8 @@ class QueryTest(TestCase):
 
         q = User.all()
 
-        q1 = q.filter('name in :names', names=['a', 'b', 'c'])
-        q2 = q.filter('name in :names', names=['d', 'e', 'f'])
+        q1 = q.filter('name in', ['a', 'b', 'c'])
+        q2 = q.filter('name in', ['d', 'e', 'f'])
 
         self.assertTrue(q != q1 != q2)
 
@@ -251,7 +251,7 @@ class QueryTest(TestCase):
             u.save()
 
         n1 = User.all().count()
-        q = User.all().filter('name in :names', names=['a', 'b', 'c'])
+        q = User.all().filter('name in', ['a', 'b', 'c'])
         q.delete()
         n2 = User.all().count()
 
@@ -270,14 +270,14 @@ class QueryTest(TestCase):
 
         q = User.all()
 
-        q1 = q.filter('name in :names', names=['a', 'b', 'c'])
-        q2 = q.filter('name in :names', names=['d', 'e', 'f'])
+        q1 = q.filter('name in', ['a', 'b', 'c'])
+        q2 = q.filter('name in', ['d', 'e', 'f'])
 
         q1.update(lang='en_EN')
         q2.update(lang='fr_FR')
 
-        n1 = q.filter('lang == :lang', lang='en_EN').count()
-        n2 = q.filter('lang == :lang', lang='fr_FR').count()
+        n1 = q.filter('lang ==', 'en_EN').count()
+        n2 = q.filter('lang ==', 'fr_FR').count()
 
         self.assertTrue(n1 == 3)
         self.assertTrue(n2 == 3)

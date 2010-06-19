@@ -20,25 +20,27 @@ __all__ = ('Query',)
 
 class Query(object):
     """The `Query` class provides methods to filter and fetch records from the
-    database with simple pythonic conditions.
+    database with simple pythonic statements.
 
-    >>> users = Query(User).filter("name = :name and age > :age", name="some", age=18)
+    >>> users = Query(User).filter("name =", "some") \
+    ...                    .filter("age >", 18)
     >>> users.order("-age")
     >>> first_ten = users.fetch(10, offset=0)
     >>> for user in first_ten:
     >>>     print "Name:", user.name
 
-    The query string should not contain literal values but named parameters should
-    be used to pass values.
+    The format of the query string should be ``field_name operator``, where
+    ``field_name`` is any field defined in the current model and `openrator` can
+    be one of ``=, ==, !=, <, >, <=, >=, in, not in``.
 
-    Also, `=` has special meaning, it stands for case-insensitive match (ilike in
-    some dbms). You should use `==` for exact match.
+    Also, ``=`` operator has special meaning, it stands for case-insensitive
+    match (ilike in some DBMS). You should use ``==`` for exact match.
 
     An instance of :class:`Query` can be constructed by passing :class:`Model`
     subclass as first argument. The contructor also accept a callable as a second
     argument to apply map on the result set.
 
-    >>> names = Query(User, lambda obj: obj.name).filter('name = :name', name='some').fetch(-1)
+    >>> names = Query(User, lambda obj: obj.name).filter('name =', 'some').fetch(-1)
     >>> print names
     ['some', 'someone', 'some1']
 
@@ -65,28 +67,28 @@ class Query(object):
         obj._order = self._order
         return obj
 
-    def filter(self, query, **kw):
+    def filter(self, query, value):
         """Return a new :class:`Query` instance with the given query ANDed with
         current query set.
 
-        >>> q = Query(User).filter('name = :name and age >= :age', name='some', age=20)
-        >>> q1 = q.filter('dob >= :dob', dob='2001-01-01')
-        >>> q2 = q.filter('dob < :dob', dob='2001-01-01')
+        >>> q = Query(User).filter('name =', 'some').filter(age >=', 20)
+        >>> q1 = q.filter('dob >=', '2001-01-01')
+        >>> q2 = q.filter('dob <', '2001-01-01')
 
         :param query: The query string
-        :keyword kw: Mapping to the keywords bound the given query
+        :keyword value: The filter value
 
         :raises: :class:`DatabaseError`, :class:`FieldError`
         :returns: A new instance of :class:`Query`
         """
         obj = deepcopy(self)
-        obj._all.append(obj._parser.parse(query, **kw))
+        obj._all.append(obj._parser.parse(query, value))
         return obj
 
     def order(self, spec):
         """Order the query result with given spec.
 
-        >>> q = Query(User).filter("name = :name and age >= :age", name="some", age=20)
+        >>> q = Query(User).filter("name = ", "some").filter("age >=", 20)
         >>> q.order("-age")
 
         :param spec: field name, if prefixed with `-` order by DESC else ASC
@@ -154,7 +156,7 @@ class Query(object):
 
         For example:
 
-        >>> Query(User).filter('name = :name', name='some').delete()
+        >>> Query(User).filter('name =', 'some').delete()
 
         will delete all the User records matching the name like 'some'
         """
@@ -167,7 +169,7 @@ class Query(object):
 
         For example:
 
-        >>> Query(User).filter('name = :name', name='some').update(lang='en_EN')
+        >>> Query(User).filter('name =', 'some').update(lang='en_EN')
 
         will update all the User records matching name like 'some' by updating
         `lang` to `en_EN`.
@@ -189,7 +191,7 @@ class Query(object):
         """
         query = "SELECT %s FROM \"%s\"" % (what, self._model._meta.table)
         if self._all:
-            query = "%s WHERE %s" % (query, " AND ".join(['(%s)' % s for s, b in self._all]))
+            query = "%s WHERE %s" % (query, " AND ".join([s for s, b in self._all]))
         if self._order:
             query = "%s %s" % (query, self._order)
         if limit > -1:
@@ -198,8 +200,11 @@ class Query(object):
                 query = "%s OFFSET %d" % (query, offset)
 
         params = []
-        for q, b in self._all:
-            params.extend(b)
+        for q, v in self._all:
+            if isinstance(v, (list, tuple)):
+                params.extend(v)
+            else:
+                params.append(v)
 
         return query, params
 
@@ -230,9 +235,7 @@ class Parser(object):
     .. todo: move to `engines` as an inteface and let backend engines provide
              engine specific implementation.
     """
-
-    pat_stmt = re.compile('([\w]+)\s+(>|<|>=|<=|==|!=|=|in|not in)\s+(:([\w]+))', re.I)
-    pat_splt = re.compile('\s+(and|or)\s+', re.I)
+    pat_stmt = re.compile('^([\w]+)\s+(>|<|>=|<=|==|!=|=|in|not in)$', re.I)
 
     op_alias = {
         '<': 'lt',
@@ -249,24 +252,17 @@ class Parser(object):
     def __init__(self, model):
         self.model = model
 
-    def split(self, query):
-        """Split the query by `and` or `or` and return list of list of substrings.
-        """
-        return self.pat_splt.split(query)
+    def parse(self, query, value):
+        """Parse the simple query statement.
 
-    def statement(self, query, params):
-        """Process the simple query statement.
+        :param query: filter string
+        :param value: the filter values
 
-        :param query: query substring, splited by `split`
-        :param params: substitution values
-
-        :returns:
-            A tuple `(str, list)` where `str` is the statement and list of
-            values to be bounded to the statement.
+        :returns: A tuple `(str, value)`
         :rtype: tuple
         """
         try:
-            name, op, __var, var = self.pat_stmt.match(query).groups()
+            name, op  = self.pat_stmt.match(query.strip()).groups()
         except:
             raise Exception(
                 _('Malformed query: %(query)s', query=query))
@@ -283,7 +279,7 @@ class Parser(object):
 
         handler = getattr(self, 'handle_%s' % op)
         validator = getattr(self, 'validate_%s' % op, self.validate)
-        value = validator(field, params[var])
+        value = validator(field, value)
 
         return handler(name, value), value
 
@@ -324,21 +320,4 @@ class Parser(object):
 
     def handle_lte(self, name, value):
         return '"%s" <= %%s' % (name)
-
-    def parse(self, query, **params):
-
-        bindings = []
-        statements = self.split(query)
-
-        for i, part in enumerate(statements):
-            if part.upper() in ('AND', 'OR'):
-                statements[i] = part.upper()
-            else:
-                statements[i], value = self.statement(part, params)
-                if isinstance(value, (list, tuple)):
-                    bindings.extend(value)
-                else:
-                    bindings.append(value)
-
-        return " ".join(statements), bindings
 

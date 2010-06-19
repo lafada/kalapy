@@ -214,8 +214,8 @@ class O2ORel(IRelation):
             pass
 
         if model_instance.is_saved:
-            value = self.reference.all().filter('%s == :key' % self.reverse_name,
-                        key=model_instance.key).fetch(1)[0]
+            value = self.reference.all().filter(
+                '%s ==' % self.reverse_name, model_instance.key).fetch(1)[0]
             model_instance._values[self.name] = value
             return value
 
@@ -261,8 +261,8 @@ class O2MSet(object):
         """Returns a :class:`Query` object pre-filtered to return related objects.
         """
         self.__check()
-        return self.__ref.all().filter('%s == :key' % (self.__field.reverse_name),
-                key=self.__obj.key)
+        return self.__ref.all().filter('%s ==' % (self.__field.reverse_name),
+                self.__obj.key)
 
     def add(self, *objs):
         """Add new instances to the reference set.
@@ -327,9 +327,9 @@ class M2MSet(object):
         self.__ref = field.reference
         self.__m2m = field.m2m
 
-        self.__source_in = '%s in :keys' % field.source
-        self.__target_in = '%s in :keys' % field.target
-        self.__source_eq = '%s == :key' % field.source
+        self.__source_in = '%s in' % field.source
+        self.__target_in = '%s in' % field.target
+        self.__source_eq = '%s ==' % field.source
 
     def __check(self, *objs):
         for obj in objs:
@@ -346,9 +346,9 @@ class M2MSet(object):
         self.__check()
         #XXX: think about a better solution
         # Use nested SELECT or JOIN, but some backends might not support that
-        keys = self.__m2m.select(self.__field.target).filter(self.__source_eq, key=self.__obj.key).fetch(-1)
+        keys = self.__m2m.select(self.__field.target).filter(self.__source_eq, self.__obj.key).fetch(-1)
         keys = [o.key for o in keys]
-        return self.__ref.all().filter('key in :keys', keys=keys)
+        return self.__ref.all().filter('key in', keys)
 
     def add(self, *objs):
         """Add new instances to the reference set.
@@ -360,7 +360,7 @@ class M2MSet(object):
         keys = [obj.key for obj in self.__check(*objs) if obj.key]
 
         if keys:
-            existing = self.__m2m.all().filter(self.__target_in, keys=keys).fetch(-1)
+            existing = self.__m2m.all().filter(self.__target_in, keys).fetch(-1)
             existing = [o.key for o in existing]
             objs = [o for o in objs if o.key not in existing]
 
