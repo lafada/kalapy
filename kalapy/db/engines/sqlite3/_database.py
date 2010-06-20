@@ -32,6 +32,7 @@ class Database(RelationalDatabase):
 
     data_types = {
         "key"       :   "INTEGER PRIMARY KEY AUTOINCREMENT",
+        "reference" :   "INTEGER",
         "char"      :   "VARCHAR(%(size)s)",
         "text"      :   "TEXT",
         "integer"   :   "INTEGER",

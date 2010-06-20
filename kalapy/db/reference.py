@@ -94,7 +94,7 @@ class ManyToOne(IRelation):
     :param kw: other field params
     """
 
-    _data_type = 'integer'
+    _data_type = 'reference'
 
     def __init__(self, reference, reverse_name=None, cascade=False, **kw):
         """Create a new ManyToOne field referencing the given `reference` model.

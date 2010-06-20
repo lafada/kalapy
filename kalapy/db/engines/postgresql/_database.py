@@ -26,6 +26,7 @@ class Database(RelationalDatabase):
 
     data_types = {
         "key"       :   "SERIAL PRIMARY KEY",
+        "reference" :   "INTEGER",
         "char"      :   "VARCHAR(%(size)s)",
         "text"      :   "TEXT",
         "integer"   :   "INTEGER",
