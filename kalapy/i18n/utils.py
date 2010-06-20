@@ -25,12 +25,15 @@ def get_translations():
     """
     locale = str(get_locale())
     translations = TRANSLATIONS.get(locale)
-
     if translations is None:
         translations = load_translations('kalapy', locale)
-        for package in settings.INSTALLED_PACKAGES:
-            translations.merge(load_translations(package, locale))
+        if isinstance(translations, Translations):
+            for package in settings.INSTALLED_PACKAGES:
+                tr = load_translations(package, locale)
+                if isinstance(tr, Translations):
+                    translations.merge(tr)
         TRANSLATIONS[locale] = translations
+
     return translations
 
 
@@ -38,6 +41,8 @@ def load_translations(import_name, locale):
     """Loads gettext translations for the given locale from the specified
     package represented by the given import name.
     """
+    if import_name not in sys.modules:
+        return None
     path = os.path.abspath(os.path.dirname(sys.modules[import_name].__file__))
     path = os.path.join(path, 'locale')
     return Translations.load(path, [locale])
