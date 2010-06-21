@@ -19,11 +19,26 @@ __all__ = ('RelationalDatabase')
 
 class RelationalDatabase(IDatabase):
 
+    data_types = {}
+
     schema_mime = 'text/x-sql'
 
     def __init__(self, name, host=None, port=None, user=None, password=None):
         super(RelationalDatabase, self).__init__(name, host, port, user, password)
         self.connection = None
+
+    def get_data_type(self, field):
+        """Get the internal datatype for the given field supported by the
+        database.
+
+        :param field: an instance of :class:`Field`
+        """
+        try:
+            return self.data_types[field.data_type] % dict(
+                [(k, getattr(field, k)) for k in dir(field)])
+        except KeyError:
+            raise TypeError(
+                _('Unsupported datatype %(type)r', type=field.data_type))
 
     def close(self):
         if self.connection:

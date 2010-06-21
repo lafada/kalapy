@@ -21,8 +21,6 @@ class IDatabase(object):
     :param password: the database password
     """
 
-    data_types = {}
-
     #: mimetype of return value of :meth:`schema_table`.
     schema_mime = "text/plain"
 
@@ -54,20 +52,6 @@ class IDatabase(object):
         """Rollback all the changes made since the last commit.
         """
         raise NotImplementedError
-
-    def get_data_type(self, field):
-        """Get the internal datatype for the given field supported by the
-        database.
-
-        :param field: an instance of :class:`Field`
-        """
-        try:
-            return self.data_types[field.data_type] % dict(
-                [(k, getattr(field, k)) for k in dir(field)])
-        except KeyError:
-            from kalapy.db.engines import DatabaseError
-            raise DatabaseError(
-                _('Unsupported datatype %(type)r', type=field.data_type))
 
     def schema_table(self, model):
         """Returns the schema information of the table for the given model.
