@@ -17,7 +17,7 @@ class Page(db.Model):
 
     @classmethod
     def by_name(cls, name):
-        page = cls.all().filter('name == :name', name=name).first()
+        page = cls.all().filter('name ==', name).first()
         if page:
             return page.revisions.all().order('-timestamp').first()
         return None

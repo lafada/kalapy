@@ -81,7 +81,7 @@ def diff(name):
     else:
         revision = Page.by_name(name)
         revisions = dict([(rev.key, rev) for rev in revision.page.revisions \
-            .all().filter('key in :keys', keys=[old, new]).fetch(-1)])
+            .all().filter('key in', [old, new]).fetch(-1)])
 
         if len(revisions) != 2:
             error = 'At least one of the revisions requested ' \
