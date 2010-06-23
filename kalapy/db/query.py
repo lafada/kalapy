@@ -267,5 +267,5 @@ class Query(object):
         return q
 
     def __repr__(self):
-        return repr(self.qset)
+        return repr(self.__qset)
 
