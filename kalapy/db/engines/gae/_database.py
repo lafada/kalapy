@@ -55,7 +55,7 @@ class Database(IDatabase):
         return result
 
     def exists_table(self, name):
-        return True
+        pass
 
     def create_table(self, model):
         pass
@@ -76,15 +76,16 @@ class Database(IDatabase):
             if not isinstance(instance, Model):
                 raise TypeError('update_records expects Model instances')
             items = obj._to_database_values(True)
+
             if not obj.is_saved:
-                obj._entity = entity = datastore.Entity(obj._meta.table)
+                entity = datastore.Entity(obj._meta.table)
             else:
-                entity = obj._entity
+                entity = datastore.Get(obj.key)
 
             #TODO: convert values to GAE supported datatypes
 
             entity.update(items)
-            obj._key = datastore.Put(entity)
+            obj._key = str(datastore.Put(entity))
 
             result.append(obj.key)
             obj.set_dirty(False)
@@ -109,6 +110,9 @@ class Database(IDatabase):
 
         return keys
 
+    def get(self, model, keys):
+        return [dict(e, key=str(e.key())) for e in datastore.Get(keys) if e is not None]
+
     def fetch(self, qset, limit, offset):
         limit = datastore.MAXIMUM_RESULTS if limit == -1 else limit
         queries, orderings = self._build_queries(qset)
@@ -123,7 +127,7 @@ class Database(IDatabase):
         mq = MultiQuery([SortQuery('__none__', entities.values())], orderings)
         entities = mq.Get(limit, offset)
 
-        return [dict(e, key=str(e.key())) for e in entities]
+        return [dict(e, key=str(e.key())) for e in entities if e is not None]
 
     def count(self, qset):
         return len(self.fetch(qset, -1, 0))
