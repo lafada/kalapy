@@ -9,11 +9,14 @@ from the database.
 :license: BSD, see LICENSE for more details.
 
 """
+import re
 from copy import deepcopy
 
 
 __all__ = ('Query', 'Q')
 
+_FILTER_REGEX = re.compile(
+    '^\s*([\w]+)\s+(>|<|>=|<=|==|!=|=|in|not in)\s*$', re.I)
 
 class Q(object):
     """Encapsulates query filters as objects that can then be used to perform
@@ -26,6 +29,28 @@ class Q(object):
     """
     def __init__(self, query, value):
         self.items = [(query, value)]
+
+    def validate(self, model):
+        for i, (operator, value) in enumerate(self.items):
+            try:
+                name, op = _FILTER_REGEX.match(operator).groups()
+            except:
+                raise Exception(
+                    _('Malformed filter string: %(filter)s', filter=operator))
+
+            if name not in model._meta.fields:
+                raise AttributeError(
+                    _('No such field %(name)r in model %(model)r',
+                        name=name, model=model._meta.name))
+
+            field = model._meta.fields[name]
+            if op in ('in', 'not in'):
+                assert isinstance(value, (list, tuple))
+                value = [field.python_to_database(v) for v in value]
+            else:
+                value = field.python_to_database(value)
+            self.items[i] = (operator, value)
+        return self
 
     def __deepcopy__(self, meta):
         q = Q(None, None)
@@ -56,7 +81,7 @@ class QSet(object):
         self.order = None
 
     def append(self, q):
-        self.items.append(q)
+        self.items.append(q.validate(self.model))
 
     def fetch(self, limit, offset):
         from kalapy.db.engines import database
