@@ -10,56 +10,41 @@ start a new project or an application package.
 """
 import os, sys, re, shutil, string
 
-from kalapy.admin import Command
+from kalapy.admin import Command, ActionCommand, CommandError
 
 
-JUNK_FILE = re.compile('^(.*?)(\.swp|\.pyc|\.pyo|\~)$')
+def copy_template(template, target, context):
 
-def copy_helper(arg, path, files):
+    source = os.path.dirname(os.path.dirname(__file__))
+    source = os.path.join(source, template)
 
-    base, name, verbose = arg
+    names = os.listdir(source)
 
-    dest = os.path.relpath(path, base)
-    dest = os.path.join(name, dest) if dest != '.' else name
+    if names and not os.path.exists(target):
+        os.mkdir(target)
 
-    if verbose:
-        sys.stdout.write('Creating dir %s\n' % dest)
-    try:
-        os.mkdir(dest)
-    except OSError, e:
-        raise CommandError(e)
+    for name in names:
+        srcname = os.path.join(source, name)
+        dstname = os.path.join(target, name)
 
-    for f in files:
-
-        if JUNK_FILE.match(f):
+        if os.path.isdir(srcname):
             continue
 
-        n = os.path.join(dest, f)
-        f = os.path.join(path, f)
+        if srcname.endswith('_t'):
+            dstname = dstname[:-2]
 
-        if verbose:
-            sys.stdout.write('Creating file %s\n' % n)
+        shutil.copy2(srcname, dstname)
 
-        f_old = open(f, 'r')
-        f_new = open(n, 'w')
+        if srcname.endswith('_t'):
+            content = open(srcname).read()
+            content = string.Template(content).safe_substitute(context)
 
-        content = string.Template(f_old.read()).safe_substitute(name=name)
+            fo = open(dstname, 'w')
+            fo.write(content)
+            fo.close()
 
-        f_new.write(content)
-
-        f_old.close()
-        f_new.close()
-
-        try:
-            shutil.copymode(f, n)
-        except OSError:
-            pass
-
-
-def copy_template(template, name, verbose=False):
-
+def check_name(name):
     pat = re.compile('^[_a-zA-Z]\w*$')
-
     if not pat.search(name):
         raise CommandError("Invalid name '%s'" % name)
 
@@ -68,11 +53,6 @@ def copy_template(template, name, verbose=False):
         raise CommandError('name conflicts with existing python module.')
     except ImportError:
         pass
-
-    basedir = os.path.dirname(os.path.dirname(__file__))
-    basedir = os.path.join(basedir, template)
-
-    os.path.walk(basedir, copy_helper, [basedir, name, verbose])
 
 
 class StartProject(Command):
@@ -89,7 +69,11 @@ class StartProject(Command):
         except:
             self.print_help()
 
-        copy_template('project_template', name=name, verbose=options.verbose)
+        check_name(name)
+
+        if options.verbose:
+            print "Creating %s..." % name
+        copy_template('project_template', name, {'name': name, 'name_lower': name.lower()})
 
 
 class StartApp(Command):
@@ -104,8 +88,39 @@ class StartApp(Command):
         except:
             self.print_help()
 
-        copy_template('package_template', name=name, verbose=options.verbose)
+        check_name(name)
+        if options.verbose:
+            print "Creating %s..." % name
+        copy_template('package_template', name, {'name': name})
 
         for d in ('static', 'templates',):
             os.mkdir('%s/%s' % (name, d))
+
+class GAEProject(ActionCommand):
+    """make this project google appengine compatible.
+    """
+    name = "gae"
+
+    def action_create(self, options, args):
+        """create appengine specific files.
+        """
+        from kalapy.conf import settings
+        name = settings.PROJECT_NAME
+        context = {'appname': name.lower(), 'name': name}
+        copy_template('gae_template', os.curdir, context)
+
+    def action_prepare(self, options, args):
+        """install dependencies in lib dir.
+        """
+        from werkzeug import import_string
+        libs = ('kalapy', 'werkzeug', 'jinja2', 'babel', 'pytz', 'simplejson')
+
+        for lib in libs:
+            mod = import_string(lib)
+            src = os.path.dirname(mod.__file__)
+            dest = os.path.join("lib", lib)
+            if not os.path.exists(dest):
+                if options.verbose:
+                    print "Copying %s..." % lib
+                shutil.copytree(src, dest)
 
