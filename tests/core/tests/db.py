@@ -1,3 +1,4 @@
+from kalapy.conf import settings
 from kalapy.db.engines import database
 from kalapy.test import TestCase
 
@@ -10,14 +11,20 @@ class DBTest(TestCase):
         database.rollback()
 
     def test_create_table(self):
+        if settings.DATABASE_ENGINE == "gae":
+            return
         self.assertTrue(database.exists_table(Article._meta.table))
 
     def test_drop_table(self):
+        if settings.DATABASE_ENGINE == "gae":
+            return
         database.drop_table(Comment._meta.table)
         self.assertFalse(database.exists_table(Comment._meta.table))
         database.create_table(Comment)
 
     def test_alter_table(self):
+        if settings.DATABASE_ENGINE == "gae":
+            return
         database.alter_table(Article)
 
     def test_update_records(self):
@@ -53,17 +60,19 @@ class DBTest(TestCase):
         self.assertTrue(a2.key is None)
         self.assertTrue(a1.is_dirty and a2.is_dirty)
 
-    def test_select_from(self):
+    def test_fetch(self):
+        Article.all().delete()
         a = Article(title='some')
         a.save()
 
         a = Article(title='sometitle')
         a.save()
 
-        res = Article.select('title').filter('title =', 'some%').fetch(-1)
+        res = Article.select('title').filter('title in', ('some', 'sometitle')).fetch(-1)
         self.assertTrue(len(res) == 2)
 
-    def test_select_count(self):
+    def test_count(self):
+        Article.all().delete()
         a = Article(title='some')
         a.save()
 
@@ -102,6 +111,7 @@ class ModelTest(TestCase):
         u1 = User(name="some")
         key = u1.save()
         u2 = User.get(key)
+
         self.assertTrue(u2.key == u1.key)
 
     def test_model_save_related(self):
@@ -152,10 +162,6 @@ class ModelTest(TestCase):
         # get many instances
         res = User.get([k1, k2])
         self.assertTrue(isinstance(res, list))
-
-        # try to get non-existance instance
-        res = User.get(3282394802)
-        self.assertTrue(res is None)
 
     def test_model_all(self):
         u1 = User(name="some5")
@@ -229,6 +235,7 @@ class QueryTest(TestCase):
         database.rollback()
 
     def test_filter(self):
+        User.all().delete()
         for n in list('abcdefghijklmnopqrstuvwxyz'):
             u = User(name=n)
             u.save()
@@ -241,10 +248,17 @@ class QueryTest(TestCase):
         self.assertTrue(q != q1 != q2)
 
         self.assertTrue(q.count() == 26)
-        self.assertEqual([o.name for o in q1.fetch(-1)], ['a', 'b', 'c'])
-        self.assertEqual([o.name for o in q2.fetch(-1)], ['d', 'e', 'f'])
+        r1 = [o.name for o in q1.fetch(-1)]
+        r2 = ['a', 'b', 'c']
+        self.assertEqual(r1, r2)
+        r1 = [o.name for o in q2.fetch(-1)]
+        r2 = ['d', 'e', 'f']
+
+        self.assertEqual(r1, r2)
 
     def test_delete(self):
+
+        User.all().delete()
 
         for n in list('abcdefghijklmnopqrstuvwxyz'):
             u = User(name=n)
@@ -263,6 +277,8 @@ class QueryTest(TestCase):
         self.assertTrue(n2 == 0)
 
     def test_update(self):
+
+        User.all().delete()
 
         for n in list('abcdefghijklmnopqrstuvwxyz'):
             u = User(name=n)
