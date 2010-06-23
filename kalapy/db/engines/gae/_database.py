@@ -124,8 +124,8 @@ class Database(IDatabase):
                     continue
                 entities[e.key()] = e
 
-        mq = MultiQuery([SortQuery('__none__', entities.values())], orderings)
-        entities = mq.Get(limit, offset)
+        mq = MultiQuery([SortQuery('__sortquery__', entities.values())], orderings)
+        entities = mq.Get(limit)
 
         return [dict(e, key=str(e.key())) for e in entities if e is not None]
 
