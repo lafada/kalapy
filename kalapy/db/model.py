@@ -545,7 +545,8 @@ class Model(object):
         if not isinstance(keys, (list, tuple)):
             keys = [keys]
             single = True
-        result = cls.all().filter('key in', keys).fetch(len(keys))
+        from kalapy.db.engines import database
+        result = map(cls._from_database_values, database.get(cls, keys))
 
         if single:
             return result[0] if result else None
