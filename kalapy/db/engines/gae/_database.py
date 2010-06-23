@@ -115,7 +115,7 @@ class Database(IDatabase):
 
     def fetch(self, qset, limit, offset):
         limit = datastore.MAXIMUM_RESULTS if limit == -1 else limit
-        queries, orderings = self._build_queries(qset)
+        queries = self._build_queries(qset)
 
         entities = {}
         for query in queries:
@@ -124,15 +124,14 @@ class Database(IDatabase):
                     continue
                 entities[e.key()] = e
 
-        mq = MultiQuery([SortQuery('__sortquery__', entities.values())], orderings)
-        entities = mq.Get(limit)
+        entities = SortResult(entities.values()).get(limit, qset.order)
 
         return [dict(e, key=str(e.key())) for e in entities if e is not None]
 
     def count(self, qset):
         return len(self.fetch(qset, -1, 0))
 
-    def _query(self, kind, item, orderings):
+    def _query(self, kind, item):
         operator, value = item
         match = _FILTER_REGEX.match(operator)
         prop = match.group(1)
@@ -140,11 +139,11 @@ class Database(IDatabase):
         if op == 'in':
             assert isinstance(value, (list, tuple)), 'in operator requires list or tuple value'
             return MultiQuery(
-                [Query(kind, {'%s =' % prop: v}) for v in value], orderings)
+                [Query(kind, {'%s =' % prop: v}) for v in value], [])
         elif op == '!=':
             return MultiQuery(
                 [Query(kind, {'%s <' % prop: value}),
-                 Query(kind, {'%s >' % prop: value})], orderings)
+                 Query(kind, {'%s >' % prop: value})], [])
         else:
             return Query(kind, {'%s %s' % (prop, op): value})
 
@@ -157,13 +156,13 @@ class Database(IDatabase):
         for q in qset:
             if len(q.items) > 1:
                 result.append(MultiQuery(
-                    [self._query(kind, item, orderings) for item in q.items], orderings))
+                    [self._query(kind, item) for item in q.items], []))
             else:
-                result.append(self._query(kind, q.items[0], orderings))
+                result.append(self._query(kind, q.items[0]))
 
         if not result:
-            return [datastore.Query(kind, {})], orderings
-        return result, orderings
+            return [datastore.Query(kind, {})]
+        return result
 
 
 class Query(datastore.Query):
@@ -178,13 +177,27 @@ class MultiQuery(datastore.MultiQuery):
         return False
 
 
-class SortQuery(Query):
+class SortResult(object):
     """This class is used to sort the final result.
     """
-    def __init__(self, kind, result):
-        super(SortQuery, self).__init__(kind, {})
+    def __init__(self, result):
         self.result = result
 
-    def Run(self, **kw):
-        return iter(self.result)
+    def get(self, limit, order=None):
+        result = self.result[:limit]
+        if not order:
+            return result
+
+        direction = 1
+        if order.startswith('-'):
+            direction = 2
+            order = order[1:]
+
+        def compare(a, b):
+            if direction == 2:
+                return -cmp(a[order], b[order])
+            return cmp(a[order], b[order])
+
+        result.sort(compare)
+        return result
 
