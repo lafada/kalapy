@@ -28,32 +28,32 @@ class Q(object):
     of multiple :func:`Query.filter` calls.
     """
     def __init__(self, query, value):
-        self.items = [(query, value)]
+        try:
+            name, op = _FILTER_REGEX.match(query).groups()
+        except:
+            raise Exception(
+                _('Malformed filter string: %(filter)s', filter=query))
+        self.items = [(name, op, value)]
 
     def validate(self, model):
-        for i, (operator, value) in enumerate(self.items):
-            try:
-                name, op = _FILTER_REGEX.match(operator).groups()
-            except:
-                raise Exception(
-                    _('Malformed filter string: %(filter)s', filter=operator))
-
+        for i, (name, operator, value) in enumerate(self.items):
             if name not in model._meta.fields:
                 raise AttributeError(
                     _('No such field %(name)r in model %(model)r',
                         name=name, model=model._meta.name))
 
             field = model._meta.fields[name]
-            if op in ('in', 'not in'):
+            if operator in ('in', 'not in'):
                 assert isinstance(value, (list, tuple))
                 value = [field.python_to_database(v) for v in value]
             else:
                 value = field.python_to_database(value)
-            self.items[i] = (operator, value)
+            self.items[i] = (name, operator, value)
         return self
 
     def __deepcopy__(self, meta):
-        q = Q(None, None)
+        n, o, v = self.items[0]
+        q = Q('%s %s' % (n, o), None)
         q.items = deepcopy(self.items, meta)
         return q
 

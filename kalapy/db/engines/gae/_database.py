@@ -1,5 +1,3 @@
-import re
-
 try:
     from google.appengine.api import datastore
 except ImportError:
@@ -13,12 +11,6 @@ from kalapy.db.model import Model
 
 
 __all__ = ('DatabaseError', 'IntegrityError', 'Database')
-
-
-_OPERATORS = ['<', '<=', '>', '>=', '=', '==', '!=', 'in']
-_FILTER_REGEX = re.compile(
-    '^\s*([^\s]+)(\s+(%s)\s*)?$' % '|'.join(_OPERATORS),
-    re.IGNORECASE | re.UNICODE)
 
 
 class DatabaseError(Exception):
@@ -132,20 +124,16 @@ class Database(IDatabase):
         return len(self.fetch(qset, -1, 0))
 
     def _query(self, kind, item):
-        operator, value = item
-        match = _FILTER_REGEX.match(operator)
-        prop = match.group(1)
-        op = '==' if match.group(3) is None else match.group(3)
+        name, op, value = item
         if op == 'in':
-            assert isinstance(value, (list, tuple)), 'in operator requires list or tuple value'
             return MultiQuery(
-                [Query(kind, {'%s =' % prop: v}) for v in value], [])
+                [Query(kind, {'%s =' % name: v}) for v in value], [])
         elif op == '!=':
             return MultiQuery(
-                [Query(kind, {'%s <' % prop: value}),
-                 Query(kind, {'%s >' % prop: value})], [])
+                [Query(kind, {'%s <' % name: value}),
+                 Query(kind, {'%s >' % name: value})], [])
         else:
-            return Query(kind, {'%s %s' % (prop, op): value})
+            return Query(kind, {'%s %s' % (name, op): value})
 
     def _build_queries(self, qset):
 

@@ -219,8 +219,8 @@ class QueryBuilder(object):
                 statements = []
                 params = []
                 for item in q.items:
-                    op, val = item
-                    s, p = parser.parse(op, val)
+                    name, op, val = item
+                    s, p = parser.parse(name, op, val)
                     statements.append(s)
                     if isinstance(p, (list, tuple)):
                         params.extend(p)
@@ -228,8 +228,8 @@ class QueryBuilder(object):
                         params.append(p)
                 self.all.append((" OR ".join(statements), params))
             else:
-                op, val = q.items[0]
-                self.all.append(parser.parse(op, val))
+                name, op, val = q.items[0]
+                self.all.append(parser.parse(name, op, val))
 
     def select(self, what, limit=None, offset=None):
         """Build the select query.
@@ -260,7 +260,6 @@ class Parser(object):
     .. todo: move to `engines` as an inteface and let backend engines provide
              engine specific implementation.
     """
-    pat_stmt = re.compile('^([\w]+)\s+(>|<|>=|<=|==|!=|=|in|not in)$', re.I)
 
     op_alias = {
         '<': 'lt',
@@ -277,29 +276,19 @@ class Parser(object):
     def __init__(self, model):
         self.model = model
 
-    def parse(self, query, value):
+    def parse(self, name, operator, value):
         """Parse the simple query statement.
 
-        :param query: filter string
+        :param name: name of the field
+        :param operator: the operator
         :param value: the filter values
 
-        :returns: A tuple `(str, value)`
+        :returns: a tuple `(str, value)`
         :rtype: tuple
         """
-        try:
-            name, op  = self.pat_stmt.match(query.strip()).groups()
-        except:
-            raise Exception(
-                _('Malformed query: %(query)s', query=query))
-
-        if name not in self.model._meta.fields:
-            raise AttributeError(
-                _('No such field %(name)r in model %(model)r',
-                    name=name, model=self.model._meta.name))
-
         field = self.model._meta.fields[name]
 
-        op = op.lower()
+        op = operator.lower()
         op = self.op_alias.get(op, op)
 
         handler = getattr(self, 'handle_%s' % op)
