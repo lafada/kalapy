@@ -161,7 +161,7 @@ class Database(IDatabase):
                 result.append(self._query(kind, q.items[0]))
 
         if not result:
-            return [datastore.Query(kind, {})]
+            return [Query(kind, {})]
         return result
 
 
@@ -169,6 +169,13 @@ class Query(datastore.Query):
 
     def IsKeysOnly(self):
         return False
+
+    def Run(self, *args, **kw):
+        if len(self) == 1:
+            for operator in ('key =', 'key =='):
+                if self.get(operator):
+                    return iter([datastore.Get(self.get(operator))])
+        return super(Query, self).Run(*args, **kw)
 
 
 class MultiQuery(datastore.MultiQuery):
