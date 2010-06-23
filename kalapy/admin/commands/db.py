@@ -31,7 +31,8 @@ try:
         sys.stdout.write(text)
         sys.stdout.write('\n')
 
-except ImportError:
+#except ImportError:
+except:
     def print_colorized(text):
         sys.stdout.write(text)
         sys.stdout.write('\n')
