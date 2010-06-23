@@ -240,7 +240,7 @@ class QueryTest(TestCase):
             u = User(name=n)
             u.save()
 
-        q = User.all()
+        q = User.all().order('name')
 
         q1 = q.filter('name in', ['a', 'b', 'c'])
         q2 = q.filter('name in', ['d', 'e', 'f'])
