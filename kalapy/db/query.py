@@ -9,13 +9,74 @@ from the database.
 :license: BSD, see LICENSE for more details.
 
 """
-import re
 from copy import deepcopy
 
-from kalapy.db.fields import FieldError
+
+__all__ = ('Query', 'Q')
 
 
-__all__ = ('Query',)
+class Q(object):
+    """Encapsulates query filters as objects that can then be used to perform
+    logical ``OR`` operation using ``|`` operator. For example::
+
+        q = Query(User).filter(Q('name =', 'some')|Q('age >=', 18))
+
+    The ``AND`` operation is not supported as ``AND`` is the default behaviour
+    of multiple :func:`Query.filter` calls.
+    """
+    def __init__(self, query, value):
+        self.items = [(query, value)]
+
+    def __deepcopy__(self, meta):
+        q = Q(None, None)
+        q.items = deepcopy(self.items, meta)
+        return q
+
+    def __or__(self, other):
+        q = deepcopy(self)
+        q.items.extend(other.items)
+        return q
+
+    def __repr__(self):
+        if len(self.items) == 1:
+            return str(self.items[0])
+        return "(" + " OR ".join(map(str, self.items)) + ")"
+
+
+class QSet(object):
+    """A container of all the :class:`db.Q` instances of a :class:`db.Query`.
+
+    It implements :meth:`fetch` and :meth:`count` which in turns calls database
+    engine specific version of ``database.fetch`` and ``database.count`` methods.
+    """
+
+    def __init__(self, model):
+        self.model = model
+        self.items = []
+        self.order = None
+
+    def append(self, q):
+        self.items.append(q)
+
+    def fetch(self, limit, offset):
+        from kalapy.db.engines import database
+        return database.fetch(self, limit, offset)
+
+    def count(self):
+        from kalapy.db.engines import database
+        return database.count(self)
+
+    def __deepcopy__(self, meta):
+        qs = QSet(self.model)
+        qs.order = self.order
+        qs.items = deepcopy(self.items, meta)
+        return qs
+
+    def __iter__(self):
+        return iter(self.items)
+
+    def __repr__(self):
+        return " AND ".join(map(repr, self.items))
 
 
 class Query(object):
@@ -55,35 +116,42 @@ class Query(object):
         if mapper and not callable(mapper):
             raise TypeError('mapper should be callable')
 
-        self._model = model
-        self._parser = Parser(model)
-        self._all = []
-        self._order = None
-        self._mapper = mapper
+        self.__model = model
+        self.__mapper = mapper
+        self.__qset = QSet(model)
 
-    def __deepcopy__(self, meta):
-        obj = self.__class__(self._model, self._mapper)
-        obj._all = deepcopy(self._all, meta)
-        obj._order = self._order
-        return obj
-
-    def filter(self, query, value):
+    def filter(self, *args):
         """Return a new :class:`Query` instance with the given query ANDed with
         current query set.
 
-        >>> q = Query(User).filter('name =', 'some').filter(age >=', 20)
-        >>> q1 = q.filter('dob >=', '2001-01-01')
-        >>> q2 = q.filter('dob <', '2001-01-01')
+        For example::
 
-        :param query: The query string
-        :keyword value: The filter value
+            q = Query(User).filter('name =', 'some').filter(age >=', 20)
+            q1 = q.filter('dob >=', '2001-01-01')
+            q2 = q.filter('dob <', '2001-01-01')
+
+        The ``OR`` operation can be performed using :class:`db.Q` like::
+
+            from kalapy.db import Query, Q
+
+            q = Query(User).filter(Q('name =', 'some') | Q(age >=', 20))
+            q.fetchall()
+
+        :param query: The query string or an instance of :class:`db.Q`
+        :param value: The filter value, ignored if query is :class:`db.Q`
 
         :raises: :class:`DatabaseError`, :class:`FieldError`
         :returns: A new instance of :class:`Query`
         """
-        obj = deepcopy(self)
-        obj._all.append(obj._parser.parse(query, value))
-        return obj
+        assert 0 < len(args) < 3, 'invalid number of arguments'
+        if not isinstance(args[0], Q):
+            assert len(args) == 2, 'value argument missing'
+            q = Q(*args)
+        else:
+            q = args[0]
+        query = deepcopy(self)
+        query.__qset.append(q)
+        return query
 
     def order(self, spec):
         """Order the query result with given spec.
@@ -93,19 +161,14 @@ class Query(object):
 
         :param spec: field name, if prefixed with `-` order by DESC else ASC
         """
-        self._order = "ORDER BY"
-        if spec.startswith('-'):
-            self._order = "%s \"%s\" DESC" % (self._order, spec[1:])
-        else:
-            self._order = "%s \"%s\" ASC" % (self._order, spec)
-        return self
+        self.__qset.order = spec
 
-    def fetch(self, limit, offset=None):
+    def fetch(self, limit, offset=0):
         """Fetch the given number of records from the query object from the given offset.
 
         If limit is `-1` fetch all records.
 
-        >>> q = Query(User).filter("name = :name and age >= :age", name="some", age=20)
+        >>> q = Query(User).filter("name =", "some").filter("age >=", 20)
         >>> for obj in q.fetch(20):
         >>>     print obj.name
 
@@ -117,12 +180,10 @@ class Query(object):
         :returns: list of model instances or content if mapper is applied
         :rtype: list
         """
-        from kalapy.db.engines import database
-
-        s, params = self._build_select('*', limit, offset)
-        result = map(self._model._from_database_values, database.select_from(s, params))
-        if self._mapper:
-            return map(self._mapper, result)
+        result = map(self.__model._from_database_values,
+                        self.__qset.fetch(limit, offset))
+        if self.__mapper:
+            return map(self.__mapper, result)
         return result
 
     def fetchone(self, offset=0):
@@ -146,10 +207,7 @@ class Query(object):
     def count(self):
         """Return the number of records in the query object.
         """
-        from kalapy.db.engines import database
-
-        s, params = self._build_select('count("key")')
-        return database.select_count(s, params)
+        return self.__qset.count()
 
     def delete(self):
         """Delete all records matched by this query.
@@ -182,32 +240,6 @@ class Query(object):
                     setattr(obj, k, v)
             obj.save()
 
-    def _build_select(self, what, limit=None, offset=None):
-        """Build the select query.
-
-        .. warning::
-
-            For internal use only.
-        """
-        query = "SELECT %s FROM \"%s\"" % (what, self._model._meta.table)
-        if self._all:
-            query = "%s WHERE %s" % (query, " AND ".join([s for s, b in self._all]))
-        if self._order:
-            query = "%s %s" % (query, self._order)
-        if limit > -1:
-            query = "%s LIMIT %d" % (query, limit)
-            if offset > -1:
-                query = "%s OFFSET %d" % (query, offset)
-
-        params = []
-        for q, v in self._all:
-            if isinstance(v, (list, tuple)):
-                params.extend(v)
-            else:
-                params.append(v)
-
-        return query, params
-
     def __getitem__(self, arg):
         if isinstance(arg, (int, long)):
             try:
@@ -228,96 +260,11 @@ class Query(object):
         except Exception:
             pass
 
+    def __deepcopy__(self, meta):
+        q = Query(self.__model, self.__mapper)
+        q.__qset = deepcopy(self.__qset, meta)
+        return q
 
-class Parser(object):
-    """Simple regex based query parser.
-
-    .. todo: move to `engines` as an inteface and let backend engines provide
-             engine specific implementation.
-    """
-    pat_stmt = re.compile('^([\w]+)\s+(>|<|>=|<=|==|!=|=|in|not in)$', re.I)
-
-    op_alias = {
-        '<': 'lt',
-        '>': 'gt',
-        '>=': 'gte',
-        '<=': 'lte',
-        '==': 'eq',
-        '!=': 'neq',
-        '=': 'like',
-        'in': 'in',
-        'not in': 'not_in',
-    }
-
-    def __init__(self, model):
-        self.model = model
-
-    def parse(self, query, value):
-        """Parse the simple query statement.
-
-        :param query: filter string
-        :param value: the filter values
-
-        :returns: A tuple `(str, value)`
-        :rtype: tuple
-        """
-        try:
-            name, op  = self.pat_stmt.match(query.strip()).groups()
-        except:
-            raise Exception(
-                _('Malformed query: %(query)s', query=query))
-
-        if name not in self.model._meta.fields:
-            raise FieldError(
-                _('No such field %(name)r in model %(model)r',
-                    name=name, model=self.model._meta.name))
-
-        field = self.model._meta.fields[name]
-
-        op = op.lower()
-        op = self.op_alias.get(op, op)
-
-        handler = getattr(self, 'handle_%s' % op)
-        validator = getattr(self, 'validate_%s' % op, self.validate)
-        value = validator(field, value)
-
-        return handler(name, value), value
-
-    def validate(self, field, value):
-        return field.python_to_database(value)
-
-    def validate_in(self, field, value):
-        assert isinstance(value, (list, tuple))
-        return [field.python_to_database(v) for v in value]
-
-    def validate_not_in(self, field, value):
-        return self.validate_in(field, value)
-
-    def handle_in(self, name, value):
-        return '"%s" IN (%s)' % (name, ', '.join(['%s'] * len(value)))
-
-    def handle_not_in(self, name, value):
-        assert isinstance(value, (list, tuple))
-        return '"%s" NOT IN (%s)' % (name, ', '.join(['%s'] * len(value)))
-
-    def handle_like(self, name, value):
-        return '"%s" LIKE %%s' % (name)
-
-    def handle_eq(self, name, value):
-        return '"%s" = %%s' % (name)
-
-    def handle_neq(self, name, value):
-        return '"%s" != %%s' % (name)
-
-    def handle_gt(self, name, value):
-        return '"%s" > %%s' % (name)
-
-    def handle_lt(self, name, value):
-        return '"%s" < %%s' % (name)
-
-    def handle_gte(self, name, value):
-        return '"%s" >= %%s' % (name)
-
-    def handle_lte(self, name, value):
-        return '"%s" <= %%s' % (name)
+    def __repr__(self):
+        return repr(self.qset)
 

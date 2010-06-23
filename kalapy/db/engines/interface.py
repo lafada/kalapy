@@ -130,23 +130,26 @@ class IDatabase(object):
         """
         raise NotImplementedError
 
-    def select_from(self, query, params):
-        """Execute the select query bound with the given params.
+    def fetch(self, qset, limit, offset):
+        """Fetch records from database filtered by the given query set bound
+        to given limit and offset.
 
-        :param query: the select query
-        :param params: list of values bound to the query
+        For more information on query set, see :class:`db.query.QSet`.
+
+        :param qset: the query set, an instance of :class:`db.query.QSet`
+        :param limit: number of records to be fetch
+        :param offset: offset from where to fetch records
 
         :returns: dict of name, value of the resultset
         :raises:
-            - :class:`DatabaseError`
+            - :class:`db.DatabaseError`
         """
         raise NotImplementedError
 
-    def select_count(self, query, params):
-        """Execute select count query bound with the given params.
+    def count(self, qset):
+        """Returns the total number of records matched by given query set.
 
-        :param query: the select query
-        :param params: list of values bound to the query
+        :param qset: the query set, an instance of :class:`db.query.QSet`
 
         :returns: integer, total number of records
         :raises:

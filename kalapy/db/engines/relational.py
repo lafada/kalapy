@@ -9,12 +9,14 @@ for relational database systems. Engines for an RDBMS should inherit from the
 :copyright: (c) 2010 Amit Mendapara.
 :license: BSD, see LICENSE for more details.
 """
+import re
+
 from kalapy.db.engines.interface import IDatabase
 from kalapy.db.model import Model
 from kalapy.db.reference import ManyToOne
 
 
-__all__ = ('RelationalDatabase')
+__all__ = ('RelationalDatabase',)
 
 
 class RelationalDatabase(IDatabase):
@@ -170,18 +172,170 @@ class RelationalDatabase(IDatabase):
 
         return keys
 
-    def select_from(self, query, params):
+    def fetch(self, qset, limit, offset):
         cursor = self.cursor()
-        cursor.execute(query, params)
+        sql, params = QueryBuilder(qset).select('*', limit, offset)
+        cursor.execute(sql, params)
         names = [desc[0] for desc in cursor.description]
         result = [dict([(name, row[i]) for i, name in enumerate(names)]) for row in cursor.fetchall()]
         return result
 
-    def select_count(self, query, params):
+    def count(self, qset):
         cursor = self.cursor()
-        cursor.execute(query, params)
+        sql, params = QueryBuilder(qset).select('count("key")')
+        cursor.execute(sql, params)
         try:
             return cursor.fetchone()[0]
         except:
             return 0
+
+
+class QueryBuilder(object):
+    """The SQL query builder for relational database engines.
+    """
+
+    def __init__(self, qset):
+        self.qset = qset
+        self.model = qset.model
+        self.order = None
+        self.all = []
+
+        if isinstance(qset.order, basestring):
+            if qset.order.startswith('-'):
+                self.order = "ORDER BY \"%s\" DESC" % (qset.order[1:])
+            else:
+                self.order = "ORDER BY \"%s\" ASC" % (qset.order)
+
+        parser = Parser(self.model)
+        for q in qset:
+            if len(q.items) > 1:
+                statements = []
+                params = []
+                for item in q.items:
+                    op, val = item
+                    s, p = parser.parse(op, val)
+                    statements.append(s)
+                    if isinstance(p, (list, tuple)):
+                        params.extend(p)
+                    else:
+                        params.append(p)
+                self.all.append((" OR ".join(statements), params))
+            else:
+                op, val = q.items[0]
+                self.all.append(parser.parse(op, val))
+
+    def select(self, what, limit=None, offset=None):
+        """Build the select query.
+        """
+        query = "SELECT %s FROM \"%s\"" % (what, self.model._meta.table)
+        if self.all:
+            query = "%s WHERE %s" % (query, " AND ".join(["(%s)" % s for s, b in self.all]))
+        if self.order:
+            query = "%s %s" % (query, self.order)
+        if limit > -1:
+            query = "%s LIMIT %d" % (query, limit)
+            if offset > -1:
+                query = "%s OFFSET %d" % (query, offset)
+
+        params = []
+        for q, v in self.all:
+            if isinstance(v, (list, tuple)):
+                params.extend(v)
+            else:
+                params.append(v)
+
+        return query, params
+
+
+class Parser(object):
+    """Simple regex based query parser.
+
+    .. todo: move to `engines` as an inteface and let backend engines provide
+             engine specific implementation.
+    """
+    pat_stmt = re.compile('^([\w]+)\s+(>|<|>=|<=|==|!=|=|in|not in)$', re.I)
+
+    op_alias = {
+        '<': 'lt',
+        '>': 'gt',
+        '>=': 'gte',
+        '<=': 'lte',
+        '==': 'eq',
+        '!=': 'neq',
+        '=': 'like',
+        'in': 'in',
+        'not in': 'not_in',
+    }
+
+    def __init__(self, model):
+        self.model = model
+
+    def parse(self, query, value):
+        """Parse the simple query statement.
+
+        :param query: filter string
+        :param value: the filter values
+
+        :returns: A tuple `(str, value)`
+        :rtype: tuple
+        """
+        try:
+            name, op  = self.pat_stmt.match(query.strip()).groups()
+        except:
+            raise Exception(
+                _('Malformed query: %(query)s', query=query))
+
+        if name not in self.model._meta.fields:
+            raise AttributeError(
+                _('No such field %(name)r in model %(model)r',
+                    name=name, model=self.model._meta.name))
+
+        field = self.model._meta.fields[name]
+
+        op = op.lower()
+        op = self.op_alias.get(op, op)
+
+        handler = getattr(self, 'handle_%s' % op)
+        validator = getattr(self, 'validate_%s' % op, self.validate)
+        value = validator(field, value)
+
+        return handler(name, value), value
+
+    def validate(self, field, value):
+        return field.python_to_database(value)
+
+    def validate_in(self, field, value):
+        assert isinstance(value, (list, tuple))
+        return [field.python_to_database(v) for v in value]
+
+    def validate_not_in(self, field, value):
+        return self.validate_in(field, value)
+
+    def handle_in(self, name, value):
+        return '"%s" IN (%s)' % (name, ', '.join(['%s'] * len(value)))
+
+    def handle_not_in(self, name, value):
+        assert isinstance(value, (list, tuple))
+        return '"%s" NOT IN (%s)' % (name, ', '.join(['%s'] * len(value)))
+
+    def handle_like(self, name, value):
+        return '"%s" LIKE %%s' % (name)
+
+    def handle_eq(self, name, value):
+        return '"%s" = %%s' % (name)
+
+    def handle_neq(self, name, value):
+        return '"%s" != %%s' % (name)
+
+    def handle_gt(self, name, value):
+        return '"%s" > %%s' % (name)
+
+    def handle_lt(self, name, value):
+        return '"%s" < %%s' % (name)
+
+    def handle_gte(self, name, value):
+        return '"%s" >= %%s' % (name)
+
+    def handle_lte(self, name, value):
+        return '"%s" <= %%s' % (name)
 
