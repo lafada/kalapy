@@ -162,6 +162,7 @@ class Query(object):
         :param spec: field name, if prefixed with `-` order by DESC else ASC
         """
         self.__qset.order = spec
+        return self
 
     def fetch(self, limit, offset=0):
         """Fetch the given number of records from the query object from the given offset.
