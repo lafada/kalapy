@@ -1,4 +1,15 @@
+"""
+kalapy.db.engines.gae
+~~~~~~~~~~~~~~~~~~~~~
+
+Implementes Google AppEngine backend support functions.
+
+:copyright: (c) 2010 Amit Mendapara.
+:license: BSD, see LICENSE for more details.
+"""
 import os, sys
+
+
 def setup_stubs():
 
     GAE_HOME = os.environ.get('GAE_HOME')

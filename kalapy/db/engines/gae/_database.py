@@ -1,10 +1,18 @@
+"""
+kalapy.db.engines.gae
+~~~~~~~~~~~~~~~~~~~~~
+
+Implementes Google AppEngine backend.
+
+:copyright: (c) 2010 Amit Mendapara.
+:license: BSD, see LICENSE for more details.
+"""
 try:
     from google.appengine.api import datastore
 except ImportError:
     from _utils import setup_stubs
     setup_stubs()
     from google.appengine.api import datastore
-
 
 from kalapy.db.engines.interface import IDatabase
 from kalapy.db.model import Model
