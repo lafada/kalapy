@@ -189,6 +189,7 @@ class RelationalDatabase(IDatabase):
     def count(self, qset):
         cursor = self.cursor()
         sql, params = QueryBuilder(qset).select('count("key")')
+        sql = re.sub(' ORDER BY "\w+" (ASC|DESC)', '', sql)
         cursor.execute(sql, params)
         try:
             return cursor.fetchone()[0]
