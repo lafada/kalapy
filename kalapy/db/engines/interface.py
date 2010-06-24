@@ -139,6 +139,9 @@ class IDatabase(object):
         The implementation should return an iterator or generator of dict
         having ``name``, ``value`` mapping including ``key`` information.
 
+        Database engine specific information can be passed with ``_payload``
+        which will be stored as an attribute to the model instance.
+
         :param qset: the query set, an instance of :class:`db.query.QSet`
         :param limit: number of records to be fetch
         :param offset: offset from where to fetch records

@@ -133,6 +133,7 @@ RESERVED_NAMES = {
     '_meta'     : '%r is reserved for internal use.',
     '__new__'   : '%r should not be overriden.',
     'key'       : '',
+    '_payload'  : '',
 }
 
 def check_reserved_names(attrs):
@@ -388,8 +389,17 @@ class Model(object):
     def __init__(self, **kw):
         """Create a new instance of this model.
         """
+
+        #: stores record id
         self._key = None
+
+        #: stores database specific information
+        self._payload = None
+
+        #: stores record values
         self._values = {}
+
+        #: stores dirty information
         self._dirty = {}
 
         for field in self.fields().values():
@@ -454,6 +464,7 @@ class Model(object):
 
         obj = cls()
         obj._key = values.pop('key', None)
+        obj._payload = values.pop('_payload', None)
 
         fields = obj.fields()
         for k, v in values.items():
