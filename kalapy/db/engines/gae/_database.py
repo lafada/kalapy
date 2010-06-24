@@ -112,53 +112,57 @@ class Database(IDatabase):
 
     def fetch(self, qset, limit, offset):
         limit = datastore.MAXIMUM_RESULTS if limit == -1 else limit
-        queries = self._build_queries(qset)
+        orderings = []
+        try:
+            name, how = qset.order
+            how = Query.ASCENDING if how == 'ASC' else Query.DESCENDING
+            orderings = [(name, how)]
+        except:
+            pass
 
-        entities = {}
-        for query in queries:
-            for e in query.Get(limit, offset):
-                if e.key() in entities:
-                    continue
-                entities[e.key()] = e
-
-        for e in SortResult(entities.values()).get(limit, qset.order):
+        for e in self._build_query(qset, orderings).Get(limit, offset):
             if e is not None:
                 yield dict(e, key=str(e.key()), _payload=e)
 
     def count(self, qset):
         return len(list(self.fetch(qset, -1, 0)))
 
-    def _query(self, kind, item):
-        name, op, value = item
-        if op == 'in':
-            return MultiQuery(
-                [Query(kind, {'%s =' % name: v}) for v in value], [])
-        elif op == '!=':
-            return MultiQuery(
-                [Query(kind, {'%s <' % name: value}),
-                 Query(kind, {'%s >' % name: value})], [])
-        else:
-            return Query(kind, {'%s %s' % (name, op): value})
-
-    def _build_queries(self, qset):
+    def _build_query(self, qset, orderings):
 
         kind = qset.model._meta.table
-        orderings = []
+
+        def _query(item):
+            name, op, value = item
+            if op == 'in':
+                return MultiQuery(
+                    [Query(kind, {'%s =' % name: v},
+                        orderings) for v in value], orderings)
+            elif op == '!=':
+                return MultiQuery(
+                    [Query(kind, {'%s <' % name: value}, orderings),
+                     Query(kind, {'%s >' % name: value}, orderings)], orderings)
+            else:
+                return Query(kind, {'%s %s' % (name, op): value}, orderings)
 
         result = []
         for q in qset:
             if len(q.items) > 1:
-                result.append(MultiQuery(
-                    [self._query(kind, item) for item in q.items], []))
+                result.append(
+                    MultiQuery([_query(item) for item in q.items], orderings))
             else:
-                result.append(self._query(kind, q.items[0]))
+                result.append(_query(q.items[0]))
 
         if not result:
-            return [Query(kind, {})]
-        return result
+            return Query(kind, {}, orderings)
+        return result[0] if len(result) == 1 else MultiQuery(result, orderings)
 
 
 class Query(datastore.Query):
+
+    def __init__(self, kind, filters={}, orderings=None):
+        super(Query, self).__init__(kind, filters)
+        if orderings:
+            self.Order(*orderings)
 
     def IsKeysOnly(self):
         return False
@@ -180,28 +184,4 @@ class MultiQuery(datastore.MultiQuery):
     def IsKeysOnly(self):
         return False
 
-
-class SortResult(object):
-    """This class is used to sort the final result.
-    """
-    def __init__(self, result):
-        self.result = result
-
-    def get(self, limit, order=None):
-        result = self.result[:limit]
-        if not order:
-            return result
-
-        direction = 1
-        if order.startswith('-'):
-            direction = 2
-            order = order[1:]
-
-        def compare(a, b):
-            if direction == 2:
-                return -cmp(a[order], b[order])
-            return cmp(a[order], b[order])
-
-        result.sort(compare)
-        return result
 
