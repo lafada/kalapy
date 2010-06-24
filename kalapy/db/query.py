@@ -186,7 +186,10 @@ class Query(object):
 
         :param spec: field name, if prefixed with `-` order by DESC else ASC
         """
-        self.__qset.order = spec
+        assert isinstance(spec, basestring)
+        self.__qset.order = (spec, 'ASC')
+        if spec.startswith('-'):
+            self.__qset.order = (spec[1:], 'DESC')
         return self
 
     def fetch(self, limit, offset=0):
