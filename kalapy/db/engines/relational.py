@@ -201,11 +201,10 @@ class QueryBuilder(object):
         self.order = None
         self.all = []
 
-        if isinstance(qset.order, basestring):
-            if qset.order.startswith('-'):
-                self.order = "ORDER BY \"%s\" DESC" % (qset.order[1:])
-            else:
-                self.order = "ORDER BY \"%s\" ASC" % (qset.order)
+        try:
+            self.order = "ORDER BY \"%s\" %s" % tuple(qset.order)
+        except:
+            pass
 
         parser = Parser(self.model)
         for q in qset:
