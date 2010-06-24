@@ -7,6 +7,8 @@ Implementes Google AppEngine backend.
 :copyright: (c) 2010 Amit Mendapara.
 :license: BSD, see LICENSE for more details.
 """
+from itertools import chain
+
 try:
     from google.appengine.api import datastore
 except ImportError:
@@ -120,14 +122,26 @@ class Database(IDatabase):
         except:
             pass
 
-        for e in self._build_query(qset, orderings).Get(limit, offset):
-            if e is not None:
-                yield dict(e, key=str(e.key()), _payload=e)
+        # The results should be ANDed
+
+        query_set = self._build_query_set(qset, orderings)
+        result_set = [[e for e in q.Get(limit, offset) if e] for q in query_set]
+
+        keys = [set([e.key() for e in result]) for result in result_set]
+        keys = reduce(lambda a, b: a & b, keys)
+
+        result = {}
+        for e in chain(*tuple(result_set)):
+            if e.key() in keys:
+                result.setdefault(e.key(), e)
+
+        for e in sort_result(result.values(), orderings)[:limit]:
+            yield dict(e, key=str(e.key()), _payload=e)
 
     def count(self, qset):
         return len(list(self.fetch(qset, -1, 0)))
 
-    def _build_query(self, qset, orderings):
+    def _build_query_set(self, qset, orderings):
 
         kind = qset.model._meta.table
 
@@ -135,12 +149,11 @@ class Database(IDatabase):
             name, op, value = item
             if op == 'in':
                 return MultiQuery(
-                    [Query(kind, {'%s =' % name: v},
-                        orderings) for v in value], orderings)
+                    [Query(kind, {'%s =' % name: v}, orderings) for v in value], orderings)
             elif op == '!=':
                 return MultiQuery(
                     [Query(kind, {'%s <' % name: value}, orderings),
-                     Query(kind, {'%s >' % name: value}, orderings)], orderings)
+                     Query(kind, {'%s >' % name: value}), orderings], orderings)
             else:
                 return Query(kind, {'%s %s' % (name, op): value}, orderings)
 
@@ -153,13 +166,14 @@ class Database(IDatabase):
                 result.append(_query(q.items[0]))
 
         if not result:
-            return Query(kind, {}, orderings)
-        return result[0] if len(result) == 1 else MultiQuery(result, orderings)
+            return [Query(kind, {}, orderings)]
+
+        return result
 
 
 class Query(datastore.Query):
 
-    def __init__(self, kind, filters={}, orderings=None):
+    def __init__(self, kind, filters, orderings=None):
         super(Query, self).__init__(kind, filters)
         if orderings:
             self.Order(*orderings)
@@ -184,4 +198,20 @@ class MultiQuery(datastore.MultiQuery):
     def IsKeysOnly(self):
         return False
 
+
+def sort_result(result, orderings):
+    """A helper function to sort the final result.
+    """
+    try:
+        name, how = orderings[0]
+    except:
+        return result
+
+    def compare(a, b):
+        if how == 2:
+            return -cmp(a[name], b[name])
+        return cmp(a[name], b[name])
+
+    result.sort(compare)
+    return result
 
