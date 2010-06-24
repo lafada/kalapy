@@ -80,14 +80,12 @@ class Database(IDatabase):
             items = obj._to_database_values(True)
 
             if not obj.is_saved:
-                entity = datastore.Entity(obj._meta.table)
-            else:
-                entity = datastore.Get(obj.key)
+                obj._payload = datastore.Entity(obj._meta.table)
 
             #TODO: convert values to GAE supported datatypes
 
-            entity.update(items)
-            obj._key = str(datastore.Put(entity))
+            obj._payload.update(items)
+            obj._key = str(datastore.Put(obj._payload))
 
             result.append(obj.key)
             obj.set_dirty(False)
@@ -125,7 +123,7 @@ class Database(IDatabase):
 
         for e in SortResult(entities.values()).get(limit, qset.order):
             if e is not None:
-                yield dict(e, key=str(e.key()))
+                yield dict(e, key=str(e.key()), _payload=e)
 
     def count(self, qset):
         return len(list(self.fetch(qset, -1, 0)))
