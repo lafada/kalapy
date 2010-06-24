@@ -14,6 +14,8 @@ except ImportError:
     setup_stubs()
     from google.appengine.api import datastore
 
+from google.appengine.api import datastore_errors
+
 from kalapy.db.engines.interface import IDatabase
 from kalapy.db.model import Model
 
@@ -166,12 +168,16 @@ class Query(datastore.Query):
     def IsKeysOnly(self):
         return False
 
-    def Run(self, *args, **kw):
-        if len(self) == 1:
-            for operator in ('key =', 'key =='):
-                if self.get(operator):
-                    return iter([datastore.Get(self.get(operator))])
-        return super(Query, self).Run(*args, **kw)
+    def Run(self, **kwargs):
+        try:
+            try:
+                return iter([datastore.Get(self['key ='])])
+            except KeyError:
+                return iter([datastore.Get(self['key =='])])
+        except datastore_errors.EntityNotFoundError:
+            return iter([None])
+        except KeyError:
+            return super(Query, self).Run(**kwargs)
 
 
 class MultiQuery(datastore.MultiQuery):
