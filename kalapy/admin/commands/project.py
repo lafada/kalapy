@@ -101,26 +101,52 @@ class GAEProject(ActionCommand):
     """
     name = "gae"
 
-    def action_create(self, options, args):
-        """create appengine specific files.
+    def action_app(self, options, args):
+        """create appengine specific files (app.yaml, gaehandler.py).
         """
         from kalapy.conf import settings
         name = settings.PROJECT_NAME
         context = {'appname': name.lower(), 'name': name}
+        if options.verbose:
+            print "Creating app.yaml..."
         copy_template('gae_template', os.curdir, context)
 
-    def action_prepare(self, options, args):
+    def action_libs(self, options, args):
         """install dependencies in lib dir.
         """
         from werkzeug import import_string
-        libs = ('kalapy', 'werkzeug', 'jinja2', 'babel', 'pytz', 'simplejson')
+        libs = set(['kalapy', 'werkzeug', 'jinja2',
+                    'babel', 'pytz', 'simplejson'] + args)
+
+        if not os.path.exists("lib"):
+            os.mkdir("lib")
 
         for lib in libs:
             mod = import_string(lib)
-            src = os.path.dirname(mod.__file__)
-            dest = os.path.join("lib", lib)
-            if not os.path.exists(dest):
+            src = mod.__file__
+            if src.endswith('.pyc'):
+                src = src[:-1]
+            if src.endswith('__init__.py'):
+                src = os.path.dirname(mod.__file__)
+                dest = os.path.join("lib", lib)
+                if not os.path.exists(dest):
+                    if options.verbose:
+                        print "Copying %s" % lib
+                    shutil.copytree(src, dest)
+            else:
+                dest = os.path.join("lib", "%s" % os.path.basename(src))
+                if os.path.exists(dest):
+                    continue
                 if options.verbose:
-                    print "Copying %s..." % lib
-                shutil.copytree(src, dest)
+                    print "Copying %s" % os.path.basename(dest)
+                shutil.copy2(src, dest)
+
+        def do_clean(args, path, files):
+            for f in files:
+                f = os.path.join(path, f)
+                __, x = os.path.splitext(f)
+                if x in args:
+                    os.remove(f)
+        os.path.walk("lib", do_clean, ['.pyc', '.pyo', '.so'])
+
 
