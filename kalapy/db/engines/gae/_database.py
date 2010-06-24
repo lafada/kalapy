@@ -112,9 +112,6 @@ class Database(IDatabase):
 
         return keys
 
-    def get(self, model, keys):
-        return [dict(e, key=str(e.key())) for e in datastore.Get(keys) if e is not None]
-
     def fetch(self, qset, limit, offset):
         limit = datastore.MAXIMUM_RESULTS if limit == -1 else limit
         queries = self._build_queries(qset)

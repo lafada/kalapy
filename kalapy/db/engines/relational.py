@@ -172,12 +172,6 @@ class RelationalDatabase(IDatabase):
 
         return keys
 
-    def get(self, model, keys):
-        from kalapy.db.query import Q, QSet
-        qset = QSet(model)
-        qset.append(Q('key in', keys))
-        return qset.fetch(-1, 0)
-
     def fetch(self, qset, limit, offset):
         cursor = self.cursor()
         sql, params = QueryBuilder(qset).select('*', limit, offset)

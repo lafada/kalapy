@@ -130,15 +130,6 @@ class IDatabase(object):
         """
         raise NotImplementedError
 
-    def get(self, model, keys):
-        """Fetch records from the database with the given keys.
-
-        :param model: the model class
-        :param keys: record keys
-        :returns: list of dict
-        """
-        raise NotImplementedError
-
     def fetch(self, qset, limit, offset):
         """Fetch records from database filtered by the given query set bound
         to given limit and offset.
