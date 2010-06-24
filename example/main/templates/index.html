@@ -6,12 +6,18 @@
     <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet" />
 </head>
 <body>
+<div class="document">
     <h1>KalaPy Examples</h1>
+    <div class="navbar">
+        <a href="http://www.kalapy.org/">Project Home</a> |
+        <a href="http://www.kalapy.org/docs/index.html">Documentation</a> |
+        <a href="http://www.kalapy.org/support.html">Support</a>
+    </div>
     This is the main page of the <i>KalaPy</i> examples.<br>
     Here is the list of installed <i>application packages</i>.
-    <ul>
+    <ul class="entries">
         <li><a href="{{ url_for('wiki:home') }}">Wiki</a></li>
-        <li><a href="{{ url_for('blog:show_entries') }}">Blog</a></li>
     </ul>
+</div>
 </body>
 </html>

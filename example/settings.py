@@ -7,28 +7,28 @@ PROJECT_NAME = "example"
 PROJECT_VERSION = "1.0"
 
 # Database backend engine
-# Possible value can be either sqlite3, postgresql, bigtable
+# Possible value can be either sqlite3, postgresql, gae
 DATABASE_ENGINE = "sqlite3"
 
 # Database name
 # For sqlite3 use path to the sqlite3 database file
-# For bigtable keep empty
+# For gae keep empty
 DATABASE_NAME = "example.db"
 
 # Database user (must have rights to create database tables)
-# Keep empty for sqlite3 and bigtable
+# Keep empty for sqlite3 and gae
 DATABASE_USER = ""
 
 # Database password
-# Keep empty for sqlite3 and bigtable
+# Keep empty for sqlite3 and gae
 DATABASE_PASSWORD = ""
 
 # Database host
-# Keep empty for sqlite3 and bigtable
+# Keep empty for sqlite3 and gae
 DATABASE_HOST = ""
 
 # Database port
-# Keep empty for sqlite3 and bigtable
+# Keep empty for sqlite3 and gae
 DATABASE_PORT = ""
 
 # Database specific options
@@ -59,7 +59,6 @@ INSTALLED_PACKAGES = (
     'kalapy.contrib.sessions',
     'main',
     'wiki',
-    'blog',
 )
 
 # Application options (subdomain, submount etc).
@@ -74,7 +73,6 @@ INSTALLED_PACKAGES = (
 #
 PACKAGE_OPTIONS = {
     'wiki': {'submount': '/wiki'},
-    'blog': {'submount': '/blog'},
 }
 
 # Deployment server name (e.g. example.com)
