@@ -50,11 +50,11 @@ class Revision(db.Model):
 
 
 def parse_rst(markup):
-    return Markup(publish_parts(
+    parts = publish_parts(
         source=markup,
-        settings_overrides={'file_insertion_enabled': 0, 'raw_enabled': 0},
-        writer_name='html')['html_body'])
-
+        writer_name='html4css1',
+        settings_overrides={'_disable_config': True})
+    return parts['html_body']
 
 class Pagination(object):
     """

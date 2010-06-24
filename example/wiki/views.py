@@ -71,8 +71,15 @@ def log(name):
 @web.route('/<name>/diff')
 def diff(name):
 
-    old = request.args.get('old', type=int)
-    new = request.args.get('new', type=int)
+    old = request.args.get('old')
+    new = request.args.get('new')
+
+    try:
+        old = int(old)
+        new = int(new)
+    except:
+        pass
+
     error = ''
     diff = page = old_rev = new_rev = None
 
@@ -110,7 +117,11 @@ def diff(name):
 @web.route('/<name>/revert', methods=('GET', 'POST',))
 def revert(name):
     """Revert an old revision."""
-    rev_id = request.args.get('rev', type=int)
+    rev_id = request.args.get('rev')
+    try:
+        rev_id = int(rev_id)
+    except:
+        pass
 
     old_revision = page = None
     error = 'No such revision'
@@ -157,7 +168,7 @@ def index():
 @web.route('/Spacial:Recent_Changes')
 def changes():
     page = max(1, request.args.get('page', type=int))
-    query = Revision.all().order('-key')
+    query = Revision.all().order('-timestamp')
     return web.render_template('changes.html',
         pagination=Pagination(query, 20, page, 'changes'))
 

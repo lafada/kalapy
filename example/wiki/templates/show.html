@@ -3,6 +3,6 @@
 {% set page_action = 'show' %}
 
 {% block contents %}
-    {{ revision.render() }}
+    {{ revision.render()|safe }}
 {% endblock %}
 
