@@ -136,11 +136,14 @@ class IDatabase(object):
 
         For more information on query set, see :class:`db.query.QSet`.
 
+        The implementation should return an iterator or generator of dict
+        having ``name``, ``value`` mapping including ``key`` information.
+
         :param qset: the query set, an instance of :class:`db.query.QSet`
         :param limit: number of records to be fetch
         :param offset: offset from where to fetch records
 
-        :returns: dict of name, value of the resultset
+        :returns: an interator of dict of name, value mappings
         :raises:
             - :class:`db.DatabaseError`
         """

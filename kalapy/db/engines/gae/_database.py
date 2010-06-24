@@ -123,12 +123,12 @@ class Database(IDatabase):
                     continue
                 entities[e.key()] = e
 
-        entities = SortResult(entities.values()).get(limit, qset.order)
-
-        return [dict(e, key=str(e.key())) for e in entities if e is not None]
+        for e in SortResult(entities.values()).get(limit, qset.order):
+            if e is not None:
+                yield dict(e, key=str(e.key()))
 
     def count(self, qset):
-        return len(self.fetch(qset, -1, 0))
+        return len(list(self.fetch(qset, -1, 0)))
 
     def _query(self, kind, item):
         name, op, value = item

@@ -177,8 +177,8 @@ class RelationalDatabase(IDatabase):
         sql, params = QueryBuilder(qset).select('*', limit, offset)
         cursor.execute(sql, params)
         names = [desc[0] for desc in cursor.description]
-        result = [dict([(name, row[i]) for i, name in enumerate(names)]) for row in cursor.fetchall()]
-        return result
+        for row in cursor.fetchall():
+            yield dict([(name, row[i]) for i, name in enumerate(names)])
 
     def count(self, qset):
         cursor = self.cursor()
