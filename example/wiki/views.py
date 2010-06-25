@@ -1,7 +1,5 @@
 from difflib import unified_diff
 
-from werkzeug.urls import url_quote_plus
-
 from kalapy import db
 from kalapy import web
 from kalapy.web import request
@@ -160,14 +158,14 @@ def revert(name):
         revision=page
     )
 
-@web.route('/' + url_quote_plus('Spacial:Index'))
+@web.route('/Spacial:Index')
 def index():
     letters = {}
     for page in Page.all().order('-name').fetch(-1):
         letters.setdefault(page.name.capitalize()[0], []).append(page)
     return web.render_template('index.html', letters=sorted(letters.items()))
 
-@web.route('/' + url_quote_plus('Spacial:Recent_Changes'))
+@web.route('/Spacial:Recent_Changes')
 def changes():
     page = max(1, request.args.get('page', type=int))
     query = Revision.all().order('-timestamp')
