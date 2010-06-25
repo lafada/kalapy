@@ -1,9 +1,17 @@
-application: example
+application: kalapy-demo
 version: 1
 runtime: python
 api_version: 1
 
 handlers:
+
+    - url: /favicon.ico
+      static_files: main/static/favicon.ico
+      upload: main/static/favicon.ico
+
+    - url: /robots.txt
+      static_files: main/static/robots.txt
+      upload: main/static/robots.txt
 
     - url: .*
       script: gaehandler.py
