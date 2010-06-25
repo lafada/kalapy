@@ -113,14 +113,17 @@ class GAEProject(ActionCommand):
         ('i', 'install', False, 'install libs (extra libs as arguments)'),
     )
 
-    def setup_stubs(self):
+    def setup_stubs(self, options):
         from kalapy.db.engines.gae._utils import setup_stubs
         setup_stubs()
+        import logging
+        logging.getLogger().setLevel(
+            logging.INFO if options.verbose else logging.WARN)
 
     def action_runserver(self, options, args):
         """launch 'dev_appserver.py runserver'
         """
-        self.setup_stubs()
+        self.setup_stubs(options)
         from google.appengine.tools import dev_appserver_main
         dev_appserver_main.main(
             ['runserver', '-a', options.address, '-p', options.port, '.'])
@@ -128,14 +131,14 @@ class GAEProject(ActionCommand):
     def action_update(self, options, args):
         """launch 'appcfg.py update'
         """
-        self.setup_stubs()
+        self.setup_stubs(options)
         from google.appengine.tools import appcfg
-        appcfg.main(['', 'update', '.'])
+        appcfg.main(['appcfg.py', 'update', '.'])
 
     def action_rollback(self, options, args):
         """launch 'appcfg.py rollback'
         """
-        self.setup_stubs()
+        self.setup_stubs(options)
         from google.appengine.tools import appcfg
         appcfg.main(['', 'rollback', '.'])
 
