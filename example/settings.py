@@ -76,5 +76,5 @@ PACKAGE_OPTIONS = {
 }
 
 # Deployment server name (e.g. example.com)
-SERVERNAME = 'localhost:8080'
+SERVER_NAME = 'localhost:8080'
 

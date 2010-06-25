@@ -352,7 +352,7 @@ class Application(Package):
         _local.current_app = self
         _local.request = request = Request(environ)
         request.url_adapter = adapter = self.urls.bind_to_environ(
-                                environ, server_name=settings.SERVERNAME)
+                                environ, server_name=settings.SERVER_NAME)
 
         signals.send('request-started')
         try:
