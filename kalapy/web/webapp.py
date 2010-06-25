@@ -101,6 +101,7 @@ class Package(object):
     For more information on packages, see...
 
     :param name: name of the package
+    :param path: directory path where package is located
     """
     __metaclass__ = PackageType
 
@@ -110,9 +111,13 @@ class Package(object):
     #: view functions, shared among all the packages
     views = {}
 
-    def __init__(self, name):
+    def __init__(self, name, path=None):
+
+        if path is None:
+            path = os.path.abspath(os.path.dirname(sys.modules[name].__file__))
+
         self.name = name
-        self.path = os.path.abspath(os.path.dirname(sys.modules[name].__file__))
+        self.path = path
 
         opts = settings.PACKAGE_OPTIONS.get(name, {})
         self.subdomain = opts.get('subdomain')
@@ -249,7 +254,10 @@ class Application(Package):
         from kalapy.conf.loader import loader
         loader.load()
 
-        super(Application, self).__init__(settings.PROJECT_NAME)
+        super(Application, self).__init__(
+                settings.PROJECT_NAME,
+                settings.PROJECT_DIR)
+
         self.debug = settings.DEBUG
         _local.current_app = self
 
@@ -266,7 +274,6 @@ class Application(Package):
         if self.static:
             static_dirs.append(self.static)
         self.dispatch = SharedDataMiddleware(self.dispatch, dict(static_dirs))
-
 
     def process_request(self, request):
         """This method will be called before actual request dispatching and
@@ -603,3 +610,4 @@ def simple_server(host='127.0.0.1', port=8080, use_reloader=False):
     app = Application()
     app.debug = debug = settings.DEBUG
     run_simple(host, port, app, use_reloader=use_reloader, use_debugger=debug)
+
