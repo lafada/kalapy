@@ -503,15 +503,19 @@ class ManyToMany(IRelation):
 
     :param reference: reference model class
     :param reverse_name: name of the reverse lookup field in the referenced model
+    :param cascade: True or False, if True all the related entries from the
+                    intermediate table will be dropped.
     :param kw: other field params
 
     """
 
     _data_type = None
 
-    def __init__(self, reference, reverse_name=None, **kw):
+    def __init__(self, reference, reverse_name=None, cascade=False, **kw):
+        assert cascade in (True, False), 'cascade should be True or False'
         super(ManyToMany, self).__init__(reference, **kw)
         self.reverse_name = reverse_name
+        self.cascade = cascade
 
     def get_reverse_field(self):
 
@@ -545,10 +549,9 @@ class ManyToMany(IRelation):
                 '__module__': model_class.__module__
             })
 
-            cls.add_field(ManyToOne(
-                model_class, name=self.source, required=True, indexed=True))
-            cls.add_field(ManyToOne(
-                self.reference, name=self.target, required=True, indexed=True))
+            kw = dict(required=True, indexed=True, cascade=self.cascade)
+            cls.add_field(ManyToOne(model_class, name=self.source, **kw))
+            cls.add_field(ManyToOne(self.reference, name=self.target, **kw))
 
             cls._meta.ref_models.extend([model_class, self.reference])
 
