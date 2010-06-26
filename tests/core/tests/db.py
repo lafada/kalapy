@@ -6,7 +6,7 @@ from core.models import *
 
 class TestCase(TestCase):
 
-    def setUp(self):
+    def tearDown(self):
         if settings.DATABASE_ENGINE == 'gae':
             from kalapy.admin import execute_command
             execute_command(['database', 'clear', '-f'])
@@ -284,7 +284,7 @@ class FieldTest(TestCase):
         else:
             self.fail()
 
-    def test_cascade(self):
+    def prepare_cascade(self):
         u1 = User(name="u1")
         u2 = User(name="u2")
         u3 = User(name="u3")
@@ -299,7 +299,10 @@ class FieldTest(TestCase):
         a3 = Account()
         c1.accounts.add(a1, a2, a3)
         c1.save()
+        return (u1, u2, u3), c1, (a1, a2, a3)
 
+    def test_cascade_none(self):
+        (u1, u2, u3), c1, (a1, a2, a3) = self.prepare_cascade()
         # test cascade = None
         c = Cascade.all().fetchone()
         assert c.user3 is not None and c.user3.key == u3.key
@@ -307,21 +310,46 @@ class FieldTest(TestCase):
         c = Cascade.all().fetchone()
         assert c.user3 is None
 
+    def test_cascade_false(self):
+        (u1, u2, u3), c1, (a1, a2, a3) = self.prepare_cascade()
         # test cascade = False
         try:
             u2.delete()
         except db.IntegrityError:
             c1.user2 = None
             c1.save()
+            pass
         else:
             self.fail()
 
+    def test_cascade_true(self):
+        (u1, u2, u3), c1, (a1, a2, a3) = self.prepare_cascade()
         # test cascade = True
         try:
             assert Cascade.all().count() == 1
             u1.delete()
             assert Cascade.all().count() == 0
         except db.IntegrityError:
+            self.fail()
+
+    def test_cascade_m2m_true(self):
+        (u1, u2, u3), c1, (a1, a2, a3) = self.prepare_cascade()
+        # test cascade = False
+        try:
+            c1.delete()
+        except db.IntegrityError:
+            self.fail()
+
+    def test_cascade_m2m_false(self):
+        (u1, u2, u3), c1, (a1, a2, a3) = self.prepare_cascade()
+        c1.accounts2.add(a1, a2, a3)
+        c1.save()
+        # test cascade = True
+        try:
+            c1.delete()
+        except db.IntegrityError:
+            pass
+        else:
             self.fail()
 
     def test_ManyToOne(self):

@@ -78,5 +78,6 @@ class Cascade(db.Model):
     user1 = db.ManyToOne(User, cascade=True)
     user2 = db.ManyToOne(User, reverse_name='cascade_set2', cascade=False)
     user3 = db.ManyToOne(User, reverse_name='cascade_set3', cascade=None)
-    accounts = db.ManyToMany(Account)
+    accounts = db.ManyToMany(Account, cascade=True)
+    accounts2 = db.ManyToMany(Account, reverse_name='cascade_set2', cascade=False)
 
