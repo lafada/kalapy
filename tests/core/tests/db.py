@@ -22,13 +22,13 @@ class DBTest(TestCase):
     def test_create_table(self):
         if settings.DATABASE_ENGINE == "gae":
             return
-        self.assertTrue(database.exists_table(Article._meta.table))
+        self.assertTrue(database.exists_table(Article))
 
     def test_drop_table(self):
         if settings.DATABASE_ENGINE == "gae":
             return
-        database.drop_table(Comment._meta.table)
-        self.assertFalse(database.exists_table(Comment._meta.table))
+        database.drop_table(Comment)
+        self.assertFalse(database.exists_table(Comment))
         database.create_table(Comment)
 
     def test_alter_table(self):

@@ -55,12 +55,12 @@ class Database(RelationalDatabase):
         self.connection = dbapi.connect(self.name, detect_types=dbapi.PARSE_DECLTYPES)
         return self
 
-    def exists_table(self, name):
+    def exists_table(self, model):
         cursor = self.cursor()
         cursor.execute("""
             SELECT "name" FROM sqlite_master
                 WHERE type = "table" AND name = %s;
-            """, (name,))
+            """, (model._meta.table,))
         return bool(cursor.fetchone())
 
 

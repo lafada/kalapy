@@ -60,7 +60,7 @@ class Database(IDatabase):
             result += "\n    %s = db.%s(...)" % (name, field.__class__.__name__)
         return result
 
-    def exists_table(self, name):
+    def exists_table(self, model):
         pass
 
     def create_table(self, model):
@@ -69,8 +69,8 @@ class Database(IDatabase):
     def alter_table(self, model, name=None):
         pass
 
-    def drop_table(self, name):
-        pass
+    def drop_table(self, model):
+        model.all().delete()
 
     def update_records(self, instance, *args):
 

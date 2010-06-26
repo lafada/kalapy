@@ -62,10 +62,10 @@ class IDatabase(object):
         """
         raise NotImplementedError
 
-    def exists_table(self, name):
+    def exists_table(self, model):
         """Check whether the table exists or not.
 
-        :param name: name of the table
+        :param model: a subclass of :class:`Model`
 
         :returns: True if table exists else False
         """
@@ -87,10 +87,10 @@ class IDatabase(object):
         """
         raise NotImplementedError
 
-    def drop_table(self, name):
+    def drop_table(self, model):
         """Drop the table
 
-        :param name: name of the table
+        :param model: a subclass of :class:`Model`
         """
         raise NotImplementedError
 

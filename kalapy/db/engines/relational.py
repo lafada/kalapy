@@ -93,18 +93,18 @@ class RelationalDatabase(IDatabase):
         return self.get_create_sql(model)
 
     def create_table(self, model):
-        if not self.exists_table(model._meta.table):
+        if not self.exists_table(model):
             cursor = self.cursor()
             cursor.execute(self.get_create_sql(model))
 
-    def drop_table(self, name):
-        if self.exists_table(name):
+    def drop_table(self, model):
+        if self.exists_table(model):
             cursor = self.cursor()
-            cursor.execute('DROP TABLE "%s"' % name)
+            cursor.execute('DROP TABLE "%s"' % model._meta.table)
 
     def alter_table(self, model, name=None):
         cursor = self.cursor()
-        if name and self.exists_table(name):
+        if name:
             cursor.execute('ALTER TABLE "%s" RENAME TO "%s"' % (
                 name, model._meta.table,))
         #TODO: alter columns if changed

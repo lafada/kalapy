@@ -59,12 +59,12 @@ class Database(RelationalDatabase):
         self.connection.set_isolation_level(1) # make transaction transparent to all cursors
         return self
 
-    def exists_table(self, name):
+    def exists_table(self, model):
         cursor = self.cursor()
         cursor.execute("""
             SELECT relname FROM pg_class
                 WHERE relkind = 'r' AND relname = %s;
-            """, (name,))
+            """, (model._meta.table,))
         return bool(cursor.fetchone())
 
     def lastrowid(self, cursor, model):

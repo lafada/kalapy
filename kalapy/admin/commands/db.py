@@ -135,7 +135,7 @@ Are you sure about this action? (y/N): """ % settings.DATABASE_NAME)
             for model in models:
                 if options.verbose:
                     print "Drop table %r" % model._meta.table
-                database.drop_table(model._meta.table)
+                database.drop_table(model)
         except:
             database.rollback()
             raise
