@@ -70,3 +70,7 @@ class UniqueTest(db.Model):
         if len(value) < 3:
             raise db.ValidationError('Too short value')
 
+class FieldType(db.Model):
+    float_value = db.Float()
+    decimal_value = db.Decimal()
+

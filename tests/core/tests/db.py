@@ -433,3 +433,33 @@ class FieldTest(TestCase):
         assert g3.members.all().count() == 1
         assert g4.members.all().count() == 1
 
+    def test_Decimal(self):
+        from decimal import Decimal
+
+        # required for GAE tests
+        FieldType.all().delete()
+
+        obj = FieldType(decimal_value='2.345')
+        obj.save()
+
+        assert isinstance(obj.decimal_value, Decimal)
+        assert obj.decimal_value == Decimal('2.345')
+
+        obj = FieldType.all().fetchone()
+
+        assert isinstance(obj.decimal_value, Decimal)
+        assert obj.decimal_value == Decimal('2.345')
+
+        # validate
+        try:
+            obj = FieldType(decimal_value=Decimal('2.345'))
+        except TypeError:
+            self.fail()
+
+        try:
+            obj = FieldType(decimal_value=2.345)
+        except db.ValidationError:
+            pass
+        else:
+            self.fail()
+
