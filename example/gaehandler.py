@@ -4,10 +4,12 @@
 import os, sys
 
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_LIB = os.path.join(PROJECT_DIR, 'lib')
 
-sys.path.insert(0, os.path.join(PROJECT_DIR, 'lib'))
+sys.path = [PROJECT_LIB] + sys.path
 
-from wsgiref.handlers import CGIHandler
+from google.appengine.ext.webapp import util
+
 from kalapy.web import Application
 from kalapy.admin import setup_environment
 
@@ -16,7 +18,7 @@ setup_environment(settings)
 
 def main():
     app = Application()
-    CGIHandler().run(app)
+    util.run_wsgi_app(app)
 
 if __name__ == "__main__":
     main()
