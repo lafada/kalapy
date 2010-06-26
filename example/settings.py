@@ -61,20 +61,16 @@ INSTALLED_PACKAGES = (
     'wiki',
 )
 
-# Application options (subdomain, submount etc).
+# Package options (submount etc).
 #
 # For example::
 #
 # PACKAGE_OPTIONS = {
-#     'wiki': dict(subdomain='wiki'),
-#     'blog': dict(subdomain='blog'),
-#     'foo': dict(submount='/foo'),
+#     'wiki': {'submount': '/wiki'},
+#     'blog': {'submount': '/blog'},
 # }
 #
 PACKAGE_OPTIONS = {
     'wiki': {'submount': '/wiki'},
 }
-
-# Deployment server name (e.g. example.com)
-SERVER_NAME = 'localhost:8080'
 
