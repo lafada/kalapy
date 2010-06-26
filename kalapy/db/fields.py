@@ -366,6 +366,12 @@ class Decimal(Float):
         """
         return value is None
 
+    def python_to_database(self, value):
+        return str(value) if value else value
+
+    def database_to_python(self, value):
+        return decimal.Decimal(value) if value else value
+
 
 class Boolean(Field):
     """Boolean field stores either True or False value.
