@@ -149,3 +149,26 @@ Are you sure about this action? (y/N): """ % settings.DATABASE_NAME)
 
         self.action_sync(options, args)
 
+    def action_clear(self, options, args):
+        """Clear all the data from database.
+        """
+        if not options.force:
+            ans = raw_input("""
+Be careful, all the data from database %r will be cleared.
+Are you sure about this action? (y/N): """ % settings.DATABASE_NAME)
+
+            if ans.lower() != 'y': return
+
+        models, __pending = self.get_models()
+        models.reverse()
+        try:
+            for model in models:
+                if options.verbose:
+                    print "Clear table %r" % model._meta.table
+                model.all().delete()
+        except:
+            database.rollback()
+            raise
+        else:
+            database.commit()
+
