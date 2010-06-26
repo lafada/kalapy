@@ -299,6 +299,11 @@ class FieldTest(TestCase):
             self.fail()
 
     def test_ManyToOne(self):
+
+        # required for GAE tests
+        Article.all().delete()
+        User.all().delete()
+
         u1 = User(name="some")
         u2 = User(name="someone")
         u1.save()
@@ -338,6 +343,9 @@ class FieldTest(TestCase):
         assert a.author.key == u1.key
 
     def test_OneToOne(self):
+        # required for GAE tests
+        Account.all().delete()
+        User.all().delete()
 
         u1 = User(name="some")
         u2 = User(name="someone")
@@ -369,6 +377,10 @@ class FieldTest(TestCase):
             self.fail()
 
     def test_OneToMany(self):
+        # required for GAE tests
+        Address.all().delete()
+        User.all().delete()
+
         u1 = User(name="some")
         u1.save()
 
@@ -390,6 +402,9 @@ class FieldTest(TestCase):
                 .address_set.all().count() == 0
 
     def test_ManyToMany(self):
+        # required for GAE tests
+        Group.all().delete()
+        User.all().delete()
 
         u1 = User(name="u1")
         u2 = User(name="u2")
