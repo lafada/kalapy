@@ -353,7 +353,9 @@ class M2MSet(object):
         self.__check()
         #XXX: think about a better solution
         # Use nested SELECT or JOIN, but some backends might not support that
-        keys = self.__m2m.select(self.__field.target).filter(self.__source_eq, self.__obj.key).fetch(-1)
+        keys = self.__m2m.select(self.__field.target) \
+                         .filter(self.__source_eq, self.__obj.key) \
+                         .fetch(-1)
         keys = [o.key for o in keys]
         return self.__ref.all().filter('key in', keys)
 
@@ -367,7 +369,9 @@ class M2MSet(object):
         keys = [obj.key for obj in self.__check(*objs) if obj.key]
 
         if keys:
-            existing = self.__m2m.all().filter(self.__target_in, keys).fetch(-1)
+            existing = self.__m2m.select(self.__field.target) \
+                                 .filter(self.__source_eq, self.__obj.key) \
+                                 .fetch(-1)
             existing = [o.key for o in existing]
             objs = [o for o in objs if o.key not in existing]
 
