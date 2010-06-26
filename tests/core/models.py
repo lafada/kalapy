@@ -74,3 +74,9 @@ class FieldType(db.Model):
     float_value = db.Float()
     decimal_value = db.Decimal()
 
+class Cascade(db.Model):
+    user1 = db.ManyToOne(User, cascade=True)
+    user2 = db.ManyToOne(User, reverse_name='cascade_set2', cascade=False)
+    user3 = db.ManyToOne(User, reverse_name='cascade_set3', cascade=None)
+    accounts = db.ManyToMany(Account)
+

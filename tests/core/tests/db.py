@@ -4,11 +4,20 @@ from kalapy.test import TestCase
 
 from core.models import *
 
+class TestCase(TestCase):
+
+    def setUp(self):
+        if settings.DATABASE_ENGINE == 'gae':
+            from kalapy.admin.commands.db import DBCommand
+            cmd = DBCommand()
+            models, __ = cmd.get_models()
+            models.reverse()
+            for m in models:
+                m.all().delete()
+        else:
+            database.rollback()
 
 class DBTest(TestCase):
-
-    def tearDown(self):
-        database.rollback()
 
     def test_create_table(self):
         if settings.DATABASE_ENGINE == "gae":
@@ -61,7 +70,6 @@ class DBTest(TestCase):
         self.assertTrue(a1.is_dirty and a2.is_dirty)
 
     def test_fetch(self):
-        Article.all().delete()
         a = Article(title='some')
         a.save()
 
@@ -72,7 +80,6 @@ class DBTest(TestCase):
         self.assertTrue(len(res) == 2)
 
     def test_count(self):
-        Article.all().delete()
         a = Article(title='some')
         a.save()
 
@@ -84,9 +91,6 @@ class DBTest(TestCase):
 
 
 class ModelTest(TestCase):
-
-    def tearDown(self):
-        database.rollback()
 
     def test_inherit_chain(self):
         u1 = User()
@@ -144,9 +148,7 @@ class ModelTest(TestCase):
         k2 = u2.save()
 
         u1.delete()
-
         u3 = User.get(k1)
-
         self.assertTrue(u3 is None)
 
     def test_model_get(self):
@@ -180,11 +182,7 @@ class ModelTest(TestCase):
 
 class QueryTest(TestCase):
 
-    def tearDown(self):
-        database.rollback()
-
     def test_filter(self):
-        User.all().delete()
         for n in list('abcdefghijklmnopqrstuvwxyz'):
             u = User(name=n)
             u.save()
@@ -207,8 +205,6 @@ class QueryTest(TestCase):
 
     def test_delete(self):
 
-        User.all().delete()
-
         for n in list('abcdefghijklmnopqrstuvwxyz'):
             u = User(name=n)
             u.save()
@@ -226,8 +222,6 @@ class QueryTest(TestCase):
         self.assertTrue(n2 == 0)
 
     def test_update(self):
-
-        User.all().delete()
 
         for n in list('abcdefghijklmnopqrstuvwxyz'):
             u = User(name=n)
@@ -250,9 +244,6 @@ class QueryTest(TestCase):
 
 class FieldTest(TestCase):
 
-    def tearDown(self):
-        database.rollback()
-
     def test_required(self):
         u = User(name="some", dob='1996-11-04')
         try:
@@ -263,9 +254,6 @@ class FieldTest(TestCase):
             self.fail()
 
     def test_unique(self):
-        # required for GAE tests
-        UniqueTest.all().delete()
-
         u = UniqueTest(a='aaa', b='bb', c='cc')
         u.save()
 
@@ -300,12 +288,47 @@ class FieldTest(TestCase):
         else:
             self.fail()
 
+    def test_cascade(self):
+        u1 = User(name="u1")
+        u2 = User(name="u2")
+        u3 = User(name="u3")
+        c1 = Cascade()
+        c1.user1 = u1
+        c1.user2 = u2
+        c1.user3 = u3
+        c1.save()
+
+        a1 = Account()
+        a2 = Account()
+        a3 = Account()
+        c1.accounts.add(a1, a2, a3)
+        c1.save()
+
+        # test cascade = None
+        c = Cascade.all().fetchone()
+        assert c.user3 is not None and c.user3.key == u3.key
+        u3.delete()
+        c = Cascade.all().fetchone()
+        assert c.user3 is None
+
+        # test cascade = False
+        try:
+            u2.delete()
+        except db.IntegrityError:
+            c1.user2 = None
+            c1.save()
+        else:
+            self.fail()
+
+        # test cascade = True
+        try:
+            assert Cascade.all().count() == 1
+            u1.delete()
+            assert Cascade.all().count() == 0
+        except db.IntegrityError:
+            self.fail()
+
     def test_ManyToOne(self):
-
-        # required for GAE tests
-        Article.all().delete()
-        User.all().delete()
-
         u1 = User(name="some")
         u2 = User(name="someone")
         u1.save()
@@ -345,10 +368,6 @@ class FieldTest(TestCase):
         assert a.author.key == u1.key
 
     def test_OneToOne(self):
-        # required for GAE tests
-        Account.all().delete()
-        User.all().delete()
-
         u1 = User(name="some")
         u2 = User(name="someone")
         u1.save()
@@ -379,10 +398,6 @@ class FieldTest(TestCase):
             self.fail()
 
     def test_OneToMany(self):
-        # required for GAE tests
-        Address.all().delete()
-        User.all().delete()
-
         u1 = User(name="some")
         u1.save()
 
@@ -391,23 +406,23 @@ class FieldTest(TestCase):
         a3 = Address(street1="s3")
         a4 = Address(street1="s4")
 
+        # test add
         u1.address_set.add(a1, a2, a3, a4)
+        u1.save()
 
         assert u1.address_set.all().count() == 4
         assert User.all().filter('name =', 'some').fetchone() \
                 .address_set.all().count() == 4
 
+        # test clear
         u1.address_set.clear()
-
         assert u1.address_set.all().count() == 0
         assert User.all().filter('name =', 'some').fetchone() \
                 .address_set.all().count() == 0
 
-    def test_ManyToMany(self):
-        # required for GAE tests
-        Group.all().delete()
-        User.all().delete()
 
+
+    def test_ManyToMany(self):
         u1 = User(name="u1")
         u2 = User(name="u2")
         u1.save()
@@ -437,9 +452,6 @@ class FieldTest(TestCase):
 
     def test_Decimal(self):
         from decimal import Decimal
-
-        # required for GAE tests
-        FieldType.all().delete()
 
         obj = FieldType(decimal_value='2.345')
         obj.save()
