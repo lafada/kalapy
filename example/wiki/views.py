@@ -44,6 +44,7 @@ def save(name):
 
     revision = Page.by_name(name)
     text = request.form.get('text')
+    note = request.form.get('note')
 
     if request.form.get('cancel') or \
         revision and revision.text == text:
@@ -53,7 +54,7 @@ def save(name):
     else:
         note = request.form.get('note', '')
         page = revision.page if revision else Page(name=name)
-        revision = Revision(text=text, page=page)
+        revision = Revision(text=text, page=page, note=note)
         revision.save()
         db.commit()
 

@@ -159,6 +159,7 @@ table.revisions td, table.changes td {
 
 table.revisions .timestamp, table.changes .timestamp {
     text-align: left;
+    white-space: nowrap;
     width: 10em;
 }
 
