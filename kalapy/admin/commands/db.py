@@ -44,6 +44,10 @@ class DBCommand(ActionCommand):
     name = 'database'
     usage = '%name <action> [options]'
 
+    options = (
+        ('f', 'force', False, 'do not ask questions'),
+    )
+
     def execute(self, options, args):
 
         if settings.DATABASE_ENGINE == "dummy":
@@ -121,13 +125,14 @@ class DBCommand(ActionCommand):
         """Reset the model tables. Use with care, will drop all the tables.
         """
 
-        ans = raw_input("""
+        if not options.force:
+            ans = raw_input("""
 Be careful, all the tables of database %r will be dropped.
 All the data stored in the database will be lost too.
 
 Are you sure about this action? (y/N): """ % settings.DATABASE_NAME)
 
-        if ans.lower() != 'y': return
+            if ans.lower() != 'y': return
 
         models, __pending = self.get_models()
         models.reverse()
