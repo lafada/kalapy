@@ -20,7 +20,7 @@ from google.appengine.api import datastore_errors
 
 from kalapy.db.engines.interface import IDatabase
 from kalapy.db.model import Model
-from kalapy.i18n import ngettext
+from kalapy.conf import settings
 
 __all__ = ('DatabaseError', 'IntegrityError', 'Database')
 
@@ -39,6 +39,8 @@ class Database(IDatabase):
 
     def __init__(self, name, host=None, port=None, user=None, password=None):
         super(Database, self).__init__(name, host, port, user, password)
+        self.check_unique = settings.DATABASE_OPTIONS.get('check_unique', True)
+        self.check_reference = settings.DATABASE_OPTIONS.get('check_reference', True)
 
     def connect(self):
         pass
@@ -85,7 +87,8 @@ class Database(IDatabase):
                 obj._payload = datastore.Entity(obj._meta.table)
 
             # test unique contraints
-            check_unique(obj, items)
+            if self.check_unique:
+                check_unique(obj, items)
 
             obj._payload.update(items)
             obj._key = str(datastore.Put(obj._payload))
@@ -104,8 +107,11 @@ class Database(IDatabase):
             if not isinstance(instance, Model):
                 raise TypeError('delete_records expectes Model instances')
 
-        # check referential integrity and then delete
-        keys = [check_integrity(obj).key for obj in instances]
+            # check referential integrity and then delete
+            if self.check_reference:
+                check_integrity(obj)
+
+        keys = [obj.key for obj in instances]
         datastore.Delete(keys)
 
         for obj in instances:
@@ -221,6 +227,7 @@ def sort_result(result, orderings):
 def check_unique(model_instance, values):
     """A helper function to check unique contraints.
     """
+    from kalapy.i18n import ngettext
     for items in model_instance._meta.unique:
         if [n for n in items if n.name in values]:
             q = model_instance.all()
@@ -236,6 +243,27 @@ def check_unique(model_instance, values):
 
 
 def check_integrity(model_instance):
-    #TODO: test referential integrity
+    """A helper function to check referential integrity.
+    """
+    from kalapy.db.reference import OneToMany, ManyToMany
+    for field in model_instance._meta.virtual_fields.values():
+        if isinstance(field, OneToMany):
+            o2m = getattr(model_instance, field.name)
+            if not o2m.all().count():
+                continue
+            reverse = getattr(field.reference, field.reverse_name)
+            if reverse.cascade is None:
+                o2m.all().update(**dict([(reverse.name, None)]))
+            elif reverse.cascade:
+                o2m.clear()
+            else:
+                raise IntegrityError(
+                    _('Key %(key)r is still referenced from table %(name)r',
+                        key=model_instance.key, name=field.reference._meta.table))
+        if isinstance(field, ManyToMany):
+            # by default we clear M2M entries
+            q = field.m2m.all().filter('%s =' % field.source, model_instance.key)
+            q.delete()
+
     return model_instance
 
