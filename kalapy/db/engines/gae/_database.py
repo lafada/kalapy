@@ -261,9 +261,15 @@ def check_integrity(model_instance):
                     _('Key %(key)r is still referenced from table %(name)r',
                         key=model_instance.key, name=field.reference._meta.table))
         if isinstance(field, ManyToMany):
-            # by default we clear M2M entries
-            q = field.m2m.all().filter('%s =' % field.source, model_instance.key)
-            q.delete()
+            if not field.m2m.all().count():
+                continue
+            if field.cascade:
+                q = field.m2m.all().filter('%s =' % field.source, model_instance.key)
+                q.delete()
+            else:
+                raise IntegrityError(
+                    _('Key %(key)r is still referenced from table %(name)r',
+                        key=model_instance.key, name=field.m2m._meta.table))
 
     return model_instance
 
