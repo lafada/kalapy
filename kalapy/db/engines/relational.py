@@ -65,8 +65,6 @@ class RelationalDatabase(IDatabase):
         if not for_alter:
             if field.is_required:
                 res = "%s NOT NULL" % res
-            if field.is_unique:
-                res = "%s UNIQUE" % res
 
         if isinstance(field, ManyToOne):
             res = '%s REFERENCES "%s" ("key")' % (res, field.reference._meta.table)

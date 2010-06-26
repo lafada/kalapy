@@ -218,9 +218,12 @@ class ModelType(type):
         for name, attr in attributes:
 
             # prepare unique constraints
-            if isinstance(attr, Field) and hasattr(attr, '_unique_with'):
-                meta.unique.append(attr._unique_with[:])
-                del attr._unique_with
+            if isinstance(attr, Field):
+                if hasattr(attr, '_unique_with'):
+                    meta.unique.append(attr._unique_with[:])
+                    del attr._unique_with
+                elif attr._unique and attr not in meta.unique:
+                    meta.unique.append([attr])
 
             # prepare validators
             if isinstance(attr, types.FunctionType) and hasattr(attr, '_validates'):
