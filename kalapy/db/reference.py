@@ -231,8 +231,15 @@ class O2ORel(IRelation):
                 _('Expected %(model)r instance', model=self.reference._meta.name))
 
         super(O2ORel, self).__set__(model_instance, value)
+
+        # this is virtual field, so mark it clean
+        del model_instance._dirty[self.name]
+
         if getattr(value, self.reverse_name, None) != model_instance:
             setattr(value, self.reverse_name, model_instance)
+            if not model_instance.is_saved:
+                model_instance.save()
+            value.save()
 
     def prepare(self, model_class):
         pass
