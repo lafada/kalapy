@@ -8,12 +8,8 @@ class TestCase(TestCase):
 
     def setUp(self):
         if settings.DATABASE_ENGINE == 'gae':
-            from kalapy.admin.commands.db import DBCommand
-            cmd = DBCommand()
-            models, __ = cmd.get_models()
-            models.reverse()
-            for m in models:
-                m.all().delete()
+            from kalapy.admin import execute_command
+            execute_command(['database', 'clear', '-f'])
         else:
             database.rollback()
 
