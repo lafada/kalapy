@@ -53,7 +53,7 @@ class CoreTest(TestCase):
         assert web.url_for('response', kind="no thing", extra='test x') \
             == '/response/no%20thing?extra=test+x'
         assert web.url_for('response', kind="no thing", extra='test x', _external=True) \
-            == 'http://%s/response/no%%20thing?extra=test+x' % settings.SERVERNAME
+            == 'http://localhost/response/no%20thing?extra=test+x'
 
     def test_static_files(self):
         static_file = web.url_for('static', filename='index.html')
