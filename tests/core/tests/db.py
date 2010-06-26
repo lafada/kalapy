@@ -263,6 +263,8 @@ class FieldTest(TestCase):
             self.fail()
 
     def test_unique(self):
+        # required for GAE tests
+        UniqueTest.all().delete()
 
         u = UniqueTest(a='aaa', b='bb', c='cc')
         u.save()

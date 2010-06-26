@@ -20,7 +20,7 @@ from google.appengine.api import datastore_errors
 
 from kalapy.db.engines.interface import IDatabase
 from kalapy.db.model import Model
-
+from kalapy.i18n import ngettext
 
 __all__ = ('DatabaseError', 'IntegrityError', 'Database')
 
@@ -84,7 +84,8 @@ class Database(IDatabase):
             if not obj.is_saved:
                 obj._payload = datastore.Entity(obj._meta.table)
 
-            #TODO: convert values to GAE supported datatypes
+            # test unique contraints
+            check_unique(obj, items)
 
             obj._payload.update(items)
             obj._key = str(datastore.Put(obj._payload))
@@ -103,7 +104,8 @@ class Database(IDatabase):
             if not isinstance(instance, Model):
                 raise TypeError('delete_records expectes Model instances')
 
-        keys = [obj.key for obj in instances]
+        # check referential integrity and then delete
+        keys = [check_integrity(obj).key for obj in instances]
         datastore.Delete(keys)
 
         for obj in instances:
@@ -214,4 +216,26 @@ def sort_result(result, orderings):
 
     result.sort(compare)
     return result
+
+
+def check_unique(model_instance, values):
+    """A helper function to check unique contraints.
+    """
+    for items in model_instance._meta.unique:
+        if [n for n in items if n.name in values]:
+            q = model_instance.all()
+            for field in items:
+                q = q.filter('%s ==' % field.name, values.get(field.name, ''))
+            if q.fetchone():
+                msg = ngettext('column %(name)s is not unique',
+                               'columns %(name)s are not unique',
+                               len(items),
+                               name=", ".join([f.name for f in items]))
+                raise IntegrityError(msg)
+    return model_instance
+
+
+def check_integrity(model_instance):
+    #TODO: test referential integrity
+    return model_instance
 
