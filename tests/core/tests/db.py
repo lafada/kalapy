@@ -178,57 +178,6 @@ class ModelTest(TestCase):
         self.assertTrue(names[0] == u1.name)
 
 
-class FieldTest(TestCase):
-
-    def tearDown(self):
-        database.rollback()
-
-    def test_field_required(self):
-        u = User(name="some", dob='1996-11-04')
-        try:
-            u.name = None
-        except db.ValidationError:
-            pass
-        else:
-            self.fail()
-
-    def test_field_unique(self):
-
-        u = UniqueTest(a='aaa', b='bb', c='cc')
-        u.save()
-
-        u2 = UniqueTest(a='aaaa', b='bb', c='dd')
-        u3 = UniqueTest(a='aaaaa', b='bb', c='cc')
-
-        try:
-            u2.save()
-            u3.save()
-        except db.IntegrityError:
-            pass
-        else:
-            self.fail()
-
-    def test_field_selection(self):
-        u = User(name="some")
-        u.lang = 'en_EN'
-        try:
-            u.lang = 'en_IN'
-        except db.ValidationError:
-            pass
-        else:
-            self.fail()
-
-    def test_field_validate(self):
-        u = UniqueTest()
-        u.a = 'aaaaaaa'
-        try:
-            u.a = 'aa'
-        except db.ValidationError:
-            pass
-        else:
-            self.fail()
-
-
 class QueryTest(TestCase):
 
     def tearDown(self):
@@ -297,4 +246,175 @@ class QueryTest(TestCase):
 
         self.assertTrue(n1 == 3)
         self.assertTrue(n2 == 3)
+
+
+class FieldTest(TestCase):
+
+    def tearDown(self):
+        database.rollback()
+
+    def test_required(self):
+        u = User(name="some", dob='1996-11-04')
+        try:
+            u.name = None
+        except db.ValidationError:
+            pass
+        else:
+            self.fail()
+
+    def test_unique(self):
+
+        u = UniqueTest(a='aaa', b='bb', c='cc')
+        u.save()
+
+        u2 = UniqueTest(a='aaaa', b='bb', c='dd')
+        u3 = UniqueTest(a='aaaaa', b='bb', c='cc')
+
+        try:
+            u2.save()
+            u3.save()
+        except db.IntegrityError:
+            pass
+        else:
+            self.fail()
+
+    def test_selection(self):
+        u = User(name="some")
+        u.lang = 'en_EN'
+        try:
+            u.lang = 'en_IN'
+        except db.ValidationError:
+            pass
+        else:
+            self.fail()
+
+    def test_validate(self):
+        u = UniqueTest()
+        u.a = 'aaaaaaa'
+        try:
+            u.a = 'aa'
+        except db.ValidationError:
+            pass
+        else:
+            self.fail()
+
+    def test_ManyToOne(self):
+        u1 = User(name="some")
+        u2 = User(name="someone")
+        u1.save()
+        u2.save()
+
+        a1 = Article(title="story1")
+        a2 = Article(title="story2")
+
+        # test direct assignment
+        a1.author = u1
+        a2.author = u2
+        a1.save()
+        a2.save()
+
+        assert u1.key == a1.author.key
+        assert u2.key == a2.author.key
+
+        # test reverse field
+        a3 = Article(title="story3")
+        u1.article_set.add(a3)
+        u1.save()
+
+        assert u1.key == a3.author.key
+        assert u1.article_set.all().count() == 2
+
+        # test type
+        try:
+            u1.article_set.add(u2)
+        except TypeError:
+            pass
+        else:
+            self.fail()
+
+        # get article by author some with title story1
+        a = u1.article_set.all().filter('title =', 'story1').fetchone()
+        assert a.title == 'story1'
+        assert a.author.key == u1.key
+
+    def test_OneToOne(self):
+
+        u1 = User(name="some")
+        u2 = User(name="someone")
+        u1.save()
+        u2.save()
+
+        a1 = Account()
+        a2 = Account()
+
+        # check direct assignment
+        u1.account = a1
+        u1.save()
+
+        assert u1.key == a1.user.key
+
+        # check reverse assignment
+        a2.user = u2
+        a2.save()
+
+        assert u2.account.key == a2.key
+
+        # check uniqueness
+        try:
+            u2.account = a1
+            u2.save()
+        except db.IntegrityError:
+            pass
+        else:
+            self.fail()
+
+    def test_OneToMany(self):
+        u1 = User(name="some")
+        u1.save()
+
+        a1 = Address(street1="s1")
+        a2 = Address(street1="s2")
+        a3 = Address(street1="s3")
+        a4 = Address(street1="s4")
+
+        u1.address_set.add(a1, a2, a3, a4)
+
+        assert u1.address_set.all().count() == 4
+        assert User.all().filter('name =', 'some').fetchone() \
+                .address_set.all().count() == 4
+
+        u1.address_set.clear()
+
+        assert u1.address_set.all().count() == 0
+        assert User.all().filter('name =', 'some').fetchone() \
+                .address_set.all().count() == 0
+
+    def test_ManyToMany(self):
+
+        u1 = User(name="u1")
+        u2 = User(name="u2")
+        u1.save()
+        u2.save()
+
+        g1 = Group(name="g1")
+        g2 = Group(name="g2")
+        g3 = Group(name="g3")
+        g4 = Group(name="g4")
+
+        g1.save()
+        g2.save()
+        g3.save()
+        g4.save()
+
+        # check direct
+        g1.members.add(u1, u2)
+        g2.members.add(u1)
+        assert u1.groups.all().count() == 2
+        assert u2.groups.all().count() == 1
+
+        # check reverse
+        u1.groups.add(g3, g4)
+        assert u1.groups.all().count() == 4
+        assert g3.members.all().count() == 1
+        assert g4.members.all().count() == 1
 
