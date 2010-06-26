@@ -316,8 +316,6 @@ class FieldTest(TestCase):
         try:
             u2.delete()
         except db.IntegrityError:
-            c1.user2 = None
-            c1.save()
             pass
         else:
             self.fail()
