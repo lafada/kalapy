@@ -120,7 +120,6 @@ class Package(object):
         self.path = path
 
         opts = settings.PACKAGE_OPTIONS.get(name, {})
-        self.subdomain = opts.get('subdomain')
         self.submount = opts.get('submount')
 
         # static dir info
@@ -182,8 +181,6 @@ class Package(object):
         options.setdefault('methods', ('GET',))
         options['endpoint'] = endpoint
 
-        if self.subdomain:
-            options['subdomain'] = self.subdomain
         if self.submount:
             rule = '%s%s' % (self.submount, rule)
 
@@ -351,8 +348,7 @@ class Application(Package):
         """
         _local.current_app = self
         _local.request = request = Request(environ)
-        request.url_adapter = adapter = self.urls.bind_to_environ(
-                                environ, server_name=settings.SERVER_NAME)
+        request.url_adapter = adapter = self.urls.bind_to_environ(environ)
 
         signals.send('request-started')
         try:
