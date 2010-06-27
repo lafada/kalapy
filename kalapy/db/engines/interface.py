@@ -52,6 +52,36 @@ class IDatabase(object):
         """Rollback all the changes made since the last commit.
         """
         raise NotImplementedError
+    
+    def run_in_transaction(self, func, *args, **kw):
+        """A helper function to run the specified func in a transaction. This
+        function is provided as a convenient method to manage transaction by
+        some database engines, especially the GAE engine.
+        
+        Example usage::
+            
+            def some_function(a, b, c):
+                u = User(name="some")
+                u.lang = "fr_FR"
+                u.save()
+                
+            db.run_in_transaction(some_function, 1, 2, c=4)
+            
+        :param func: the callable to be run in transaction
+        :param args: positional arguments to be passed to the function
+        :param kw: keyword arguments to be passed to the function
+        
+        :returns: result of the function
+        :raises: any exception thrown during function execution
+        """
+        try:
+            res = func(*args, **kw)
+        except:
+            self.rollback()
+            raise
+        else:
+            self.commit()
+        return res
 
     def schema_table(self, model):
         """Returns the schema information of the table for the given model.

@@ -76,6 +76,10 @@ def rollback():
     """
     database.rollback()
 
+def run_in_transaction(func, *args, **kw):
+    """A helper function to run the specified func in a transaction.
+    """
+    return database.run_in_transaction(func, *args, **kw)
 
 @signals.connect('request-started')
 def open_connection():

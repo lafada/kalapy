@@ -53,6 +53,9 @@ class Database(IDatabase):
 
     def rollback(self):
         pass
+    
+    def run_in_transaction(self, func, *args, **kw):
+        return datastore.RunInTransaction(func, *args, **kw)
 
     def schema_table(self, model):
         result = "class %s(db.Model):" % model.__name__

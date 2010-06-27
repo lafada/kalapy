@@ -8,7 +8,8 @@ inspired of OpenERP and Django ORM.
 :copyright: (c) 2010 Amit Mendapara.
 :license: BSD, see LICENSE for more details.
 """
-from kalapy.db.engines import DatabaseError, IntegrityError, commit, rollback
+from kalapy.db.engines import DatabaseError, IntegrityError, \
+    commit, rollback, run_in_transaction
 
 from fields import *
 from reference import *
