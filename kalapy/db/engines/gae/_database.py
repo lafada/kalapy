@@ -53,7 +53,7 @@ class Database(IDatabase):
 
     def rollback(self):
         pass
-    
+
     def run_in_transaction(self, func, *args, **kw):
         return datastore.RunInTransaction(func, *args, **kw)
 
@@ -133,24 +133,38 @@ class Database(IDatabase):
         except:
             pass
 
-        # The results should be ANDed
+        keys = self._keys(qset)
+        result = []
 
-        query_set = self._build_query_set(qset, orderings)
-        result_set = [[e for e in q.Get(limit, offset) if e] for q in query_set]
+        if keys: # if only key filter
+            result = [e for e in datastore.Get(keys) if e]
+        else: # else build query, the results should be ANDed
+            query_set = self._build_query_set(qset, orderings)
+            result_set = [[e for e in q.Get(limit, offset) if e] for q in query_set]
+            keys = [set([e.key() for e in result]) for result in result_set]
+            keys = reduce(lambda a, b: a & b, keys)
 
-        keys = [set([e.key() for e in result]) for result in result_set]
-        keys = reduce(lambda a, b: a & b, keys)
+            result = {}
+            for e in chain(*tuple(result_set)):
+                if e.key() in keys:
+                    result.setdefault(e.key(), e)
+            result = result.values()
 
-        result = {}
-        for e in chain(*tuple(result_set)):
-            if e.key() in keys:
-                result.setdefault(e.key(), e)
-
-        for e in sort_result(result.values(), orderings)[:limit]:
+        for e in sort_result(result, orderings)[:limit]:
             yield dict(e, key=str(e.key()), _payload=e)
 
     def count(self, qset):
         return len(list(self.fetch(qset, -1, 0)))
+
+    def _keys(self, qset):
+        if len(qset.items) == 1:
+            q = qset.items[0]
+            if len(q.items) == 1 and q.items[0][0] == 'key':
+                keys = q.items[0][2]
+                if not isinstance(keys, (list, tuple)):
+                    return [keys]
+                return keys
+        return []
 
     def _build_query_set(self, qset, orderings):
 
