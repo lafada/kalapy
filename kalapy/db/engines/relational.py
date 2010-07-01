@@ -193,6 +193,18 @@ class QueryBuilder(object):
     """The SQL query builder for relational database engines.
     """
 
+    op_alias = {
+        '<': 'lt',
+        '>': 'gt',
+        '>=': 'gte',
+        '<=': 'lte',
+        '==': 'eq',
+        '!=': 'neq',
+        '=': 'like',
+        'in': 'in',
+        'not in': 'not_in',
+    }
+
     def __init__(self, qset):
         self.qset = qset
         self.model = qset.model
@@ -204,14 +216,13 @@ class QueryBuilder(object):
         except:
             pass
 
-        parser = Parser(self.model)
         for q in qset:
             if len(q.items) > 1:
                 statements = []
                 params = []
                 for item in q.items:
                     name, op, val = item
-                    s, p = parser.parse(name, op, val)
+                    s, p = self.parse(name, op, val)
                     statements.append(s)
                     if isinstance(p, (list, tuple)):
                         params.extend(p)
@@ -220,7 +231,7 @@ class QueryBuilder(object):
                 self.all.append((" OR ".join(statements), params))
             else:
                 name, op, val = q.items[0]
-                self.all.append(parser.parse(name, op, val))
+                self.all.append(self.parse(name, op, val))
 
     def select(self, what, limit=None, offset=None):
         """Build the select query.
@@ -243,29 +254,6 @@ class QueryBuilder(object):
                 params.append(v)
 
         return query, params
-
-
-class Parser(object):
-    """Simple regex based query parser.
-
-    .. todo: move to `engines` as an inteface and let backend engines provide
-             engine specific implementation.
-    """
-
-    op_alias = {
-        '<': 'lt',
-        '>': 'gt',
-        '>=': 'gte',
-        '<=': 'lte',
-        '==': 'eq',
-        '!=': 'neq',
-        '=': 'like',
-        'in': 'in',
-        'not in': 'not_in',
-    }
-
-    def __init__(self, model):
-        self.model = model
 
     def parse(self, name, operator, value):
         """Parse the simple query statement.
