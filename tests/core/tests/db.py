@@ -499,3 +499,8 @@ class FieldTest(TestCase):
         else:
             self.fail()
 
+        # filter
+        q = FieldType.all().filter('decimal_value ==', Decimal('2.345'))
+        obj = q.fetchone()
+        assert obj and obj.decimal_value == Decimal('2.345')
+

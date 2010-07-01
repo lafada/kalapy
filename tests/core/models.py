@@ -72,7 +72,7 @@ class UniqueTest(db.Model):
 
 class FieldType(db.Model):
     float_value = db.Float()
-    decimal_value = db.Decimal()
+    decimal_value = db.Decimal(max_digits=9, decimal_places=3)
 
 class Cascade(db.Model):
     user1 = db.ManyToOne(User, cascade=True)
