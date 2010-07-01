@@ -60,6 +60,11 @@ class RelationalDatabase(IDatabase):
             self.connect()
         return self.connection.cursor()
 
+    def fix_quote(self, sql):
+        """Subclass should override this method to fix quotation marks.
+        """
+        return sql
+
     def get_field_sql(self, field, for_alter=False):
         res = '"%s" %s' % (field.name, self.get_data_type(field))
         if not for_alter:
@@ -95,7 +100,8 @@ class RelationalDatabase(IDatabase):
             output.append('UNIQUE(%s)' % ", ".join(['"%s"' % f.name for f in item]))
 
         output = ",\n    ".join(output)
-        return 'CREATE TABLE "%s" (\n    %s\n);' % (model._meta.table, output)
+        output = 'CREATE TABLE "%s" (\n    %s\n);' % (model._meta.table, output)
+        return self.fix_quote(output)
 
     def schema_table(self, model):
         return self.get_create_sql(model)
@@ -108,13 +114,15 @@ class RelationalDatabase(IDatabase):
     def drop_table(self, model):
         if self.exists_table(model):
             cursor = self.cursor()
-            cursor.execute('DROP TABLE "%s"' % model._meta.table)
+            cursor.execute(
+                    self.fix_quote('DROP TABLE "%s"' % model._meta.table))
 
     def alter_table(self, model, name=None):
         cursor = self.cursor()
         if name:
-            cursor.execute('ALTER TABLE "%s" RENAME TO "%s"' % (
-                name, model._meta.table,))
+            cursor.execute(
+                    self.fix_quote('ALTER TABLE "%s" RENAME TO "%s"' % (
+                        name, model._meta.table)))
         #TODO: alter columns if changed
 
     def lastrowid(self, cursor, model):
@@ -142,7 +150,7 @@ class RelationalDatabase(IDatabase):
                         obj._meta.table,
                         ", ".join(keys),
                         ", ".join(['%s'] * len(vals)))
-                cursor.execute(sql, vals)
+                cursor.execute(self.fix_quote(sql), vals)
                 obj._key = self.lastrowid(cursor, obj.__class__)
                 result.append(obj.key)
             else:
@@ -150,7 +158,7 @@ class RelationalDatabase(IDatabase):
                 sql = 'UPDATE "%s" SET %s WHERE "key" = %%s' % (obj._meta.table, keys)
 
                 vals.append(obj.key)
-                cursor.execute(sql, vals)
+                cursor.execute(self.fix_quote(sql), vals)
                 result.append(obj.key)
 
             obj.set_dirty(False)
@@ -170,7 +178,7 @@ class RelationalDatabase(IDatabase):
                             instance._meta.table, ", ".join(['%s'] * len(keys)))
 
         cursor = self.cursor()
-        cursor.execute(sql, keys)
+        cursor.execute(self.fix_quote(sql), keys)
 
         for obj in instances:
             obj._key = None
@@ -181,7 +189,7 @@ class RelationalDatabase(IDatabase):
     def fetch(self, qset, limit, offset):
         cursor = self.cursor()
         sql, params = QueryBuilder(qset).select('*', limit, offset)
-        cursor.execute(sql, params)
+        cursor.execute(self.fix_quote(sql), params)
         names = [desc[0] for desc in cursor.description]
         for row in cursor.fetchall():
             yield dict([(name, row[i]) for i, name in enumerate(names)])
@@ -190,7 +198,7 @@ class RelationalDatabase(IDatabase):
         cursor = self.cursor()
         sql, params = QueryBuilder(qset).select('count("key")')
         sql = re.sub(' ORDER BY "\w+" (ASC|DESC)', '', sql)
-        cursor.execute(sql, params)
+        cursor.execute(self.fix_quote(sql), params)
         try:
             return cursor.fetchone()[0]
         except:
