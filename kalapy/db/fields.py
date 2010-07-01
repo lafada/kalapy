@@ -341,8 +341,19 @@ class Float(Field):
 
 class Decimal(Float):
     """Decimal field stores decimal value, useful for monatory calulations.
+
+    The precision and scale can be specified by `max_digits` and `decimal_places`
+    respectively. For example::
+
+        salary = db.Decimal(max_digits=10, decimal_places=2)
+
     """
     _data_type = "decimal"
+
+    def __init__(self, label=None, max_digits=None, decimal_places=None, **kw):
+        super(Decimal, self).__init__(label=label, **kw)
+        self.max_digits = max_digits or 65
+        self.decimal_places = decimal_places or 30
 
     def validate(self, value):
         if isinstance(value, basestring):
