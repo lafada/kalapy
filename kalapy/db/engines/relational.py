@@ -65,29 +65,37 @@ class RelationalDatabase(IDatabase):
         if not for_alter:
             if field.is_required:
                 res = "%s NOT NULL" % res
+        return res
 
-        if isinstance(field, ManyToOne):
-            res = '%s REFERENCES "%s" ("key")' % (res, field.reference._meta.table)
-            if field.cascade:
-                res = '%s ON DELETE CASCADE' % res
-            elif field.is_required:
-                res = '%s ON DELETE RESTRICT' % res
-            elif field.cascade is None:
-                res = '%s ON DELETE SET NULL' % res
+    def get_fk_sql(self, field):
+        res = 'FOREIGN KEY ("%s") REFERENCES "%s" ("key")' % (
+                field.name, field.reference._meta.table)
+        if field.cascade:
+            res = '%s ON DELETE CASCADE' % res
+        elif field.is_required:
+            res = '%s ON DELETE RESTRICT' % res
+        elif field.cascade is None:
+            res = '%s ON DELETE SET NULL' % res
         return res
 
     def get_create_sql(self, model):
 
         fields = [f for f in model.fields().values() if f._data_type is not None]
-        fields_sql = [self.get_field_sql(f) for f in fields]
+
+        # create columns
+        output = [self.get_field_sql(f) for f in fields]
+
+        # generate foreign key constraints
+        for field in fields:
+            if isinstance(field, ManyToOne):
+                output.append(self.get_fk_sql(field))
 
         # generate unique constraints
         for item in model._meta.unique:
-            fields_sql.append('UNIQUE(%s)' % ", ".join(['"%s"' % f.name for f in item]))
+            output.append('UNIQUE(%s)' % ", ".join(['"%s"' % f.name for f in item]))
 
-        fields_sql = ",\n    ".join(fields_sql)
-
-        return 'CREATE TABLE "%s" (\n    %s\n);' % (model._meta.table, fields_sql)
+        output = ",\n    ".join(output)
+        return 'CREATE TABLE "%s" (\n    %s\n);' % (model._meta.table, output)
 
     def schema_table(self, model):
         return self.get_create_sql(model)
