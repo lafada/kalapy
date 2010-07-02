@@ -63,10 +63,9 @@ class UniqueTest(db.Model):
     b = db.String()
     c = db.String()
 
-    db.unique(a, [b, c])
+    __unique__ = [a, (b, c)]
 
-    @db.validate(a)
-    def chk_a(self, value):
+    def validate_a(self, value):
         if len(value) < 3:
             raise db.ValidationError('Too short value')
 
