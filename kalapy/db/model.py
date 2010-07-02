@@ -187,12 +187,14 @@ class ModelType(type):
             '_meta': meta,
             '__module__': attrs.pop('__module__')})
 
-        # update meta, overriden with @db.meta
-        cls._update_meta(meta)
-
+        # update meta information
+        unique = attrs.pop('__unique__', [])
         if meta.name is None:
-            meta.name = meta.package + ':' + name.lower() if meta.package else name.lower()
-            meta.table = meta.name.replace(':', '_')
+            meta_name = name.lower()
+            if meta.package:
+                meta_name = '%s:%s' % (meta.package, meta_name)
+            meta.name = meta_name
+            meta.table = meta_name.replace(':', '_')
 
         # create primary key field if it is root model
         if not parent:
@@ -203,6 +205,7 @@ class ModelType(type):
 
         cls._values = None
 
+        # sort fields and set attributes to class
         attributes = attrs.items()
         attributes.sort(lambda a, b: cmp(
             getattr(a[1], '_serial', 0), getattr(b[1], '_serial', 0)))
@@ -210,46 +213,32 @@ class ModelType(type):
         for name, attr in attributes:
             if isinstance(attr, Field):
                 cls.add_field(attr, name)
+                if attr.is_unique:
+                    unique.append([attr])
             else:
                 setattr(cls, name, attr)
 
-        # loop again so that every attributes are set before preparing
-        # validators and unique constraints
+        # prepare validators
         for name, attr in attributes:
+            if name.startswith('validate_') and isinstance(attr, types.FunctionType):
+                field = getattr(cls, name[9:], None)
+                if isinstance(field, Field):
+                    field._validator = getattr(cls, name) # use bound method
 
-            # prepare unique constraints
-            if isinstance(attr, Field):
-                if hasattr(attr, '_unique_with'):
-                    meta.unique.append(attr._unique_with[:])
-                    del attr._unique_with
-                elif attr._unique and attr not in meta.unique:
-                    meta.unique.append([attr])
-
-            # prepare validators
-            if isinstance(attr, types.FunctionType) and hasattr(attr, '_validates'):
-
-                field = attr._validates
+        # prepare unique constraints
+        for item in unique:
+            item = list(item) if isinstance(item, (list, tuple)) else [item]
+            for i, field in enumerate(item):
                 if isinstance(field, basestring):
-                    field = getattr(cls, field, None)
-
-                if not isinstance(field, Field):
-                    raise FieldError(
-                        _("Field '%(name)s' is not defined.",
-                            name=attr._validates))
-
-                # use bound method
-                field._validator = getattr(cls, name)
+                    try:
+                        item[i] = field = getattr(cls, field)
+                    except:
+                        raise AttributeError(
+                            _('No such field %(name)s.', field))
+                assert isinstance(field, Field), 'expected a field'
+            meta.unique.append(item)
 
         return cls
-
-    def _update_meta(cls, meta):
-        frame = sys._getframe().f_back.f_back
-        try:
-            meta_info = frame.f_locals.pop('_MODEL_META__', {})
-            for name, value in meta_info.items():
-                setattr(meta, name, value)
-        finally:
-            del frame
 
     def add_field(cls, field, name=None):
 
